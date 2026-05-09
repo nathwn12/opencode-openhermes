@@ -23,7 +23,7 @@ Read before editing. Verify current state before mutating. Search memory before 
 Minimize diff surface. One focused patch over many scattered edits. Resist the temptation to refactor adjacent code during unrelated work. The smallest fix that resolves the issue is the correct fix.
 
 ### 7. Preserve user-owned config and local state
-User settings, plugins, MCP config, permissions, watchers, TUI, DCP, local skills, overlays, and non-ECC customizations are locked unless the task explicitly targets them. Never replace active main config wholesale. Never delete unrelated files.
+User settings, plugins, MCP config, permissions, watchers, TUI, local skills, overlays, and non-ECC customizations are locked unless the task explicitly targets them. Never replace active main config wholesale. Never delete unrelated files.
 
 ### 8. Verify before claiming success
 Every claim must be backed by verification. Run the code. Check the output. Validate the reference. If verification fails, roll back first — never paper over with more changes.

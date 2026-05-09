@@ -21,8 +21,8 @@ npm i openhermes-opencode
 ---
 
 > &#9764; **Inspired by [Hermes Agent](https://github.com/NousResearch/hermes-agent)** — Nous Research's self-improving agent that brought closed learning loops, skill creation, and cross-session memory to the agent ecosystem. OpenHermes reimagines that vision **native to the OpenCode platform**: zero dependencies, no sidecars, no installers. Your entire agent OS in a single npm package.
-
-> The `ohc-pruner` plugin is the built-in OpenHermes wiring of `Opencode-DCP/opencode-dynamic-context-pruning`. It ships inside this package and does not depend on the upstream repo at runtime.
+>
+> **Pruning inspiration**: The autonomous context-pressure system is heavily inspired by [Opencode-DCP (Dynamic Context Pruning)](https://github.com/Opencode-DCP/opencode-dynamic-context-pruning). The curator plugin's compaction-trigger logic and recall-cache freshness model are direct ports of DCP's approach, adapted to run inside OpenHermes with zero external dependencies.
 
 ---
 
@@ -73,7 +73,7 @@ The LLM reads rules on demand via the injected paths. Memory directories auto-cr
 
 ---
 
-## The Five Plugins
+## The Four Plugins
 
 | Plugin | Triggers On | What It Does |
 |--------|------------|--------------|
@@ -81,7 +81,6 @@ The LLM reads rules on demand via the injected paths. Memory directories auto-cr
 | **CuratorPlugin** | `session.idle`, `.compacted`, `.error`, `.compacting`, `permission.replied` | Writes checkpoints, logs mistakes, records audits, injects state into compaction. |
 | **AutorecallPlugin** | `session.created` | Loads memory from disk, builds session recall cache. |
 | **SkillBuilderPlugin** | `session.idle`, `.created`, `tool.execute.after` | Detects complex sessions (8+ tool calls or 2+ subagent spawns) → creates skill-candidate backlogs. |
-| **OHCPrunerPlugin** | `config`, `experimental.chat.system.transform`, `experimental.chat.messages.transform`, `tool` | Built-in OpenHermes integration of `Opencode-DCP/opencode-dynamic-context-pruning`: exposes `compress`, emits hidden nudges, and replays saved compression ranges into the live buffer. |
 
 ---
 
@@ -148,7 +147,7 @@ The full OpenHermes framework ships inside the package — 45 files across 6 dir
 ```
 harness/
 ├── constitution/soul.md        # 11 immutable personality principles
-├── instructions/RUNTIME.md      # Session workflow: gather → delegate → verify → compress
+├── instructions/RUNTIME.md      # Session workflow: gather → delegate → verify
 ├── rules/ (16 files)
 │   ├── delegation.md            # Mandatory subagent routing
 │   ├── retrieval.md             # Gated precision-first memory retrieval
@@ -182,7 +181,7 @@ harness/
 │   # code-reviewer, e2e-runner, explore, planner, security-reviewer
 └── commands/ (8 files)
     # Slash command templates: build-fix, code-review, doctor,
-    # learn, memory-search, ohc, plan, security
+    # learn, memory-search, plan, security
 ```
 
 ---
@@ -215,13 +214,11 @@ No self-termination. No grandstanding. Narrow, log, recover, improve.
 
 ```
 openhermes-opencode/
-├── index.mjs                 # Re-exports all five plugins
+├── index.mjs                 # Re-exports all plugins
 ├── bootstrap.mjs             # Config hook + chat.transform hook
 ├── autorecall.mjs            # Recall cache builder
 ├── curator.mjs               # Lifecycle hooks engine (483 lines)
 ├── skill-builder.mjs         # Complexity detection engine
-├── ohc-pruner.mjs            # Built-in dynamic-context-pruning plugin
-├── ohc-pruner-core.mjs       # Compression engine and pruning state
 ├── lib/
 │   ├── hardening.mjs         # atomicWriteJson, fingerprint, sanitize, redact
 │   └── schema-validator.mjs  # Draft-07 subset validator

@@ -1,1 +1,0 @@
-{"version":3,"file":"sync.d.ts","sourceRoot":"","sources":["../../../src/ohc-pruner/messages/sync.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,YAAY,EAAc,MAAM,aAAa,CAAA;AAC3D,OAAO,KAAK,EAAE,MAAM,EAAE,MAAM,cAAc,CAAA;AAG1C,wBAAgB,qBAAqB,CACnC,KAAK,EAAE,YAAY,EACnB,MAAM,EAAE,MAAM,EACd,QAAQ,EAAE,OAAO,EAAE,GAClB,IAAI,CAiHN"}

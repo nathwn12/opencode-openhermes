@@ -50,11 +50,11 @@ Snapshot before mutation. Never delete unrelated files. Never assume \`%USERPROF
 
 | Category | Items |
 |----------|-------|
-| **Native tools** | \`read\`, \`write\`, \`edit\`, \`glob\`, \`grep\`, \`bash\`, \`task\`, \`webfetch\`, \`skill\`, \`todowrite\`, \`todoread\`, \`compress\` |
+| **Native tools** | \`read\`, \`write\`, \`edit\`, \`glob\`, \`grep\`, \`bash\`, \`task\`, \`webfetch\`, \`skill\`, \`todowrite\`, \`todoread\` |
 | **MCP: openhermes-memory** | \`hm_put\`, \`hm_get\`, \`hm_list\`, \`hm_latest\`, \`hm_search\` |
 | **Memory recall cache** | \`openhermes/memory/recall/cache.json\` — read on session start, no MCP round-trip |
 | **Subagents** | \`explore\` (read-only), \`general\` (multi-step), \`architect\`, \`planner\`, \`build-error-resolver\`, \`code-reviewer\`, \`security-reviewer\`, \`e2e-runner\` |
-| **Plugins** | \`curator\` (checkpoints, mistakes, audit, compaction), \`autorecall\` (recall cache on \`session.created\`), \`skill-builder\` (complex session detection), \`ohc-pruner\` (OpenHermes-wired, built-in port of \`Opencode-DCP/opencode-dynamic-context-pruning\`; context pressure at 5 iterations) |
+| **Plugins** | \`curator\` (checkpoints, mistakes, audit, compaction), \`autorecall\` (recall cache on \`session.created\`), \`skill-builder\` (complex session detection) |
 
 ## Skills (available via \`skill\` tool)
 
@@ -103,7 +103,7 @@ Full tiers: \`${RULES_DIR}\\\\self-heal.md\`.
 
 - Checkpoint on meaningful boundaries. Compress closed segments immediately.
 - After subagent return: verify → compress that block.
-- OHC nudges at 5 iterations — compress proactively.
+- Compress proactively.
 - Skill candidates → \`/learn\` only if repeated pattern + \`hm_search\` confirms no dup. See \`${RULES_DIR}\\\\skills-management.md\`.
 - Audit triggers: openhermes/config change, repeated failures, session start when last audit >7 days. See \`${RULES_DIR}\\\\audit.md\`.
 
@@ -156,13 +156,17 @@ export const BootstrapPlugin = async ({ client, directory }) => {
     },
 
     "experimental.chat.messages.transform": async (_input, output) => {
-      const bootstrap = getContent()
-      if (!bootstrap || !output.messages || !output.messages.length) return
-      const firstUser = output.messages.find(m => m && m.info && m.info.role === "user")
-      if (!firstUser || !firstUser.parts || !firstUser.parts.length) return
-      if (firstUser.parts.some(p => p.type === "text" && p.text.includes("OPENHERMES_BOOTSTRAP"))) return
-      const ref = firstUser.parts[0]
-      firstUser.parts.unshift({ ...ref, type: "text", text: bootstrap })
+      try {
+        const bootstrap = getContent()
+        if (!bootstrap || !output.messages || !output.messages.length) return
+        const firstUser = output.messages.find(m => m && m.info && m.info.role === "user")
+        if (!firstUser || !firstUser.parts || !firstUser.parts.length) return
+        if (firstUser.parts.some(p => p.type === "text" && p.text.includes("OPENHERMES_BOOTSTRAP"))) return
+        const ref = firstUser.parts[0]
+        firstUser.parts.unshift({ ...ref, type: "text", text: bootstrap })
+      } catch (err) {
+        console.error("[openhermes-bootstrap] transform error:", err.message)
+      }
     }
   }
 }

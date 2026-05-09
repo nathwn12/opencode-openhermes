@@ -15,8 +15,7 @@ Run full OpenCode openhermes diagnostics. $ARGUMENTS
    - Config syntax (opencode.json valid JSON)
    - Provider connectivity (LM Studio at http://127.0.0.1:1234/v1)
    - Cache state (memory records, recall cache)
-   - DCP config (dcp.jsonc)
-   - Auth file integrity
+    - Auth file integrity
 3. Report results with any fix suggestions
 
 ## Automated Checks
@@ -36,7 +35,6 @@ Run these commands and report results:
 | Memory MCP | PASS/FAIL | |
 | Plugins | PASS/FAIL | |
 | Skills | PASS/FAIL | |
-| DCP | PASS/FAIL | |
 
 ## After Diagnosis
 

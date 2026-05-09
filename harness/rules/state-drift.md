@@ -1,7 +1,7 @@
 # State Drift Detection — Hash-Based Environment Fingerprinting
 
 ## Problem Statement 
-DCP compression accumulates verification receipts across sessions. Without drift detection, the same receipt content gets compressed repeatedly even when:
+Compression accumulates verification receipts across sessions. Without drift detection, the same receipt content gets compressed repeatedly even when:
 - Environment changed (node 18 → node 20, Python 3.9 → 3.11)  
 - File system state drifted (git commit hash changed)
 - Provider credentials rotated (API key in verification detail)
@@ -59,7 +59,7 @@ function detectHashDrift(compressedSummary, lastFingerprint) {
 
 ## Enforcement Points
 
-### DCP Compress Event (Primary Guard)
+### Compress Event (Primary Guard)
 ```javascript
 // In OpenHermes's built-in dynamic-context-pruning plugin
 function onCompress() {

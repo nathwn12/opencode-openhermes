@@ -1,7 +1,7 @@
 {
   "name": "openhermes-opencode",
-  "version": "1.0.8",
-  "description": "OpenHermes plugin suite for OpenCode — autonomous checkpointing, memory recall, skill-candidate detection, built-in dynamic-context-pruning, and runtime curation.",
+  "version": "1.0.9",
+  "description": "OpenHermes plugin suite for OpenCode — autonomous checkpointing, memory recall, and skill-candidate detection.",
   "type": "module",
   "license": "MIT",
   "main": "./index.mjs",
@@ -9,8 +9,7 @@
     ".": "./index.mjs",
     "./autorecall": "./autorecall.mjs",
     "./curator": "./curator.mjs",
-    "./skill-builder": "./skill-builder.mjs",
-    "./ohc-pruner": "./ohc-pruner.mjs"
+    "./skill-builder": "./skill-builder.mjs"
   },
   "files": [
     "index.mjs",
@@ -18,29 +17,12 @@
     "curator.mjs",
     "skill-builder.mjs",
     "bootstrap.mjs",
-    "ohc-pruner.mjs",
-    "ohc-pruner-core.mjs",
     "lib/",
     "schemas/",
-    "harness/",
-    "dist/ohc-pruner-core.js",
-    "dist/ohc-pruner/**/*.js"
+    "harness/"
   ],
   "scripts": {
-    "build:ohc": "npx tsc -p tsconfig.json",
-    "build:ohc:watch": "npx tsc -p tsconfig.json --watch",
-    "prebuild:ohc": "node -e \"require('node:fs').mkdirSync('dist',{recursive:true})\""
-  },
-  "devDependencies": {
-    "typescript": "^5.9.3"
-  },
-  "peerDependencies": {
-    "@opencode-ai/plugin": ">=1.0.0"
-  },
-  "peerDependenciesMeta": {
-    "@opencode-ai/plugin": {
-      "optional": true
-    }
+    "test": "node --test"
   },
   "keywords": [
     "opencode",
@@ -60,7 +42,7 @@
   },
   "homepage": "https://github.com/nathwn12/opencode-openhermes#readme",
   "author": "nathwn12",
-  "dependencies": {
-    "version": "^0.0.1"
+  "devDependencies": {
+    "typescript": "^5.9.3"
   }
 }

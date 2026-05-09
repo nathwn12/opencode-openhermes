@@ -54,7 +54,7 @@ function beforeToolCall(toolName, args) {
 }
 ```
 
-### 3. DCP Compression Guard (Critical)
+### 3. Compression Guard (Critical)
 Before adding verification receipts to compress buffer:
 ```javascript
 function filterReceiptForCompression(receipt) {
@@ -112,7 +112,7 @@ function putMemoryObject(obj) {
 }
 ```
 
-### DCP Compress Event
+### Compress Event
 ```javascript
 // In OpenHermes's built-in dynamic-context-pruning plugin
 function onCompress() {
