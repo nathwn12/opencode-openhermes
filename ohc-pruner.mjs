@@ -3,6 +3,7 @@ import { join } from "node:path"
 import { homedir } from "node:os"
 
 const NAME = "ohc-pruner"
+const NUDGE_PREFIX = "\n\n[OpenHermes"
 
 const DEFAULTS = {
   enabled: true,
@@ -34,27 +35,37 @@ function loadConfig() {
   return merged
 }
 
+function isNudgeText(text) {
+  return typeof text === "string" && text.startsWith(NUDGE_PREFIX)
+}
+
 function estimateTokens(text) {
   if (typeof text !== "string") return 0
   return Math.ceil(text.length / 4)
 }
 
+function messageTokens(msg) {
+  let n = 0
+  if (!Array.isArray(msg?.parts)) return 0
+  for (const p of msg.parts) {
+    if (isNudgeText(p?.text)) continue
+    n += estimateTokens(p?.text || JSON.stringify(p))
+  }
+  return n + 4
+}
+
 function totalTokens(messages) {
   let n = 0
-  for (const msg of messages) {
-    if (msg?._ohc_nudge) continue
-    const raw = typeof msg?.content === "string"
-      ? msg.content
-      : Array.isArray(msg?.content) ? JSON.stringify(msg.content) : ""
-    n += estimateTokens(raw) + 4
-  }
+  for (const msg of messages) { n += messageTokens(msg) }
   return n
 }
 
 function sinceLastUser(messages) {
   let n = 0
   for (let i = messages.length - 1; i >= 0; i--) {
-    if (messages[i]?.role === "user" && !messages[i]?._ohc_nudge) break
+    const role = messages[i]?.info?.role
+    if (!role) { n++; continue }
+    if (role === "user") break
     n++
   }
   return n
@@ -62,8 +73,7 @@ function sinceLastUser(messages) {
 
 function isUserTurn(messages) {
   if (messages.length === 0) return false
-  const last = messages[messages.length - 1]
-  return last?.role === "user" && !last?._ohc_nudge
+  return messages[messages.length - 1]?.info?.role === "user"
 }
 
 function formatNudge(tokens, max, mode) {
@@ -71,9 +81,7 @@ function formatNudge(tokens, max, mode) {
   const urgency = pct > 140 ? "CRITICAL" : pct > 100 ? "HIGH" : pct > 70 ? "MODERATE" : "LOW"
 
   return [
-    mode === "strong"
-      ? `[OpenHermes — STRONG Compaction Required]`
-      : `[OpenHermes — Context Pressure: ${urgency}]`,
+    `[OpenHermes — ${mode === "strong" ? "STRONG Compaction Required" : `Context Pressure: ${urgency}`}]`,
     ``,
     `Token estimate: ~${tokens.toLocaleString()} (${pct}% of ${max.toLocaleString()} limit).`,
     mode === "strong"
@@ -90,15 +98,14 @@ function pruneDedup(messages) {
 
   for (let i = messages.length - 1; i >= 0; i--) {
     const msg = messages[i]
-    if (msg?._ohc_nudge) continue
-    if (msg?.role !== "assistant") continue
+    if (!msg || msg.info?.role !== "assistant") continue
+    if (!Array.isArray(msg.parts)) continue
 
-    const blocks = Array.isArray(msg.content) ? msg.content : []
-    for (const block of blocks) {
-      if (block?.type === "tool_use" && !block?.error) {
-        const key = `${block.name}::${JSON.stringify(block.input || {})}`
+    for (const p of msg.parts) {
+      if (p?.type === "tool_use" && !p.error) {
+        const key = `${p.name}::${JSON.stringify(p.input || {})}`
         if (seen.has(key)) {
-          block._deduped = true
+          p._deduped = true
         } else {
           seen.set(key, true)
         }
@@ -107,8 +114,8 @@ function pruneDedup(messages) {
   }
 
   for (const msg of messages) {
-    if (!Array.isArray(msg?.content)) continue
-    msg.content = msg.content.map(b => {
+    if (!Array.isArray(msg?.parts)) continue
+    msg.parts = msg.parts.map(b => {
       if (b?._deduped) {
         delete b._deduped
         return { type: "text", text: `[Content pruned: duplicate tool call — ${b.name}]` }
@@ -124,15 +131,14 @@ function pruneErrors(messages) {
 
   for (let i = messages.length - 1; i >= 0; i--) {
     const msg = messages[i]
-    if (msg?.role === "user" && !msg?._ohc_nudge) {
-      turnCount++
-    }
+    if (!msg || !msg.info?.role) continue
+    if (msg.info.role === "user") turnCount++
     if (turnCount <= TURNS) continue
-    if (!Array.isArray(msg?.content)) continue
+    if (!Array.isArray(msg.parts)) continue
 
-    for (const block of msg.content) {
-      if (block?.type === "tool_use" && block?.error) {
-        block.input = "[stripped — errored tool >4 turns old]"
+    for (const p of msg.parts) {
+      if (p?.type === "tool_use" && p.error) {
+        p.input = "[stripped — errored tool >4 turns old]"
       }
     }
   }
@@ -154,16 +160,14 @@ export async function OHCPrunerPlugin() {
       const limit = input?.model?.limit?.context || _config.maxContext
 
       output.system = output.system || []
-      output.system.push({
-        type: "text",
-        text: [
-          `## OpenHermes Context Pruning (${NAME})`,
-          `- Mode: ${_config.mode}. Window: ${limit.toLocaleString()} tokens. Soft limits: ${_config.minContext.toLocaleString()} / ${_config.maxContext.toLocaleString()}.`,
-          `- When context-pressure messages appear, call the \`compress\` tool.`,
-          `- Use range mode: \`startId\` + \`endId\` + a comprehensive technical summary.`,
-          `- Target: closed topics, stale tool outputs, dead-end exploration. Never compress active work.`,
-        ].join("\n")
-      })
+      output.system[output.system.length - 1] += [
+        ``,
+        `## OpenHermes Context Pruning (${NAME})`,
+        `- Mode: ${_config.mode}. Window: ${limit.toLocaleString()} tokens. Soft limits: ${_config.minContext.toLocaleString()} / ${_config.maxContext.toLocaleString()}.`,
+        `- When context-pressure messages appear, call the \`compress\` tool.`,
+        `- Use range mode: \`startId\` + \`endId\` + a comprehensive technical summary.`,
+        `- Target: closed topics, stale tool outputs, dead-end exploration. Never compress active work.`,
+      ].join("\n")
     },
 
     "experimental.chat.messages.transform": async (input, output) => {
@@ -193,11 +197,16 @@ export async function OHCPrunerPlugin() {
       }
 
       if (shouldNudge) {
-        messages.push({
-          role: "user",
-          content: formatNudge(tokens, maxContext, mode),
-          _ohc_nudge: true
-        })
+        const nudgeText = NUDGE_PREFIX + formatNudge(tokens, maxContext, mode).substring("[OpenHermes".length)
+
+        for (let i = messages.length - 1; i >= 0; i--) {
+          const msg = messages[i]
+          if (msg?.info?.role === "user" && Array.isArray(msg.parts)) {
+            if (msg.parts.some(p => isNudgeText(p?.text))) break
+            msg.parts.push({ type: "text", text: nudgeText })
+            break
+          }
+        }
       }
     }
   }
