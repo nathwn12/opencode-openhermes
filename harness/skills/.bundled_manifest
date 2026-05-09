@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "description": "Bundled skills shipped with openhermes. These are never subject to curator mutation, archive, or deletion.",
+  "skills": [
+    { "name": "api-design", "bundled": true, "created_by": "openhermes" },
+    { "name": "backend-patterns", "bundled": true, "created_by": "openhermes" },
+    { "name": "coding-standards", "bundled": true, "created_by": "openhermes" },
+    { "name": "e2e-testing", "bundled": true, "created_by": "openhermes" },
+    { "name": "frontend-patterns", "bundled": true, "created_by": "openhermes" },
+    { "name": "frontend-slides", "bundled": true, "created_by": "openhermes" },
+    { "name": "security-review", "bundled": true, "created_by": "openhermes" },
+    { "name": "strategic-compact", "bundled": true, "created_by": "openhermes" },
+    { "name": "tdd-workflow", "bundled": true, "created_by": "openhermes" },
+    { "name": "verification-loop", "bundled": true, "created_by": "openhermes" }
+  ],
+  "updated_at": "2026-05-08T00:00:00Z"
+}

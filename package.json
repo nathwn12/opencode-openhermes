@@ -16,8 +16,10 @@
     "autorecall.mjs",
     "curator.mjs",
     "skill-builder.mjs",
+    "bootstrap.mjs",
     "lib/",
-    "schemas/"
+    "schemas/",
+    "harness/"
   ],
   "peerDependencies": {
     "@opencode-ai/plugin": ">=1.0.0"
