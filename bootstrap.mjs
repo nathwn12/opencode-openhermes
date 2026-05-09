@@ -54,7 +54,7 @@ Snapshot before mutation. Never delete unrelated files. Never assume \`%USERPROF
 | **MCP: openhermes-memory** | \`hm_put\`, \`hm_get\`, \`hm_list\`, \`hm_latest\`, \`hm_search\` |
 | **Memory recall cache** | \`openhermes/memory/recall/cache.json\` — read on session start, no MCP round-trip |
 | **Subagents** | \`explore\` (read-only), \`general\` (multi-step), \`architect\`, \`planner\`, \`build-error-resolver\`, \`code-reviewer\`, \`security-reviewer\`, \`e2e-runner\` |
-| **Plugins** | \`curator\` (checkpoints, mistakes, audit, compaction), \`autorecall\` (recall cache on \`session.created\`), \`skill-builder\` (complex session detection), \`opencode-dcp\` (context pressure at 5 iterations) |
+| **Plugins** | \`curator\` (checkpoints, mistakes, audit, compaction), \`autorecall\` (recall cache on \`session.created\`), \`skill-builder\` (complex session detection), \`ohc-pruner\` (OpenHermes-wired, built-in port of \`Opencode-DCP/opencode-dynamic-context-pruning\`; context pressure at 5 iterations) |
 
 ## Skills (available via \`skill\` tool)
 
@@ -103,7 +103,7 @@ Full tiers: \`${RULES_DIR}\\\\self-heal.md\`.
 
 - Checkpoint on meaningful boundaries. Compress closed segments immediately.
 - After subagent return: verify → compress that block.
-- DCP nudges at 5 iterations — compress proactively.
+- OHC nudges at 5 iterations — compress proactively.
 - Skill candidates → \`/learn\` only if repeated pattern + \`hm_search\` confirms no dup. See \`${RULES_DIR}\\\\skills-management.md\`.
 - Audit triggers: openhermes/config change, repeated failures, session start when last audit >7 days. See \`${RULES_DIR}\\\\audit.md\`.
 

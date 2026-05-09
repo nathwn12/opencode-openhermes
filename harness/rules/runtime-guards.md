@@ -114,7 +114,7 @@ function putMemoryObject(obj) {
 
 ### DCP Compress Event
 ```javascript
-// In opencode-dcp plugin
+// In OpenHermes's built-in dynamic-context-pruning plugin
 function onCompress() {
   const compressBuffer = buildSummary()
   // Filter out stale artifacts before adding to buffer

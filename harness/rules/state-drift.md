@@ -61,7 +61,7 @@ function detectHashDrift(compressedSummary, lastFingerprint) {
 
 ### DCP Compress Event (Primary Guard)
 ```javascript
-// In opencode-dcp plugin
+// In OpenHermes's built-in dynamic-context-pruning plugin
 function onCompress() {
   // Generate fresh fingerprint before compressing
   const currentFp = generateEnvironmentFingerprint()
