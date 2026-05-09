@@ -30,7 +30,11 @@
   "keywords": ["opencode", "opencode-plugin", "openhermes", "checkpoint", "curation", "memory", "skills"],
   "repository": {
     "type": "git",
-    "url": "https://github.com/nathan/opencode-openhermes"
+    "url": "git+https://github.com/nathwn12/opencode-openhermes.git"
   },
-  "author": "Nathan"
+  "bugs": {
+    "url": "https://github.com/nathwn12/opencode-openhermes/issues"
+  },
+  "homepage": "https://github.com/nathwn12/opencode-openhermes#readme",
+  "author": "nathwn12"
 }
