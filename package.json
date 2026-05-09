@@ -1,0 +1,36 @@
+{
+  "name": "openhermes-opencode",
+  "version": "1.0.0",
+  "description": "OpenHermes plugin suite for OpenCode — autonomous checkpointing, memory recall, skill-candidate detection, and runtime curation.",
+  "type": "module",
+  "license": "MIT",
+  "main": "./index.mjs",
+  "exports": {
+    ".": "./index.mjs",
+    "./autorecall": "./autorecall.mjs",
+    "./curator": "./curator.mjs",
+    "./skill-builder": "./skill-builder.mjs"
+  },
+  "files": [
+    "index.mjs",
+    "autorecall.mjs",
+    "curator.mjs",
+    "skill-builder.mjs",
+    "lib/",
+    "schemas/"
+  ],
+  "peerDependencies": {
+    "@opencode-ai/plugin": ">=1.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@opencode-ai/plugin": {
+      "optional": true
+    }
+  },
+  "keywords": ["opencode", "opencode-plugin", "openhermes", "checkpoint", "curation", "memory", "skills"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nathan/opencode-openhermes"
+  },
+  "author": "Nathan"
+}

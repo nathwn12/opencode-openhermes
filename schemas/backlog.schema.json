@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Backlog Item",
+  "description": "Evidence-backed self-improvement item for openhermes or project maintenance.",
+  "type": "object",
+  "required": ["id", "class", "summary", "title", "priority", "trigger", "provenance", "created_at", "status"],
+  "properties": {
+    "id": { "type": "string", "description": "Unique identifier, recommended pattern: backlog-YYYYMMDD-short-slug" },
+    "class": { "type": "string", "const": "backlog" },
+    "project": { "type": ["string", "null"], "description": "Project identifier; null for openhermes scope" },
+    "scope": { "type": "string", "enum": ["project", "global", "session", "harness"], "description": "Scope of applicability" },
+    "summary": { "type": "string", "description": "One-line description of the backlog item" },
+    "tags": { "type": "array", "items": { "type": "string" }, "description": "Searchable tags" },
+    "source": { "type": "string", "enum": ["user", "agent", "audit", "migration", "repair"], "description": "Origin of this record" },
+    "provenance": {
+      "type": "object",
+      "required": ["session_id"],
+      "properties": {
+        "session_id": { "type": "string" },
+        "task_id": { "type": "string" },
+        "db_refs": { "type": "array", "items": { "type": "string" } },
+        "file_refs": { "type": "array", "items": { "type": "string" } },
+        "log_refs": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "created_at": { "type": "string", "format": "date-time", "description": "ISO-8601 timestamp" },
+    "updated_at": { "type": "string", "format": "date-time", "description": "ISO-8601 timestamp" },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.8 },
+    "signal": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
+    "visibility": { "type": "string", "enum": ["implicit", "selective", "explicit"] },
+    "status": { "type": "string", "enum": ["active", "superseded", "archived", "closed", "open"] },
+    "refs": { "type": "array", "items": { "type": "string" }, "description": "Related object IDs or file paths" },
+    "review_at": { "type": ["string", "null"], "format": "date-time", "description": "ISO-8601 or null" },
+    "decay_at": { "type": ["string", "null"], "format": "date-time", "description": "ISO-8601 or null" },
+    "archived_at": { "type": ["string", "null"], "format": "date-time", "description": "ISO-8601 or null" },
+    "title": { "type": "string", "description": "Human-readable title for this backlog item" },
+    "priority": { "type": "string", "enum": ["low", "medium", "high", "critical", "P0", "P1", "P2", "P3", "P4"], "description": "Priority level (low/medium/high/critical or P0-P4)" },
+    "trigger": { "type": "string", "enum": ["audit", "mistake", "drift", "user", "manual"], "description": "What triggered creation of this item" },
+    "evidence_refs": { "type": "array", "items": { "type": "string" }, "description": "References to evidence (audit IDs, mistake IDs, file paths)" },
+    "done_when": { "type": "array", "items": { "type": "string" }, "description": "Acceptance criteria — concrete conditions for closure" }
+  }
+}
