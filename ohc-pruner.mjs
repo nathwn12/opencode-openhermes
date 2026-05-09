@@ -80,15 +80,17 @@ function formatNudge(tokens, max, mode) {
   const pct = Math.round((tokens / max) * 100)
   const urgency = pct > 140 ? "CRITICAL" : pct > 100 ? "HIGH" : pct > 70 ? "MODERATE" : "LOW"
 
+  const over = pct > 100
+  const action = mode === "strong" || over
+    ? `Run \`compress\` NOW on the oldest closed topic segments. Do not proceed without compacting.`
+    : `Consider running \`compress\` on closed, stale, or dead-end conversation segments.`
+
   return [
     `[OpenHermes — ${mode === "strong" ? "STRONG Compaction Required" : `Context Pressure: ${urgency}`}]`,
     ``,
-    `Token estimate: ~${tokens.toLocaleString()} (${pct}% of ${max.toLocaleString()} limit).`,
-    mode === "strong"
-      ? `Strong mode active. Run \`compress\` before any substantive response.`
-      : `Run \`compress\` on closed, stale, or dead-end conversation segments when convenient.`,
+    `Token estimate: ~${tokens.toLocaleString()} (${pct}% of ${max.toLocaleString()} limit).${over ? " WINDOW EXCEEDED." : ""}`,
+    action,
     `Use range mode: \`startId\` + \`endId\` + comprehensive summary.`,
-    `Prefer: oldest closed topics, large tool outputs, exhausted exploration branches.`,
     `After compaction, summaries are your authoritative reference. Resume normally.`,
   ].join("\n")
 }
@@ -160,14 +162,18 @@ export async function OHCPrunerPlugin() {
       const limit = input?.model?.limit?.context || _config.maxContext
 
       output.system = output.system || []
-      output.system[output.system.length - 1] += [
-        ``,
+      const instruction = [
         `## OpenHermes Context Pruning (${NAME})`,
         `- Mode: ${_config.mode}. Window: ${limit.toLocaleString()} tokens. Soft limits: ${_config.minContext.toLocaleString()} / ${_config.maxContext.toLocaleString()}.`,
-        `- When context-pressure messages appear, call the \`compress\` tool.`,
+        `- When context-pressure messages appear, call the \`compress\` tool immediately.`,
         `- Use range mode: \`startId\` + \`endId\` + a comprehensive technical summary.`,
-        `- Target: closed topics, stale tool outputs, dead-end exploration. Never compress active work.`,
+        `- Target: oldest closed topics, large tool outputs, dead-end exploration. Never compress active work.`,
       ].join("\n")
+      if (output.system.length > 0) {
+        output.system[output.system.length - 1] += "\n\n" + instruction
+      } else {
+        output.system.push(instruction)
+      }
     },
 
     "experimental.chat.messages.transform": async (input, output) => {
