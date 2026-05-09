@@ -1,6 +1,6 @@
 {
   "name": "openhermes-opencode",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "OpenHermes plugin suite for OpenCode — autonomous checkpointing, memory recall, skill-candidate detection, and runtime curation.",
   "type": "module",
   "license": "MIT",
@@ -27,7 +27,15 @@
       "optional": true
     }
   },
-  "keywords": ["opencode", "opencode-plugin", "openhermes", "checkpoint", "curation", "memory", "skills"],
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "openhermes",
+    "checkpoint",
+    "curation",
+    "memory",
+    "skills"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nathwn12/opencode-openhermes.git"
