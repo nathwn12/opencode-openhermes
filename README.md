@@ -22,7 +22,7 @@ npm i openhermes-opencode
 
 > &#9764; **Inspired by [Hermes Agent](https://github.com/NousResearch/hermes-agent)** — Nous Research's self-improving agent that brought closed learning loops, skill creation, and cross-session memory to the agent ecosystem. OpenHermes reimagines that vision **native to the OpenCode platform**: zero dependencies, no sidecars, no installers. Your entire agent OS in a single npm package.
 >
-> **Pruning inspiration**: The autonomous context-pressure system is heavily inspired by [Opencode-DCP (Dynamic Context Pruning)](https://github.com/Opencode-DCP/opencode-dynamic-context-pruning). The curator plugin's compaction-trigger logic and recall-cache freshness model are direct ports of DCP's approach, adapted to run inside OpenHermes with zero external dependencies.
+> **Pruning inspiration**: The autonomous context-pressure system is heavily inspired by [Opencode-DCP (Dynamic Context Pruning)](https://github.com/Opencode-DCP/opencode-dynamic-context-pruning). The curator plugin's compaction-trigger logic and recall-cache freshness model are direct ports of DCP's approach, adapted to run inside OpenHermes with no sidecars or installers.
 
 ---
 
@@ -239,7 +239,7 @@ openhermes-opencode/
 └── package.json
 ```
 
-**Zero external npm dependencies.** Every import is a Node.js built-in or a relative path. No `node_modules/` bloat. No postinstall scripts. No native compilation.
+**Minimal npm dependency footprint.** Tool definitions use OpenCode's tiny `@opencode-ai/plugin` SDK. No postinstall scripts. No native compilation.
 
 ---
 
