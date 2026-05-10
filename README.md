@@ -12,7 +12,7 @@
 
 ---
 
-**Your OpenCode agent, leveled up.** Add it to your plugins — your agent gains a personality, a memory, a conscience, 7 specialist subagents, 7 slash commands, an MCP memory server, 10 procedural skills, and the discipline to self-improve.
+**Your OpenCode agent, leveled up.** Add it to your plugins — your agent gains a personality, a memory, a conscience, 7 specialist subagents, 7 slash commands, 5 native memory tools, 10 procedural skills, and the discipline to self-improve.
 
 ```bash
 npm i openhermes-opencode
@@ -57,22 +57,22 @@ That's it. **No other config needed.** The plugin auto-registers:
 |------|---------|
 | **7 subagents** | `architect`, `planner`, `code-reviewer`, `security-reviewer`, `build-error-resolver`, `e2e-runner`, `explore` |
 | **7 slash commands** | `/plan`, `/build-fix`, `/code-review`, `/security`, `/doctor`, `/memory-search`, `/learn` |
-| **MCP memory server** | `openhermes-memory` — 5 tools: `hm_put`, `hm_get`, `hm_list`, `hm_latest`, `hm_search` |
+| **5 native memory tools** | `hm_put`, `hm_get`, `hm_list`, `hm_latest`, `hm_search` — in-process, no MCP server needed |
 | **10 procedural skills** | API design, backend patterns, coding standards, E2E testing, frontend patterns, frontend slides, security review, strategic compaction, TDD workflow, verification loop |
-| **4 lifecycle plugins** | bootstrap, curator, autorecall, skill-builder |
+| **5 lifecycle plugins** | bootstrap, curator, autorecall, skill-builder, memory-tools |
 
 You only need to define primary agents (like `build` or `OpenHermes`) in `opencode.json` — subagents are injected automatically.
 
 <details>
 <summary><b>What happens on your next session</b></summary>
 
-1. **Config hook** — BootstrapPlugin registers all auto-config: MCP server, 7 subagents, 7 commands, 10 skill dirs.
+1. **Config hook** — BootstrapPlugin registers auto-config: 7 subagents, 7 commands, 10 skill dirs.
 2. **Chat transform hook** — ~12KB of context injected into the first user message:
    - &#9733; **Constitution** (soul.md) — 11 immutable principles
    - &#9733; **Runtime** (RUNTIME.md) — gather → delegate → verify → compress
    - &#9733; **Router** (AGENTS.md) — delegation table, memory policy, escalation, with absolute paths to every rule
 3. **Session created** — AutorecallPlugin builds recall cache from prior session memory
-4. **Tools execute** — SkillBuilderPlugin watches tool calls and subagent spawns; MCP tools available immediately
+4. **Tools execute** — SkillBuilderPlugin watches tool calls and subagent spawns; MemoryToolsPlugin provides 5 native tools immediately
 5. **Session idle** — CuratorPlugin snapshots checkpoint + verification receipt
 6. **Session error** — CuratorPlugin logs mistake with root cause + prevention rule
 7. **Compaction** — CuratorPlugin force-writes pre-compaction checkpoint, injects state into buffer
@@ -81,28 +81,14 @@ The LLM reads rules on demand via the injected paths. Memory directories auto-cr
 
 </details>
 
-### MCP Memory (optional manual config)
-
-The plugin auto-registers the MCP server. If you need to override the path:
-
-```json
-{
-  "mcp": {
-    "openhermes-memory": {
-      "command": ["cmd.exe", "/d", "/c", "node_modules\\openhermes-opencode\\lib\\hm-mcp-wrapper.cmd"],
-      "type": "local"
-    }
-  }
-}
-```
-
 ---
 
-## The Four Plugins
+## The Five Plugins
 
 | Plugin | Triggers On | What It Does |
 |--------|------------|--------------|
-| **BootstrapPlugin** | `config`, `chat.transform` | Registers MCP server, 7 subagents, 7 commands, 10 skill paths. Injects constitution + router + runtime into every session. |
+| **BootstrapPlugin** | `config`, `chat.transform` | Registers 7 subagents, 7 commands, 10 skill paths. Injects constitution + router + runtime. |
+| **MemoryToolsPlugin** | — | Registers 5 native tools: `hm_put`, `hm_get`, `hm_list`, `hm_latest`, `hm_search`. Runs in-process — no MCP server needed. |
 | **CuratorPlugin** | `session.idle`, `.compacted`, `.error`, `.compacting`, `permission.replied` | Writes checkpoints, logs mistakes, records audits, injects state into compaction. |
 | **AutorecallPlugin** | `session.created` | Loads memory from disk, builds session recall cache. |
 | **SkillBuilderPlugin** | `session.idle`, `.created`, `tool.execute.after` | Detects complex sessions (8+ tool calls or 2+ subagent spawns) → creates skill-candidate backlogs. |
@@ -239,16 +225,15 @@ No self-termination. No grandstanding. Narrow, log, recover, improve.
 
 ```
 openhermes-opencode/
-├── index.mjs                 # Re-exports all plugins
-├── bootstrap.mjs             # Config hook (MCP/server/skills) + chat.transform hook
+├── index.mjs                 # Re-exports all 5 plugins
+├── bootstrap.mjs             # Config hook (agents/commands/skills) + chat.transform
 ├── autorecall.mjs            # Recall cache builder
 ├── curator.mjs               # Lifecycle hooks engine (~470 lines)
 ├── skill-builder.mjs         # Complexity detection engine
 ├── lib/
-│   ├── hm-mcp-server.mjs     # MCP stdio server (5 tools)
-│   ├── hm-mcp-wrapper.cmd    # Windows batch wrapper for MCP server
-│   ├── hardening.mjs         # atomicWriteJson, fingerprint, sanitize, redact
-│   └── schema-validator.mjs  # Draft-07 subset validator
+│   ├── memory-tools-plugin.mjs  # 5 native memory tools (hm_put/get/list/latest/search)
+│   ├── hardening.mjs            # atomicWriteJson, fingerprint, sanitize, redact
+│   └── schema-validator.mjs     # Draft-07 subset validator
 ├── schemas/                  # 9 JSON schemas for memory validation
 ├── harness/                  # Full framework (44 files)
 └── package.json
@@ -272,7 +257,7 @@ openhermes-opencode/
 | **Platform** | Standalone agent with custom TUI, multi-platform gateway, cron scheduler | OpenCode-native plugin — runs *inside* your existing setup |
 | **Installation** | `curl | bash` + Python 3.11 + uv + Docker (optional) + PostgreSQL (optional) | `npm i` — that's it |
 | **Infrastructure** | Sidecar processes, gateway daemon, FTS5 database, Honcho user modeling | Zero sidecars — everything is a plugin hook |
-| **Memory** | Honcho dialectic user profiles + skills system | Schema-validated 9-class memory + MCP-backed retrieval |
+| **Memory** | Honcho dialectic user profiles + skills system | Schema-validated 9-class memory + in-process native tools |
 | **Skills** | Agentskills.io standard, self-created + improving | SKILL.md progressive disclosure, skill-builder auto-detection |
 | **Context** | Context files + session search with LLM summarization | Harness injection at session start, recall cache at compaction |
 | **Philosophy** | "The self-improving agent" — feature-rich, platform-expansive | "The constitutional router" — discipline-first, precision-only |

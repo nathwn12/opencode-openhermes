@@ -135,19 +135,6 @@ export const BootstrapPlugin = async ({ client, directory }) => {
         config.skills.paths.push(SKILLS_DIR)
       }
 
-      config.mcp = config.mcp || {}
-      if (!config.mcp["openhermes-memory"]) {
-        config.mcp["openhermes-memory"] = {
-          command: [
-            process.env.ComSpec || "cmd.exe",
-            "/d",
-            "/c",
-            path.join(__dirname, "lib", "hm-mcp-wrapper.cmd")
-          ],
-          type: "local"
-        }
-      }
-
       config.agent = config.agent || {}
       const PROMPTS_DIR = path.join(HARNESS_DIR, "prompts")
       const p = (name) => `{file:${path.join(PROMPTS_DIR, name)}}`
