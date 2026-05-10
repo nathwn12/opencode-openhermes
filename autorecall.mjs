@@ -80,15 +80,15 @@ async function loadMemoryAndWriteCache(projectKey, directory) {
   const SENTINEL = path.join(getDataRoot(), ".migrated-from-v1")
   if (!fs.existsSync(SENTINEL)) {
     const oldMemory = path.join(OLD_BASE, "memory")
+    const oldCache = path.join(oldMemory, "recall")
     if (fs.existsSync(oldMemory)) {
       fs.cpSync(oldMemory, getMemoryRoot(), { recursive: true })
+      if (fs.existsSync(oldCache)) {
+        fs.mkdirSync(getRecallRoot(), { recursive: true })
+        const files = fs.readdirSync(oldCache).filter(f => f.endsWith(".json"))
+        for (const f of files) fs.cpSync(path.join(oldCache, f), path.join(getRecallRoot(), f))
+      }
       fs.rmSync(oldMemory, { recursive: true, force: true })
-    }
-    const oldCache = path.join(OLD_BASE, "memory", "recall")
-    if (fs.existsSync(oldCache)) {
-      fs.mkdirSync(getRecallRoot(), { recursive: true })
-      const files = fs.readdirSync(oldCache).filter(f => f.endsWith(".json"))
-      for (const f of files) fs.cpSync(path.join(oldCache, f), path.join(getRecallRoot(), f))
     }
     const oldRuntime = path.join(OLD_BASE, "runtime")
     if (fs.existsSync(oldRuntime)) {
@@ -99,6 +99,7 @@ async function loadMemoryAndWriteCache(projectKey, directory) {
     if (fs.existsSync(oldArchive)) {
       fs.rmSync(oldArchive, { recursive: true, force: true })
     }
+    fs.mkdirSync(path.dirname(SENTINEL), { recursive: true })
     fs.writeFileSync(SENTINEL, new Date().toISOString(), "utf8")
   }
 

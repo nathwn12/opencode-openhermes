@@ -400,8 +400,14 @@ export const CuratorPlugin = async ({ project, directory }) => {
       const SENTINEL = path.join(getDataRoot(), ".migrated-from-v1")
       if (!fs.existsSync(SENTINEL)) {
         const oldMemory = path.join(OLD_BASE, "memory")
+        const oldCache = path.join(oldMemory, "recall")
         if (fs.existsSync(oldMemory)) {
           fs.cpSync(oldMemory, getMemoryRoot(), { recursive: true })
+          if (fs.existsSync(oldCache)) {
+            fs.mkdirSync(getRecallRoot(), { recursive: true })
+            const files = fs.readdirSync(oldCache).filter(f => f.endsWith(".json"))
+            for (const f of files) fs.cpSync(path.join(oldCache, f), path.join(getRecallRoot(), f))
+          }
           fs.rmSync(oldMemory, { recursive: true, force: true })
         }
         const oldRuntime = path.join(OLD_BASE, "runtime")
@@ -413,7 +419,12 @@ export const CuratorPlugin = async ({ project, directory }) => {
         if (fs.existsSync(oldArchive)) {
           fs.rmSync(oldArchive, { recursive: true, force: true })
         }
+        fs.mkdirSync(path.dirname(SENTINEL), { recursive: true })
         fs.writeFileSync(SENTINEL, new Date().toISOString(), "utf8")
+      }
+      if (event.type === "session.created") {
+        lastCheckpoint.ts = 0
+        writtenThisSession.length = 0
       }
       if (event.type === "session.idle") {
         await handleSessionIdle(directory, project)
