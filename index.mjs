@@ -24,8 +24,7 @@ export default async (input) => {
 
   const merged = {}
 
-  const configHandler = chain(bootstrap.config, ohc.config)
-  if (configHandler) merged.config = configHandler
+  if (bootstrap.config) merged.config = bootstrap.config
 
   const toolHandlers = { ...memoryTools.tool, ...ohc.tool }
   if (Object.keys(toolHandlers).length) merged.tool = toolHandlers

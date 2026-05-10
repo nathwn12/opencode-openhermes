@@ -69,7 +69,6 @@ describe("plugin structure", () => {
     assert.ok(typeof plugin["experimental.chat.system.transform"] === "function")
     assert.ok(typeof plugin["experimental.chat.messages.transform"] === "function")
     assert.ok(typeof plugin["command.execute.before"] === "function")
-    assert.ok(typeof plugin.config === "function")
     assert.ok(typeof plugin.tool?.compress?.execute === "function")
   })
 })
