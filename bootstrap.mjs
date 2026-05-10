@@ -33,7 +33,7 @@ Snapshot before mutation. Never delete unrelated files. Never assume \`%USERPROF
 | Category | Items |
 |----------|-------|
 | **Native tools** | \`read\`, \`write\`, \`edit\`, \`glob\`, \`grep\`, \`bash\`, \`task\`, \`webfetch\`, \`skill\`, \`todowrite\`, \`todoread\` |
-| **In-process tools** | \`hm_put\`, \`hm_get\`, \`hm_list\`, \`hm_latest\`, \`hm_search\`, \`hm_checkpoint\` |
+| **In-process tools** | \`hm_put\`, \`hm_get\`, \`hm_list\`, \`hm_latest\`, \`hm_search\` |
 | **Memory recall cache** | \`openhermes/memory/recall/cache.json\` — read on session start, no MCP round-trip |
 | **Subagents** | \`explore\` (read-only), \`general\` (multi-step), \`architect\`, \`planner\`, \`build-error-resolver\`, \`code-reviewer\`, \`security-reviewer\`, \`e2e-runner\` |
 | **Plugins** | \`curator\` (checkpoints, mistakes, audit, compaction), \`autorecall\` (recall cache on \`session.created\`), \`skill-builder\` (complex session detection) |
@@ -63,7 +63,6 @@ Never delegate trivial single-step ops. Subagent returns diff + summary + verifi
 ## Memory — Gated & Precision-First
 
 - **Start**: Read recall cache first. If stale/missing → \`hm_latest\` for relevant classes.
-- **Checkpoint writes**: Prefer \`hm_checkpoint\` for normal checkpoint saves. Use \`hm_put\` for low-level or non-checkpoint memory surgery.
 - **Before work**: Narrow \`hm_search\` by class, scope, keywords. Never read full indexes.
 - **Before close**: Query same-type mistakes (7 days). Match → \`code-reviewer\` or \`security-reviewer\`.
 - **On failure**: \`hm_search\` for similar incidents. Search memory before asking user.

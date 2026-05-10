@@ -12,7 +12,7 @@
 
 ---
 
-**Your OpenCode agent, leveled up.** Add it to your plugins and your agent gains a personality, a memory, a conscience, 7 specialist subagents, 7 slash commands, 6 native memory tools, 10 procedural skills, autonomous checkpointing, and the discipline to self-improve.
+**Your OpenCode agent, leveled up.** Add it to your plugins and your agent gains a personality, a memory, a conscience, 7 specialist subagents, 7 slash commands, 5 native memory tools, 10 procedural skills, autonomous checkpointing, and the discipline to self-improve.
 
 ```bash
 npm i openhermes
@@ -71,7 +71,7 @@ Either way, **no other config needed.** The plugin auto-registers:
 |------|---------|
 | **7 subagents** | `architect`, `planner`, `code-reviewer`, `security-reviewer`, `build-error-resolver`, `e2e-runner`, `explore` |
 | **7 slash commands** | `/plan`, `/build-fix`, `/code-review`, `/security`, `/doctor`, `/memory-search`, `/learn` |
-| **6 native memory tools** | `hm_put`, `hm_get`, `hm_list`, `hm_latest`, `hm_search`, `hm_checkpoint` — in-process, no MCP server needed |
+| **5 native memory tools** | `hm_put`, `hm_get`, `hm_list`, `hm_latest`, `hm_search` — in-process, no MCP server needed |
 | **10 procedural skills** | API design, backend patterns, coding standards, E2E testing, frontend patterns, frontend slides, security review, strategic compaction, TDD workflow, verification loop |
 | **5 lifecycle plugins** | bootstrap, curator, autorecall, skill-builder, memory-tools |
 
@@ -86,7 +86,7 @@ You only need to define primary agents (like `build` or `OpenHermes`) in `openco
    - &#9733; **Runtime** (`RUNTIME.md`) — gather → delegate → verify → compress
    - &#9733; **Router** (`AGENTS.md`) — delegation table, memory policy, escalation, and rule paths
 3. **Session created** — AutorecallPlugin builds recall cache from prior session memory.
-4. **Tools execute** — SkillBuilderPlugin watches tool calls and subagent spawns; MemoryToolsPlugin provides 6 native tools immediately, including `hm_checkpoint` for compact checkpoint saves.
+4. **Tools execute** — SkillBuilderPlugin watches tool calls and subagent spawns; MemoryToolsPlugin provides 5 native tools immediately.
 5. **Session idle** — CuratorPlugin snapshots checkpoint + verification receipt.
 6. **Session error** — CuratorPlugin logs mistake with root cause + prevention rule.
 7. **Compaction** — CuratorPlugin force-writes a pre-compaction checkpoint and injects state into the compaction buffer.
@@ -102,7 +102,7 @@ The LLM reads rules on demand via the injected paths. Memory directories auto-cr
 | Plugin | Triggers On | What It Does |
 |--------|------------|--------------|
 | **BootstrapPlugin** | `config`, `chat.transform` | Registers 7 subagents, 7 commands, 10 skill paths. Injects constitution + router + runtime. |
-| **MemoryToolsPlugin** | — | Registers 6 native tools: `hm_put`, `hm_get`, `hm_list`, `hm_latest`, `hm_search`, `hm_checkpoint`. Runs in-process — no MCP server needed. |
+| **MemoryToolsPlugin** | — | Registers 5 native tools: `hm_put`, `hm_get`, `hm_list`, `hm_latest`, `hm_search`. Runs in-process — no MCP server needed. |
 | **CuratorPlugin** | `session.idle`, `.compacted`, `.error`, `.compacting`, `permission.replied` | Writes checkpoints, logs mistakes, records audits, injects state into compaction. |
 | **AutorecallPlugin** | `session.created` | Loads memory from disk, builds session recall cache. |
 | **SkillBuilderPlugin** | `session.idle`, `.created`, `tool.execute.after` | Detects complex sessions (8+ tool calls or 2+ subagent spawns) and creates skill-candidate backlogs. |
@@ -239,7 +239,7 @@ openhermes/
 ├── curator.mjs                  # Lifecycle hooks engine
 ├── skill-builder.mjs            # Complexity detection engine
 ├── lib/
-│   ├── memory-tools-plugin.mjs  # 6 native memory tools (hm_put/get/list/latest/search/checkpoint)
+│   ├── memory-tools-plugin.mjs  # 5 native memory tools (hm_put/get/list/latest/search)
 │   ├── hardening.mjs            # atomicWriteJson, fingerprint, sanitize, redact
 │   └── schema-validator.mjs     # Draft-07 subset validator
 ├── schemas/                     # Memory schemas for validation
