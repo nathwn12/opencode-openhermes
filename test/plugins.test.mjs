@@ -26,6 +26,18 @@ describe("plugin exports", () => {
     const mod = await import("../bootstrap.mjs")
     assert.ok(typeof mod.BootstrapPlugin === "function")
   })
+
+  it("lib/ohc/pruner.mjs exports OhcPlugin", async () => {
+    const mod = await import("../lib/ohc/pruner.mjs")
+    assert.ok(typeof mod.OhcPlugin === "function")
+  })
+
+  it("lib/ohc/config.mjs loads config", async () => {
+    const { loadConfig } = await import("../lib/ohc/config.mjs")
+    const cfg = loadConfig()
+    assert.ok(typeof cfg.enabled === "boolean")
+    assert.ok(typeof cfg.min === "number")
+  })
 })
 
 describe("plugin structure", () => {
@@ -51,6 +63,11 @@ describe("plugin structure", () => {
     assert.ok(typeof plugin.config === "function")
     assert.ok(typeof plugin["experimental.chat.messages.transform"] === "function")
   })
+
+  it("OhcPlugin returns messages.transform hook when enabled", async () => {
+    const plugin = await OhcPlugin({})
+    assert.ok(typeof plugin["experimental.chat.messages.transform"] === "function")
+  })
 })
 
 async function AutorecallPlugin(ctx) {
@@ -68,4 +85,8 @@ async function CuratorPlugin(ctx) {
 async function BootstrapPlugin(ctx) {
   const mod = await import("../bootstrap.mjs")
   return mod.BootstrapPlugin(ctx)
+}
+async function OhcPlugin(ctx) {
+  const mod = await import("../lib/ohc/pruner.mjs")
+  return mod.OhcPlugin(ctx)
 }

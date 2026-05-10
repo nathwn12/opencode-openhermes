@@ -36,6 +36,7 @@ npm i openhermes
 <tr><td><b>&#128293; Autonomous Checkpointing</b></td><td>Pre-compaction snapshots capture mission, current state, next actions, blockers, and risk notes so compaction never loses the plot.</td></tr>
 <tr><td><b>&#128260; Closed Learning Loop</b></td><td>Mistakes are logged with root cause + prevention rule. Complex sessions auto-generate skill-candidate backlogs. Strike tracking escalates repeat failures. The agent gets better — you don't have to teach it twice.</td></tr>
 <tr><td><b>&#128736; 10 Bundled Procedural Skills</b></td><td>Pre-built skills for API design, backend patterns, coding standards, E2E testing, frontend patterns, frontend slides, security reviews, strategic compaction, TDD workflow, and verification loops. Discovered automatically — use <code>skill</code> to list and load.</td></tr>
+<tr><td><b>&#128270; Context Pruner</b></td><td>Silent hook-based pruning via <code>ohc.json</code>. Set <code>max</code> (prune trigger) and <code>min</code> (token floor). No tool calls, no chat output, no toasts — runs in <code>experimental.chat.messages.transform</code>.</td></tr>
 <tr><td><b>&#129513; Zero Infrastructure</b></td><td>No Python. No uv. No Docker. No PostgreSQL. No gateway. No cron daemon. Just Node.js and your existing OpenCode runtime.</td></tr>
 </table>
 
@@ -73,7 +74,7 @@ Either way, **no other config needed.** The plugin auto-registers:
 | **7 slash commands** | `/plan`, `/build-fix`, `/code-review`, `/security`, `/doctor`, `/memory-search`, `/learn` |
 | **5 native memory tools** | `hm_put`, `hm_get`, `hm_list`, `hm_latest`, `hm_search` — in-process, no MCP server needed |
 | **10 procedural skills** | API design, backend patterns, coding standards, E2E testing, frontend patterns, frontend slides, security review, strategic compaction, TDD workflow, verification loop |
-| **5 lifecycle plugins** | bootstrap, curator, autorecall, skill-builder, memory-tools |
+| **6 lifecycle plugins** | bootstrap, curator, autorecall, skill-builder, memory-tools, ohc |
 
 You only need to define primary agents (like `build` or `OpenHermes`) in `opencode.json` — subagents are injected automatically.
 
@@ -97,7 +98,29 @@ The LLM reads rules on demand via the injected paths. Memory directories auto-cr
 
 ---
 
-## The Five Plugins
+## Context Pruner (OHC)
+
+Configure in `~/.config/opencode/openhermes/ohc.json`:
+
+```json
+{
+  "enabled": true,
+  "max": 200000,
+  "min": 50000
+}
+```
+
+| Field | Default | Job |
+|-------|---------|-----|
+| `enabled` | `true` | Master switch |
+| `max` | `200000` | Prune when context exceeds this |
+| `min` | `50000` | Never prune below this token floor |
+
+Fully silent — no tool calls, no chat output, no toasts.
+
+---
+
+## The Six Plugins
 
 | Plugin | Triggers On | What It Does |
 |--------|------------|--------------|
@@ -106,6 +129,7 @@ The LLM reads rules on demand via the injected paths. Memory directories auto-cr
 | **CuratorPlugin** | `session.idle`, `.compacted`, `.error`, `.compacting`, `permission.replied` | Writes checkpoints, logs mistakes, records audits, injects state into compaction. |
 | **AutorecallPlugin** | `session.created` | Loads memory from disk, builds session recall cache. |
 | **SkillBuilderPlugin** | `session.idle`, `.created`, `tool.execute.after` | Detects complex sessions (8+ tool calls or 2+ subagent spawns) and creates skill-candidate backlogs. |
+| **OhcPlugin** | `experimental.chat.messages.transform` | Reads `ohc.json` (`max`/`min`), prunes oldest messages when context exceeds `max`, never goes below `min`. |
 
 ---
 
@@ -242,7 +266,8 @@ openhermes/
 │   ├── memory-tools-plugin.mjs  # 5 native memory tools (hm_put/get/list/latest/search)
 │   ├── hardening.mjs            # atomicWriteJson, fingerprint, sanitize, redact
 │   ├── paths.mjs                # storage root resolution (data/cache/memory/runtime)
-│   └── schema-validator.mjs     # Draft-07 JSON schema validator
+│   ├── schema-validator.mjs     # Draft-07 JSON schema validator
+│   └── ohc/                     # Context pruner (max/min config, silent reap)
 ├── schemas/                     # Memory schemas for validation
 ├── harness/                     # Full framework bundle
 └── package.json

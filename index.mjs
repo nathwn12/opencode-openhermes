@@ -3,14 +3,23 @@ import { CuratorPlugin } from "./curator.mjs"
 import { SkillBuilderPlugin } from "./skill-builder.mjs"
 import { BootstrapPlugin } from "./bootstrap.mjs"
 import { MemoryToolsPlugin } from "./lib/memory-tools-plugin.mjs"
+import { OhcPlugin } from "./lib/ohc/pruner.mjs"
+
+function chain(...fns) {
+  const h = fns.filter(Boolean)
+  if (!h.length) return undefined
+  if (h.length === 1) return h[0]
+  return async (i, o) => { for (const fn of h) await fn(i, o) }
+}
 
 export default async (input) => {
-  const [bootstrap, autorecall, curator, skillBuilder, memoryTools] = await Promise.all([
+  const [bootstrap, autorecall, curator, skillBuilder, memoryTools, ohc] = await Promise.all([
     BootstrapPlugin(input),
     AutorecallPlugin(input),
     CuratorPlugin(input),
     SkillBuilderPlugin(input),
     MemoryToolsPlugin(input),
+    OhcPlugin(input),
   ])
 
   const merged = {}
@@ -24,8 +33,13 @@ export default async (input) => {
     }
   }
 
-  for (const hook of ["experimental.chat.messages.transform", "experimental.session.compacting", "tool.execute.after"]) {
-    const handler = bootstrap[hook] || curator[hook] || skillBuilder[hook]
+  merged["experimental.chat.messages.transform"] = chain(
+    bootstrap["experimental.chat.messages.transform"],
+    ohc["experimental.chat.messages.transform"],
+  )
+
+  for (const hook of ["experimental.session.compacting", "tool.execute.after"]) {
+    const handler = chain(curator[hook], skillBuilder[hook])
     if (handler) merged[hook] = handler
   }
 
