@@ -5,7 +5,7 @@
 
 <p align="center">
   <a href="https://www.npmjs.com/package/openhermes"><img src="https://img.shields.io/npm/v/openhermes?style=for-the-badge&label=version&color=FFD700" alt="npm version"></a>
-  <a href="https://github.com/nathwn12/openhermes/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="License: MIT"></a>
+  <a href="https://github.com/nathwn12/openhermes/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="License: MIT"></a>
   <a href="https://opencode.ai"><img src="https://img.shields.io/badge/runs%20on-OpenCode-6366f1?style=for-the-badge" alt="Runs on OpenCode"></a>
   <a href="https://github.com/nathwn12/openhermes/issues"><img src="https://img.shields.io/badge/issues-welcome-orange?style=for-the-badge" alt="Issues welcome"></a>
 </p>
@@ -241,7 +241,8 @@ openhermes/
 ├── lib/
 │   ├── memory-tools-plugin.mjs  # 5 native memory tools (hm_put/get/list/latest/search)
 │   ├── hardening.mjs            # atomicWriteJson, fingerprint, sanitize, redact
-│   └── schema-validator.mjs     # Draft-07 subset validator
+│   ├── paths.mjs                # storage root resolution (data/cache/memory/runtime)
+│   └── schema-validator.mjs     # Draft-07 JSON schema validator
 ├── schemas/                     # Memory schemas for validation
 ├── harness/                     # Full framework bundle
 └── package.json
