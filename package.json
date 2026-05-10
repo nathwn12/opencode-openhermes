@@ -1,7 +1,7 @@
 {
   "name": "openhermes-opencode",
-  "version": "1.0.11",
-  "description": "OpenHermes plugin suite for OpenCode — autonomous checkpointing, memory recall, and skill-candidate detection.",
+  "version": "1.1.0",
+  "description": "OpenHermes plugin suite for OpenCode — autonomous checkpointing, MCP memory server, subagent routing, slash commands, and skill-candidate detection.",
   "type": "module",
   "license": "MIT",
   "main": "./index.mjs",
