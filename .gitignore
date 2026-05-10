@@ -1,3 +1,4 @@
 node_modules/
 *.tgz
+PLAN.d
 .DS_Store

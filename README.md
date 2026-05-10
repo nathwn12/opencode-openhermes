@@ -4,10 +4,10 @@
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/openhermes-opencode"><img src="https://img.shields.io/npm/v/openhermes-opencode?style=for-the-badge&label=version&color=FFD700" alt="npm version"></a>
-  <a href="https://github.com/nathwn12/opencode-openhermes/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="License: MIT"></a>
+  <a href="https://www.npmjs.com/package/openhermes"><img src="https://img.shields.io/npm/v/openhermes?style=for-the-badge&label=version&color=FFD700" alt="npm version"></a>
+  <a href="https://github.com/nathwn12/openhermes/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="License: MIT"></a>
   <a href="https://opencode.ai"><img src="https://img.shields.io/badge/runs%20on-OpenCode-6366f1?style=for-the-badge" alt="Runs on OpenCode"></a>
-  <a href="https://github.com/nathwn12/opencode-openhermes/issues"><img src="https://img.shields.io/badge/issues-welcome-orange?style=for-the-badge" alt="Issues welcome"></a>
+  <a href="https://github.com/nathwn12/openhermes/issues"><img src="https://img.shields.io/badge/issues-welcome-orange?style=for-the-badge" alt="Issues welcome"></a>
 </p>
 
 ---
@@ -15,7 +15,7 @@
 **Your OpenCode agent, leveled up.** Add it to your plugins — your agent gains a personality, a memory, a conscience, 7 specialist subagents, 7 slash commands, 5 native memory tools, 10 procedural skills, and the discipline to self-improve.
 
 ```bash
-npm i openhermes-opencode
+npm i openhermes
 ```
 
 ---
@@ -47,7 +47,7 @@ Add one line to your `opencode.json`:
 
 ```json
 {
-  "plugins": ["openhermes-opencode"]
+  "plugin": ["openhermes"]
 }
 ```
 
@@ -224,7 +224,7 @@ No self-termination. No grandstanding. Narrow, log, recover, improve.
 ## Architecture
 
 ```
-openhermes-opencode/
+openhermes/
 ├── index.mjs                 # Re-exports all 5 plugins
 ├── bootstrap.mjs             # Config hook (agents/commands/skills) + chat.transform
 ├── autorecall.mjs            # Recall cache builder
@@ -268,7 +268,7 @@ Both are &#9764; messengers. Different mediums.
 
 ## Contributing
 
-Problems, ideas, improvements? [Open an issue](https://github.com/nathwn12/opencode-openhermes/issues). PRs welcome.
+Problems, ideas, improvements? [Open an issue](https://github.com/nathwn12/openhermes/issues). PRs welcome.
 
 ---
 

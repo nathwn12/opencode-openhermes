@@ -1,6 +1,6 @@
 {
-  "name": "openhermes-opencode",
-  "version": "1.2.1",
+  "name": "openhermes",
+  "version": "1.2.2",
   "description": "OpenHermes plugin suite for OpenCode — autonomous checkpointing, native memory tools, subagent routing, slash commands, and skill-candidate detection.",
   "type": "module",
   "license": "MIT",
@@ -39,11 +39,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nathwn12/opencode-openhermes.git"
+    "url": "git+https://github.com/nathwn12/openhermes.git"
   },
   "bugs": {
-    "url": "https://github.com/nathwn12/opencode-openhermes/issues"
+    "url": "https://github.com/nathwn12/openhermes/issues"
   },
-  "homepage": "https://github.com/nathwn12/opencode-openhermes#readme",
+  "homepage": "https://github.com/nathwn12/openhermes#readme",
   "author": "nathwn12"
 }
