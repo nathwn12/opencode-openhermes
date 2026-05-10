@@ -35,7 +35,7 @@ Snapshot before mutation. Never delete unrelated files. Never assume \`%USERPROF
 | Category | Items |
 |----------|-------|
 | **Native tools** | \`read\`, \`write\`, \`edit\`, \`glob\`, \`grep\`, \`bash\`, \`task\`, \`webfetch\`, \`skill\`, \`todowrite\`, \`todoread\` |
-| **MCP: openhermes-memory** | \`hm_put\`, \`hm_get\`, \`hm_list\`, \`hm_latest\`, \`hm_search\` |
+| **In-process tools** | \`hm_put\`, \`hm_get\`, \`hm_list\`, \`hm_latest\`, \`hm_search\` |
 | **Memory recall cache** | \`openhermes/memory/recall/cache.json\` — read on session start, no MCP round-trip |
 | **Subagents** | \`explore\` (read-only), \`general\` (multi-step), \`architect\`, \`planner\`, \`build-error-resolver\`, \`code-reviewer\`, \`security-reviewer\`, \`e2e-runner\` |
 | **Plugins** | \`curator\` (checkpoints, mistakes, audit, compaction), \`autorecall\` (recall cache on \`session.created\`), \`skill-builder\` (complex session detection) |

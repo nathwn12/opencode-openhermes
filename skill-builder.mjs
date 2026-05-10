@@ -2,17 +2,7 @@ import path from "node:path"
 import fs from "node:fs"
 import os from "node:os"
 import { atomicWriteJson, fingerprintEnvironment, isTruthy, sanitizeRecord } from "./lib/hardening.mjs"
-
-function getHarnessRoot(directory) {
-  const home = process.env.USERPROFILE || os.homedir()
-  const configRoot = path.join(home, ".config", "opencode")
-  const projectHarness = path.join(directory, ".opencode", "openhermes")
-  const projectMemory = path.join(projectHarness, "memory")
-  if (isTruthy(process.env.OPENCODE_ALLOW_PROJECT_HARNESS)) {
-    try { fs.accessSync(projectMemory); return projectHarness } catch {}
-  }
-  return path.join(configRoot, "openhermes")
-}
+import { getConfigRoot, getDataRoot, getMemoryRoot } from "./lib/paths.mjs"
 
 function readJson(fp, fallback) {
   try { return JSON.parse(fs.readFileSync(fp, "utf8")) } catch { return fallback }
@@ -50,7 +40,7 @@ export const SkillBuilderPlugin = async ({ project, directory }) => {
 
         if (isComplex) {
           try {
-            const root = getHarnessRoot(directory)
+            const root = getDataRoot()
             const ts = new Date().toISOString()
             const id = `bl_skill_candidate_${ts.replace(/[:.]/g, "-")}`
             const backlogIndexPath = path.join(root, "memory", "backlog", "index.json")

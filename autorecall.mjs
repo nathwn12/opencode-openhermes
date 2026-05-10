@@ -2,21 +2,7 @@ import path from "node:path"
 import os from "node:os"
 import fs from "node:fs"
 import { atomicWriteJson, fingerprintEnvironment, isTruthy, sanitizeRecord, truncateText } from "./lib/hardening.mjs"
-
-function getHarnessRoot(directory) {
-  const home = process.env.USERPROFILE || os.homedir()
-  const configRoot = path.join(home, ".config", "opencode")
-  const projectHarness = path.join(directory, ".opencode", "openhermes")
-  const projectMemory = path.join(projectHarness, "memory")
-  if (isTruthy(process.env.OPENCODE_ALLOW_PROJECT_HARNESS)) {
-    try {
-      fs.accessSync(projectMemory)
-      return projectHarness
-    } catch {
-    }
-  }
-  return path.join(configRoot, "openhermes")
-}
+import { getDataRoot, getCacheRoot, getMemoryRoot, getRecallRoot, getRuntimeRoot } from "./lib/paths.mjs"
 
 function readJson(fp, fallback) {
   try { return JSON.parse(fs.readFileSync(fp, "utf8")) } catch { return fallback }
@@ -88,31 +74,52 @@ function formatMemoryWriteGap(memory) {
   return `## Memory Write Gap\nThese memory classes are empty: ${gaps.join(", ")}. Write at least one ${gaps[0]} this session.`
 }
 
-async function loadMemoryAndWriteCache(harnessRoot, projectKey, directory) {
-  const memory = { constraints: [], decisions: [], mistakes: [], checkpoint: null, pendingSkillCandidates: [] }
-  const fingerprint = buildEnvironmentFingerprint(harnessRoot, directory, projectKey)
+async function loadMemoryAndWriteCache(projectKey, directory) {
+  const OLD_MEMORY = path.join(os.homedir(), ".config", "opencode", "openhermes", "memory")
+  const OLD_CACHE = path.join(os.homedir(), ".config", "opencode", "openhermes", "memory", "recall")
+  const SENTINEL = path.join(getDataRoot(), ".migrated-from-v1")
+  if (!fs.existsSync(SENTINEL)) {
+    if (fs.existsSync(OLD_MEMORY)) {
+      fs.cpSync(OLD_MEMORY, getMemoryRoot(), { recursive: true })
+      fs.rmSync(OLD_MEMORY, { recursive: true, force: true })
+    }
+    if (fs.existsSync(OLD_CACHE)) {
+      fs.mkdirSync(getRecallRoot(), { recursive: true })
+      const files = fs.readdirSync(OLD_CACHE).filter(f => f.endsWith(".json"))
+      for (const f of files) fs.cpSync(path.join(OLD_CACHE, f), path.join(getRecallRoot(), f))
+    }
+    const oldRuntime = path.join(os.homedir(), ".config", "opencode", "openhermes", "runtime")
+    if (fs.existsSync(oldRuntime)) {
+      fs.cpSync(oldRuntime, getRuntimeRoot(), { recursive: true })
+      fs.rmSync(oldRuntime, { recursive: true, force: true })
+    }
+    fs.writeFileSync(SENTINEL, new Date().toISOString(), "utf8")
+  }
 
-  const constraintsIndex = readJson(path.join(harnessRoot, "memory", "constraints", "index.json"), [])
+  const memory = { constraints: [], decisions: [], mistakes: [], checkpoint: null, pendingSkillCandidates: [] }
+  const fingerprint = buildEnvironmentFingerprint(getDataRoot(), directory, projectKey)
+
+  const constraintsIndex = readJson(path.join(getMemoryRoot(), "constraints", "index.json"), [])
   if (Array.isArray(constraintsIndex)) memory.constraints = constraintsIndex.filter(e => e.status === "active")
 
-  const decisionsIndex = readJson(path.join(harnessRoot, "memory", "decisions", "index.json"), [])
+  const decisionsIndex = readJson(path.join(getMemoryRoot(), "decisions", "index.json"), [])
   if (Array.isArray(decisionsIndex)) {
     memory.decisions = decisionsIndex
       .filter(e => e.status === "active")
-      .map(entry => loadMemoryRecord(harnessRoot, "decisions", entry))
+      .map(entry => loadMemoryRecord(getDataRoot(), "decisions", entry))
       .filter(validateMemoryRecord)
   }
 
-  const allMistakes = readJsonl(path.join(harnessRoot, "memory", "mistakes", "mistakes.jsonl"))
+  const allMistakes = readJsonl(path.join(getMemoryRoot(), "mistakes", "mistakes.jsonl"))
   if (allMistakes.length) memory.mistakes = allMistakes.filter(e => e.status === "active").slice(0, 5)
 
-  const checkpointIndex = readJson(path.join(harnessRoot, "memory", "checkpoints", "index.json"), [])
+  const checkpointIndex = readJson(path.join(getMemoryRoot(), "checkpoints", "index.json"), [])
   if (Array.isArray(checkpointIndex) && checkpointIndex.length > 0) {
     const latest = checkpointIndex.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))[0]
-    memory.checkpoint = readJson(path.join(harnessRoot, "memory", "checkpoints", `${latest.id}.json`), null)
+    memory.checkpoint = readJson(path.join(getMemoryRoot(), "checkpoints", `${latest.id}.json`), null)
   }
 
-  const backlogIndex = readJson(path.join(harnessRoot, "memory", "backlog", "index.json"), [])
+  const backlogIndex = readJson(path.join(getMemoryRoot(), "backlog", "index.json"), [])
   if (Array.isArray(backlogIndex)) {
     memory.pendingSkillCandidates = backlogIndex.filter(e =>
       e.status === "open" && (e.summary || "").includes("skill-candidate")
@@ -130,13 +137,13 @@ async function loadMemoryAndWriteCache(harnessRoot, projectKey, directory) {
   const context = contextParts.join("\n\n")
   const boundedContext = context ? truncateText(context, 12000) : null
 
-  const cacheDir = path.join(harnessRoot, "memory", "recall")
+  const cacheDir = getRecallRoot()
   fs.mkdirSync(cacheDir, { recursive: true })
   atomicWriteJson(path.join(cacheDir, "cache.json"), sanitizeRecord({
     context: boundedContext,
     project: projectKey,
     trust_mode: isTruthy(process.env.OPENCODE_ALLOW_PROJECT_HARNESS) ? "project" : "global",
-    harness_root: harnessRoot,
+    harness_root: getDataRoot(),
     project_root: directory,
     updated_at: new Date().toISOString(),
     fingerprint,
@@ -158,9 +165,8 @@ export const AutorecallPlugin = async ({ project, directory }) => {
   return {
     event: async ({ event }) => {
       if (event.type === "session.created") {
-        const harnessRoot = getHarnessRoot(directory)
         const projectKey = project?.name || path.basename(directory)
-        await loadMemoryAndWriteCache(harnessRoot, projectKey, directory)
+        await loadMemoryAndWriteCache(projectKey, directory)
       }
     },
   }

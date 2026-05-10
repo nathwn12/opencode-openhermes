@@ -97,7 +97,7 @@ The LLM reads rules on demand via the injected paths. Memory directories auto-cr
 
 ## Memory Architecture
 
-Nine memory classes, all schema-validated before persistence, stored at `~/.config/opencode/openhermes/memory/`:
+Nine memory classes, all schema-validated before persistence, stored at `~/.local/share/opencode/openhermes/memory/`:
 
 | Class | Format | Purpose |
 |-------|--------|---------|
@@ -110,6 +110,14 @@ Nine memory classes, all schema-validated before persistence, stored at `~/.conf
 | `audit` | JSON | Structured quality/integrity evaluations with health scores |
 | `verification_receipt` | JSON | Cached verification results keyed by artifact fingerprint |
 | `recall` | JSON | Session-start cache aggregating active state for compaction injection |
+
+OpenHermes follows the same storage contract as OpenCode itself — see [OpenCode docs on storage](https://opencode.ai/docs/troubleshooting/#storage):
+
+| What | Where |
+|---|---|
+| Config (schemas, archive) | `~/.config/opencode/openhermes/` |
+| Durable memory + runtime state | `~/.local/share/opencode/openhermes/` |
+| Derived recall cache | `~/.cache/opencode/openhermes/recall/` |
 
 **Runtime hardening**: All records pass through `sanitizeRecord()` (strips `__proto__`, `constructor`, `prototype`), `redactSensitiveText()` (strips bearer tokens, API keys, passwords), and `truncateText()` before persistence. Schema validation gate runs before every write.
 
@@ -153,7 +161,7 @@ permission.replied
 
 ## Bundled Harness
 
-The full OpenHermes framework ships inside the package — 45 files across 6 directories:
+The full OpenHermes framework ships inside the package — 60 files across 6 directories:
 
 ```
 harness/
@@ -190,7 +198,7 @@ harness/
 ├── prompts/ (7 files)
 │   # Subagent prompt templates: architect, build-error-resolver,
 │   # code-reviewer, e2e-runner, explore, planner, security-reviewer
-└── commands/ (8 files)
+└── commands/ (7 files)
     # Slash command templates: build-fix, code-review, doctor,
     # learn, memory-search, plan, security
 ```

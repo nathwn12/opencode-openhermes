@@ -5,6 +5,7 @@ import { findUnsupportedSchemaKeywords, validateSchema } from "./lib/schema-vali
 import { atomicWriteJson, fingerprintEnvironment, fingerprintFile, isTruthy, redactSensitiveText, sanitizeRecord, truncateText } from "./lib/hardening.mjs"
 import { fileURLToPath } from "node:url"
 import { dirname } from "node:path"
+import { getConfigRoot, getDataRoot, getMemoryRoot, getRuntimeRoot, getArchiveRoot, getSchemaRoot } from "./lib/paths.mjs"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -17,21 +18,6 @@ const CURATOR_LOGS = /^(1|true|yes)$/i.test(process.env.OPENCODE_CURATOR_LOGS ||
 function curatorLog(message) {
   if (!CURATOR_LOGS) return
   process.stderr.write(`${message}\n`)
-}
-
-function getHarnessRoot(directory) {
-  const home = process.env.USERPROFILE || os.homedir()
-  const configRoot = path.join(home, ".config", "opencode")
-  const projectHarness = path.join(directory, ".opencode", "openhermes")
-  const projectMemory = path.join(projectHarness, "memory")
-  if (isTruthy(process.env.OPENCODE_ALLOW_PROJECT_HARNESS)) {
-    try {
-      fs.accessSync(projectMemory)
-      return projectHarness
-    } catch {
-    }
-  }
-  return path.join(configRoot, "openhermes")
 }
 
 function readJson(fp, fallback) {
@@ -92,8 +78,7 @@ function updateLoopState(root, patch) {
 }
 
 function loadSchema(classId) {
-  const home = process.env.USERPROFILE || os.homedir()
-  const fp = path.join(home, ".config", "opencode", "openhermes", "schemas", `${classId}.schema.json`)
+  const fp = path.join(getSchemaRoot(), `${classId}.schema.json`)
   try { return JSON.parse(fs.readFileSync(fp, "utf8")) } catch {}
   const bundled = path.join(__dirname, "schemas", `${classId}.schema.json`)
   try { return JSON.parse(fs.readFileSync(bundled, "utf8")) } catch { return null }
@@ -242,11 +227,16 @@ function writeMistakeRecord(root, project, directory, error) {
     project: project?.name || path.basename(directory),
     environment_fingerprint: environmentFingerprint,
   }
-  const dir = path.join(root, "memory", "mistakes")
+  const dir = path.join(getMemoryRoot(), "mistakes")
   fs.mkdirSync(dir, { recursive: true })
   const fp = path.join(dir, "mistakes.jsonl")
-  const line = JSON.stringify(sanitizeRecord(record, { maxStringLength: 4000 }))
-  try { fs.appendFileSync(fp, line + "\n") } catch { fs.writeFileSync(fp, line + "\n") }
+  const safeRecord = sanitizeRecord(record, { maxStringLength: 4000 })
+  let entries = []
+  try { entries = fs.readFileSync(fp, "utf8").trim().split("\n").filter(Boolean).map(l => JSON.parse(l)) } catch {}
+  const idx = entries.findIndex(e => e.id === safeRecord.id)
+  if (idx >= 0) entries[idx] = safeRecord; else entries.push(safeRecord)
+  const text = entries.map(e => JSON.stringify(e)).join("\n")
+  fs.writeFileSync(fp, text ? text + "\n" : "", "utf8")
   curatorLog(`[curator] mistake logged: ${id} - ${safeLogMessage(errorMsg, 80)}`)
   return id
 }
@@ -298,7 +288,7 @@ function writeVerificationReceipt(root, project, directory, checkpointId) {
 
 async function handleSessionIdle(directory, project) {
   try {
-    const root = getHarnessRoot(directory)
+    const root = getDataRoot()
     const checkpointId = await writeCheckpoint(root, project, directory, "session.idle", null)
     if (checkpointId) {
       writeVerificationReceipt(root, project, directory, checkpointId)
@@ -310,7 +300,7 @@ async function handleSessionIdle(directory, project) {
 
 async function handleSessionCompacted(directory, project) {
   try {
-    const root = getHarnessRoot(directory)
+    const root = getDataRoot()
     const ts = new Date().toISOString()
     updateLoopState(root, {
       status: "compacted",
@@ -326,7 +316,7 @@ async function handleSessionCompacted(directory, project) {
 
 async function handleSessionError(directory, project, event) {
   try {
-    const root = getHarnessRoot(directory)
+    const root = getDataRoot()
     const ts = new Date().toISOString()
     const errorMsg = typeof event?.error === "object" && event.error !== null
       ? (event.error.message || JSON.stringify(event.error).slice(0, 200))
@@ -347,7 +337,7 @@ async function handleSessionError(directory, project, event) {
 
 async function handlePermissionReplied(directory, project, event) {
   try {
-    const root = getHarnessRoot(directory)
+    const root = getDataRoot()
     const ts = new Date().toISOString()
     const id = `audit_perm_${ts.replace(/[:.]/g, "-")}`
     const environmentFingerprint = buildEnvironmentFingerprint(root, directory, project)
@@ -387,7 +377,14 @@ async function handlePermissionReplied(directory, project, event) {
       environment_fingerprint: environmentFingerprint,
     }
     const safeRecord = sanitizeRecord(record, { maxStringLength: 4000 })
-    if (!validateRecordAgainstSchema(safeRecord)) return
+    const auditSchema = loadSchema("audit") || readJson(path.join(__dirname, "schemas", "audit.schema.json"), null)
+    if (auditSchema) {
+      const unsupported = findUnsupportedSchemaKeywords(auditSchema)
+      if (!unsupported.length) {
+        const errors = validateSchema(auditSchema, safeRecord, "$")
+        if (errors.length) return
+      }
+    }
     const dir = path.join(root, "memory", "audits")
     fs.mkdirSync(dir, { recursive: true })
     atomicWriteJson(path.join(dir, `${id}.json`), safeRecord)
@@ -401,6 +398,20 @@ async function handlePermissionReplied(directory, project, event) {
 export const CuratorPlugin = async ({ project, directory }) => {
   return {
     event: async ({ event }) => {
+      const OLD_DATA = path.join(os.homedir(), ".config", "opencode", "openhermes", "memory")
+      const SENTINEL = path.join(getDataRoot(), ".migrated-from-v1")
+      if (!fs.existsSync(SENTINEL)) {
+        if (fs.existsSync(OLD_DATA)) {
+          fs.cpSync(OLD_DATA, getMemoryRoot(), { recursive: true })
+          fs.rmSync(OLD_DATA, { recursive: true, force: true })
+        }
+        const oldRuntime = path.join(os.homedir(), ".config", "opencode", "openhermes", "runtime")
+        if (fs.existsSync(oldRuntime)) {
+          fs.cpSync(oldRuntime, getRuntimeRoot(), { recursive: true })
+          fs.rmSync(oldRuntime, { recursive: true, force: true })
+        }
+        fs.writeFileSync(SENTINEL, new Date().toISOString(), "utf8")
+      }
       if (event.type === "session.idle") {
         await handleSessionIdle(directory, project)
       } else if (event.type === "session.compacted") {
@@ -415,7 +426,7 @@ export const CuratorPlugin = async ({ project, directory }) => {
   },
   "experimental.session.compacting": async (input, output) => {
     try {
-      const root = getHarnessRoot(directory)
+      const root = getDataRoot()
       const projectKey = project?.name || path.basename(directory)
       const checkpointIndex = readJson(path.join(root, "memory", "checkpoints", "index.json"), [])
       const constraintsIndex = readJson(path.join(root, "memory", "constraints", "index.json"), [])
