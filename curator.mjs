@@ -2,7 +2,7 @@ import path from "node:path"
 import fs from "node:fs"
 import os from "node:os"
 import { findUnsupportedSchemaKeywords, validateSchema } from "./lib/schema-validator.mjs"
-import { atomicWriteJson, fingerprintEnvironment, fingerprintFile, redactSensitiveText, sanitizeRecord, truncateText } from "./lib/hardening.mjs"
+import { atomicWriteJson, fingerprintEnvironment, fingerprintFile, isTruthy, redactSensitiveText, sanitizeRecord, truncateText } from "./lib/hardening.mjs"
 import { fileURLToPath } from "node:url"
 import { dirname } from "node:path"
 
@@ -13,10 +13,6 @@ const COMPACTION_CONTEXT_LIMIT = 12000
 const lastCheckpoint = { ts: 0 }
 const writtenThisSession = []
 const CURATOR_LOGS = /^(1|true|yes)$/i.test(process.env.OPENCODE_CURATOR_LOGS || "")
-
-function isTruthy(value) {
-  return /^(1|true|yes|on)$/i.test(String(value || ""))
-}
 
 function curatorLog(message) {
   if (!CURATOR_LOGS) return
@@ -79,19 +75,10 @@ function indexEntry(root, plural, record) {
 
 function updateLoopState(root, patch) {
   const statePath = path.join(root, "runtime", "loop-state.json")
-  const state = readJson(statePath, null)
+  const state = readJson(statePath, null) || {}
   const next = {
-    ...(state && typeof state === "object" ? state : {
-      status: patch.status || "idle",
-      last_gate_result: null,
-      last_error: null,
-      phase: patch.phase || "session.idle",
-      heartbeat_at: patch.heartbeat_at || new Date().toISOString(),
-      updated_at: patch.updated_at || new Date().toISOString(),
-    }),
+    ...state,
     ...patch,
-    budget: patch.budget ? { ...((state && state.budget) || {}), ...patch.budget } : state?.budget,
-    rollback: patch.rollback ? { ...((state && state.rollback) || {}), ...patch.rollback } : state?.rollback,
     updated_at: patch.updated_at || new Date().toISOString(),
   }
   const schema = loadSchema("loop-state")
@@ -435,49 +422,49 @@ export const CuratorPlugin = async ({ project, directory }) => {
       const environmentFingerprint = buildEnvironmentFingerprint(root, directory, project)
       const preCompactionCheckpointId = await writeCheckpoint(root, project, directory, "experimental.session.compacting", `Pre-compaction checkpoint for ${projectKey}`, { force: true })
 
-        const latestCheckpoint = Array.isArray(checkpointIndex) && checkpointIndex.length > 0
-          ? checkpointIndex.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))[0]
-          : null
+      const latestCheckpoint = Array.isArray(checkpointIndex) && checkpointIndex.length > 0
+        ? checkpointIndex.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))[0]
+        : null
 
-        const activeConstraints = Array.isArray(constraintsIndex)
-          ? constraintsIndex.filter(c => c.status === "active")
-          : []
+      const activeConstraints = Array.isArray(constraintsIndex)
+        ? constraintsIndex.filter(c => c.status === "active")
+        : []
 
-        const inject = [
-          `## OpenHermes State`,
-          `- Project: ${projectKey}`,
-          `- Latest checkpoint: ${latestCheckpoint ? latestCheckpoint.summary : "none"}`,
-          preCompactionCheckpointId ? `- Pre-compaction checkpoint: ${preCompactionCheckpointId}` : null,
-          `- Active constraints: ${activeConstraints.length}`,
-          `- Memory writes this session: ${writtenThisSession.length}`,
-          writtenThisSession.length > 0 ? `- Recent writes: ${writtenThisSession.slice(-3).join(", ")}` : null,
-          `- Session hook: experimental.session.compacting`,
-        ].filter(Boolean).join("\n")
+      const inject = [
+        `## OpenHermes State`,
+        `- Project: ${projectKey}`,
+        `- Latest checkpoint: ${latestCheckpoint ? latestCheckpoint.summary : "none"}`,
+        preCompactionCheckpointId ? `- Pre-compaction checkpoint: ${preCompactionCheckpointId}` : null,
+        `- Active constraints: ${activeConstraints.length}`,
+        `- Memory writes this session: ${writtenThisSession.length}`,
+        writtenThisSession.length > 0 ? `- Recent writes: ${writtenThisSession.slice(-3).join(", ")}` : null,
+        `- Session hook: experimental.session.compacting`,
+      ].filter(Boolean).join("\n")
 
-        const recallCache = readJson(path.join(root, "memory", "recall", "cache.json"), null)
-        const cacheMatches = recallCache && recallCache.fingerprint && recallCache.fingerprint.sha256 === environmentFingerprint.sha256
-        const cacheFresh = cacheMatches && recallCache.freshness_marker && recallCache.freshness_marker.updated_at
-          ? (Date.now() - Date.parse(recallCache.freshness_marker.updated_at) <= (recallCache.freshness_marker.ttl_ms || 0))
-          : false
-        const contextSink = Array.isArray(output.context) ? output.context : (output.context = [])
-        if (recallCache && recallCache.context && cacheFresh) {
-          const merged = truncateText(`${inject}\n\n${recallCache.context}`, COMPACTION_CONTEXT_LIMIT)
-          contextSink.push(merged)
-          curatorLog(`[curator] compaction injected harness state + autorecall (${merged.length} chars)`)
-        } else {
-          contextSink.push(truncateText(inject, COMPACTION_CONTEXT_LIMIT))
-          curatorLog(`[curator] compaction injected harness state (stale or missing autorecall cache)`)
-        }
-        updateLoopState(root, {
-          phase: "compress",
-          heartbeat_at: new Date().toISOString(),
-          status: "active",
-        })
-      } catch (err) {
-        curatorLog(`[curator] compaction error: ${safeLogMessage(err.message)}`)
-        const contextSink = Array.isArray(output.context) ? output.context : (output.context = [])
-        contextSink.push(truncateText(`## OpenHermes State\n- Project: ${project?.name || path.basename(directory)}\n- Hook: experimental.session.compacting (error state)\n`, COMPACTION_CONTEXT_LIMIT))
+      const recallCache = readJson(path.join(root, "memory", "recall", "cache.json"), null)
+      const cacheMatches = recallCache && recallCache.fingerprint && recallCache.fingerprint.sha256 === environmentFingerprint.sha256
+      const cacheFresh = cacheMatches && recallCache.freshness_marker && recallCache.freshness_marker.updated_at
+        ? (Date.now() - Date.parse(recallCache.freshness_marker.updated_at) <= (recallCache.freshness_marker.ttl_ms || 0))
+        : false
+      const contextSink = Array.isArray(output.context) ? output.context : (output.context = [])
+      if (recallCache && recallCache.context && cacheFresh) {
+        const merged = truncateText(`${inject}\n\n${recallCache.context}`, COMPACTION_CONTEXT_LIMIT)
+        contextSink.push(merged)
+        curatorLog(`[curator] compaction injected harness state + autorecall (${merged.length} chars)`)
+      } else {
+        contextSink.push(truncateText(inject, COMPACTION_CONTEXT_LIMIT))
+        curatorLog(`[curator] compaction injected harness state (stale or missing autorecall cache)`)
       }
+      updateLoopState(root, {
+        phase: "compress",
+        heartbeat_at: new Date().toISOString(),
+        status: "active",
+      })
+    } catch (err) {
+      curatorLog(`[curator] compaction error: ${safeLogMessage(err.message)}`)
+      const contextSink = Array.isArray(output.context) ? output.context : (output.context = [])
+      contextSink.push(truncateText(`## OpenHermes State\n- Project: ${project?.name || path.basename(directory)}\n- Hook: experimental.session.compacting (error state)\n`, COMPACTION_CONTEXT_LIMIT))
+    }
     },
   }
 }

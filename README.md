@@ -217,7 +217,7 @@ openhermes-opencode/
 ├── index.mjs                 # Re-exports all plugins
 ├── bootstrap.mjs             # Config hook + chat.transform hook
 ├── autorecall.mjs            # Recall cache builder
-├── curator.mjs               # Lifecycle hooks engine (483 lines)
+├── curator.mjs               # Lifecycle hooks engine (~470 lines)
 ├── skill-builder.mjs         # Complexity detection engine
 ├── lib/
 │   ├── hardening.mjs         # atomicWriteJson, fingerprint, sanitize, redact
@@ -235,7 +235,6 @@ openhermes-opencode/
 
 - **Node.js >= 18** — `node:path`, `node:fs`, `node:os`, `node:url`, `node:crypto`
 - **OpenCode** — provides the Bun runtime, plugin loader, hook dispatcher, and `skill` tool
-- `@opencode-ai/plugin` — optional peer dep (OpenCode already provides the runtime context)
 
 ---
 

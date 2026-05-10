@@ -11,25 +11,6 @@ const RUNTIME_FILE = path.join(HARNESS_DIR, "instructions", "RUNTIME.md")
 
 let _bootstrapCache = undefined
 
-function rewritePaths(text) {
-  return text
-    .replace(/`openhermes\\constitution\\`/g, "`openhermes/harness/constitution/`")
-    .replace(/`openhermes\\rules\\([^`]+)`/g, (_, file) => `\`${RULES_DIR}\\${file}\``)
-    .replace(/openhermes\\rules\\([^\s,;\(\)]+)/g, (_, file) => `${RULES_DIR}\\${file}`)
-    .replace(/`openhermes\\`/g, `\`${HARNESS_DIR}\\\``)
-    .replace(/openhermes\\constitution\\/g, `${HARNESS_DIR}\\constitution\\`)
-    .replace(/openhermes\\skills\\/g, `${SKILLS_DIR}\\`)
-    .replace(/`openhermes\\memory\\/g, "`openhermes/memory/")
-    .replace(/openhermes\\memory\\/g, "openhermes/memory/")
-    .replace(/`openhermes\\instructions\\/g, `\`${HARNESS_DIR}\\instructions\\`)
-    .replace(/openhermes\\instructions\\/g, `${HARNESS_DIR}\\instructions\\`)
-    .replace(/`openhermes\\prompts\\/g, `\`${HARNESS_DIR}\\prompts\\`)
-    .replace(/openhermes\\prompts\\/g, `${HARNESS_DIR}\\prompts\\`)
-    .replace(/`openhermes\\commands\\/g, `\`${HARNESS_DIR}\\commands\\`)
-    .replace(/openhermes\\commands\\/g, `${HARNESS_DIR}\\commands\\`)
-    .replace(/\`rules\\/g, `\`${RULES_DIR}\\`)
-}
-
 function buildBootstrapContent() {
   const constitution = fs.readFileSync(CONSTITUTION_FILE, "utf8")
   const runtime = fs.readFileSync(RUNTIME_FILE, "utf8")

@@ -1,11 +1,7 @@
 import path from "node:path"
 import fs from "node:fs"
 import os from "node:os"
-import { atomicWriteJson, fingerprintEnvironment, sanitizeRecord } from "./lib/hardening.mjs"
-
-function isTruthy(value) {
-  return /^(1|true|yes|on)$/i.test(String(value || ""))
-}
+import { atomicWriteJson, fingerprintEnvironment, isTruthy, sanitizeRecord } from "./lib/hardening.mjs"
 
 function getHarnessRoot(directory) {
   const home = process.env.USERPROFILE || os.homedir()
@@ -33,7 +29,7 @@ function buildEnvironmentFingerprint(root, directory, project) {
 }
 
 const COMPLEXITY_THRESHOLD = { toolCalls: 8, subagents: 2 }
-let sessionStats = { toolCalls: 0, subagents: 0, startTime: Date.now(), newSkills: [] }
+let sessionStats = { toolCalls: 0, subagents: 0, startTime: Date.now() }
 
 export const SkillBuilderPlugin = async ({ project, directory }) => {
   return {
@@ -44,14 +40,7 @@ export const SkillBuilderPlugin = async ({ project, directory }) => {
 
     event: async ({ event }) => {
       if (event.type === "session.created") {
-        sessionStats = { toolCalls: 0, subagents: 0, startTime: Date.now(), newSkills: [] }
-        try {
-          const root = getHarnessRoot(directory)
-          const backlogIndex = readJson(path.join(root, "memory", "backlog", "index.json"), [])
-          const pending = Array.isArray(backlogIndex)
-            ? backlogIndex.filter(e => e.status === "open" && (e.summary || "").includes("skill-candidate"))
-            : []
-        } catch (err) {}
+        sessionStats = { toolCalls: 0, subagents: 0, startTime: Date.now() }
       }
 
       if (event.type === "session.idle") {
@@ -70,7 +59,7 @@ export const SkillBuilderPlugin = async ({ project, directory }) => {
               ? backlogIndex.some(e => e.status === "open" && String(e.summary || "").includes("[skill-candidate]"))
               : false
             if (hasOpenCandidate) {
-              sessionStats = { toolCalls: 0, subagents: 0, startTime: Date.now(), newSkills: [] }
+              sessionStats = { toolCalls: 0, subagents: 0, startTime: Date.now() }
               return
             }
             const environmentFingerprint = buildEnvironmentFingerprint(root, directory, project)
@@ -117,7 +106,7 @@ export const SkillBuilderPlugin = async ({ project, directory }) => {
 
           } catch (err) {}
         }
-        sessionStats = { toolCalls: 0, subagents: 0, startTime: Date.now(), newSkills: [] }
+        sessionStats = { toolCalls: 0, subagents: 0, startTime: Date.now() }
       }
     },
   }

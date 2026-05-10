@@ -1,11 +1,7 @@
 import path from "node:path"
 import os from "node:os"
 import fs from "node:fs"
-import { atomicWriteJson, fingerprintEnvironment, sanitizeRecord, truncateText } from "./lib/hardening.mjs"
-
-function isTruthy(value) {
-  return /^(1|true|yes|on)$/i.test(String(value || ""))
-}
+import { atomicWriteJson, fingerprintEnvironment, isTruthy, sanitizeRecord, truncateText } from "./lib/hardening.mjs"
 
 function getHarnessRoot(directory) {
   const home = process.env.USERPROFILE || os.homedir()
@@ -59,13 +55,6 @@ function formatContext(memory) {
   if (memory.decisions.length) parts.push(`## Recent Decisions\n${memory.decisions.slice(0, 3).map(d => `- ${d.summary}`).join("\n")}\n`)
   if (memory.mistakes.length) parts.push(`## Recent Mistakes (top ${Math.min(3, memory.mistakes.length)})\n${memory.mistakes.slice(0, 3).map(m => `- ${m.summary}`).join("\n")}\n`)
   return parts.join("\n")
-}
-
-function isFreshCache(cache, fingerprint) {
-  if (!cache || !cache.fingerprint || cache.fingerprint.sha256 !== fingerprint.sha256) return false
-  if (!cache.freshness_marker || !cache.freshness_marker.updated_at) return false
-  const ttlMs = Number.isFinite(cache.freshness_marker.ttl_ms) ? cache.freshness_marker.ttl_ms : 1800000
-  return (Date.now() - Date.parse(cache.freshness_marker.updated_at)) <= ttlMs
 }
 
 function validateMemoryRecord(record) {
