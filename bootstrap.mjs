@@ -1,6 +1,5 @@
 import path from "node:path"
 import fs from "node:fs"
-import os from "node:os"
 import { fileURLToPath } from "node:url"
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -9,8 +8,7 @@ const RULES_DIR = path.join(HARNESS_DIR, "rules")
 const SKILLS_DIR = path.join(HARNESS_DIR, "skills")
 const CONSTITUTION_FILE = path.join(HARNESS_DIR, "constitution", "soul.md")
 const RUNTIME_FILE = path.join(HARNESS_DIR, "instructions", "RUNTIME.md")
-const TOOLS_SOURCE_DIR = path.resolve(__dirname, "lib", "tools")
-const USER_TOOLS_DIR = path.join(os.homedir(), ".config", "opencode", "tools")
+
 
 let _bootstrapCache = undefined
 
@@ -116,35 +114,7 @@ function getOwnVersion() {
   } catch { return "1.0.0" }
 }
 
-function installToolFiles() {
-  try {
-    if (!fs.existsSync(TOOLS_SOURCE_DIR)) return
-    const files = fs.readdirSync(TOOLS_SOURCE_DIR).filter(f => f.endsWith(".mjs") && f !== "_memory.mjs")
-    if (!files.length) return
-    fs.mkdirSync(USER_TOOLS_DIR, { recursive: true })
-    const pkgVersion = getOwnVersion()
-    const markerPath = path.join(USER_TOOLS_DIR, ".openhermes-version")
-    let installedVersion = ""
-    try { installedVersion = fs.readFileSync(markerPath, "utf8").trim() } catch {}
-    if (installedVersion === pkgVersion) {
-      const existing = fs.readdirSync(USER_TOOLS_DIR).filter(f => f.endsWith(".mjs"))
-      const needed = [...files, "_memory.mjs"]
-      if (needed.every(f => existing.includes(f))) return
-    }
-    for (const f of ["_memory.mjs", ...files]) {
-      const src = path.join(TOOLS_SOURCE_DIR, f)
-      const dst = path.join(USER_TOOLS_DIR, f)
-      if (fs.existsSync(src)) fs.copyFileSync(src, dst)
-    }
-    fs.writeFileSync(markerPath, pkgVersion, "utf8")
-    process.stderr.write(`[openhermes-bootstrap] installed ${files.length + 1} tool files (v${pkgVersion})\n`)
-  } catch (err) {
-    process.stderr.write(`[openhermes-bootstrap] tool install error: ${err.message}\n`)
-  }
-}
-
 export const BootstrapPlugin = async ({ client, directory }) => {
-  installToolFiles()
 
   const getContent = () => {
     if (_bootstrapCache !== undefined) return _bootstrapCache
@@ -218,6 +188,23 @@ export const BootstrapPlugin = async ({ client, directory }) => {
       }
       for (const [name, def] of Object.entries(SUBAGENTS)) {
         if (!config.agent[name]) config.agent[name] = def
+      }
+
+      if (!config.agent["OpenHermes"]) {
+        config.agent["OpenHermes"] = {
+          description: "Fully autonomous primary coding agent (all tools allowed)",
+          mode: "primary",
+          color: "#F59E0B",
+          permission: {
+            bash: { "*": "allow" },
+            edit: "allow",
+            read: "allow",
+            task: { "*": "allow" }
+          }
+        }
+      }
+      if (!config.default_agent) {
+        config.default_agent = "OpenHermes"
       }
 
       config.command = config.command || {}

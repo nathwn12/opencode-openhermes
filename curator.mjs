@@ -5,7 +5,7 @@ import { findUnsupportedSchemaKeywords, validateSchema } from "./lib/schema-vali
 import { atomicWriteJson, fingerprintEnvironment, fingerprintFile, isTruthy, redactSensitiveText, sanitizeRecord, truncateText } from "./lib/hardening.mjs"
 import { fileURLToPath } from "node:url"
 import { dirname } from "node:path"
-import { getConfigRoot, getDataRoot, getMemoryRoot, getRuntimeRoot, getArchiveRoot, getSchemaRoot } from "./lib/paths.mjs"
+import { getDataRoot, getMemoryRoot, getRuntimeRoot, getArchiveRoot } from "./lib/paths.mjs"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -78,10 +78,8 @@ function updateLoopState(root, patch) {
 }
 
 function loadSchema(classId) {
-  const fp = path.join(getSchemaRoot(), `${classId}.schema.json`)
-  try { return JSON.parse(fs.readFileSync(fp, "utf8")) } catch {}
-  const bundled = path.join(__dirname, "schemas", `${classId}.schema.json`)
-  try { return JSON.parse(fs.readFileSync(bundled, "utf8")) } catch { return null }
+  const fp = path.join(__dirname, "schemas", `${classId}.schema.json`)
+  try { return JSON.parse(fs.readFileSync(fp, "utf8")) } catch { return null }
 }
 
 function validateRecordAgainstSchema(record) {
@@ -377,7 +375,7 @@ async function handlePermissionReplied(directory, project, event) {
       environment_fingerprint: environmentFingerprint,
     }
     const safeRecord = sanitizeRecord(record, { maxStringLength: 4000 })
-    const auditSchema = loadSchema("audit") || readJson(path.join(__dirname, "schemas", "audit.schema.json"), null)
+    const auditSchema = loadSchema("audit")
     if (auditSchema) {
       const unsupported = findUnsupportedSchemaKeywords(auditSchema)
       if (!unsupported.length) {
@@ -398,17 +396,22 @@ async function handlePermissionReplied(directory, project, event) {
 export const CuratorPlugin = async ({ project, directory }) => {
   return {
     event: async ({ event }) => {
-      const OLD_DATA = path.join(os.homedir(), ".config", "opencode", "openhermes", "memory")
+      const OLD_BASE = path.join(os.homedir(), ".config", "opencode", "openhermes")
       const SENTINEL = path.join(getDataRoot(), ".migrated-from-v1")
       if (!fs.existsSync(SENTINEL)) {
-        if (fs.existsSync(OLD_DATA)) {
-          fs.cpSync(OLD_DATA, getMemoryRoot(), { recursive: true })
-          fs.rmSync(OLD_DATA, { recursive: true, force: true })
+        const oldMemory = path.join(OLD_BASE, "memory")
+        if (fs.existsSync(oldMemory)) {
+          fs.cpSync(oldMemory, getMemoryRoot(), { recursive: true })
+          fs.rmSync(oldMemory, { recursive: true, force: true })
         }
-        const oldRuntime = path.join(os.homedir(), ".config", "opencode", "openhermes", "runtime")
+        const oldRuntime = path.join(OLD_BASE, "runtime")
         if (fs.existsSync(oldRuntime)) {
           fs.cpSync(oldRuntime, getRuntimeRoot(), { recursive: true })
           fs.rmSync(oldRuntime, { recursive: true, force: true })
+        }
+        const oldArchive = path.join(OLD_BASE, "archive")
+        if (fs.existsSync(oldArchive)) {
+          fs.rmSync(oldArchive, { recursive: true, force: true })
         }
         fs.writeFileSync(SENTINEL, new Date().toISOString(), "utf8")
       }

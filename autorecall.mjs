@@ -4,6 +4,8 @@ import fs from "node:fs"
 import { atomicWriteJson, fingerprintEnvironment, isTruthy, sanitizeRecord, truncateText } from "./lib/hardening.mjs"
 import { getDataRoot, getCacheRoot, getMemoryRoot, getRecallRoot, getRuntimeRoot } from "./lib/paths.mjs"
 
+const OLD_BASE = path.join(os.homedir(), ".config", "opencode", "openhermes")
+
 function readJson(fp, fallback) {
   try { return JSON.parse(fs.readFileSync(fp, "utf8")) } catch { return fallback }
 }
@@ -75,23 +77,27 @@ function formatMemoryWriteGap(memory) {
 }
 
 async function loadMemoryAndWriteCache(projectKey, directory) {
-  const OLD_MEMORY = path.join(os.homedir(), ".config", "opencode", "openhermes", "memory")
-  const OLD_CACHE = path.join(os.homedir(), ".config", "opencode", "openhermes", "memory", "recall")
   const SENTINEL = path.join(getDataRoot(), ".migrated-from-v1")
   if (!fs.existsSync(SENTINEL)) {
-    if (fs.existsSync(OLD_MEMORY)) {
-      fs.cpSync(OLD_MEMORY, getMemoryRoot(), { recursive: true })
-      fs.rmSync(OLD_MEMORY, { recursive: true, force: true })
+    const oldMemory = path.join(OLD_BASE, "memory")
+    if (fs.existsSync(oldMemory)) {
+      fs.cpSync(oldMemory, getMemoryRoot(), { recursive: true })
+      fs.rmSync(oldMemory, { recursive: true, force: true })
     }
-    if (fs.existsSync(OLD_CACHE)) {
+    const oldCache = path.join(OLD_BASE, "memory", "recall")
+    if (fs.existsSync(oldCache)) {
       fs.mkdirSync(getRecallRoot(), { recursive: true })
-      const files = fs.readdirSync(OLD_CACHE).filter(f => f.endsWith(".json"))
-      for (const f of files) fs.cpSync(path.join(OLD_CACHE, f), path.join(getRecallRoot(), f))
+      const files = fs.readdirSync(oldCache).filter(f => f.endsWith(".json"))
+      for (const f of files) fs.cpSync(path.join(oldCache, f), path.join(getRecallRoot(), f))
     }
-    const oldRuntime = path.join(os.homedir(), ".config", "opencode", "openhermes", "runtime")
+    const oldRuntime = path.join(OLD_BASE, "runtime")
     if (fs.existsSync(oldRuntime)) {
       fs.cpSync(oldRuntime, getRuntimeRoot(), { recursive: true })
       fs.rmSync(oldRuntime, { recursive: true, force: true })
+    }
+    const oldArchive = path.join(OLD_BASE, "archive")
+    if (fs.existsSync(oldArchive)) {
+      fs.rmSync(oldArchive, { recursive: true, force: true })
     }
     fs.writeFileSync(SENTINEL, new Date().toISOString(), "utf8")
   }
