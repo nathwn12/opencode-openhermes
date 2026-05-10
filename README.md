@@ -100,7 +100,7 @@ The LLM reads rules on demand via the injected paths. Memory directories auto-cr
 
 ## Context Pruner (OHC)
 
-Configure in `~/.config/opencode/openhermes/ohc.json`:
+Configure in `~/.config/opencode/openhermes/ohc.json` — auto-generated with defaults on first load if missing:
 
 ```json
 {
