@@ -143,10 +143,6 @@ export const BootstrapPlugin = async ({ client, directory }) => {
       const existingCommands = config.command ?? {}
       const existingAgents = { ...(config.agent ?? {}) }
 
-      if (existingAgents.build && typeof existingAgents.build === "object") {
-        existingAgents.build = { ...existingAgents.build, mode: "subagent", hidden: true }
-      }
-
       config.command = {
         ...existingCommands,
         "build-fix": { agent: "build-error-resolver", description: "Fix build and TypeScript errors", subtask: true, template: ct("build-fix.md") },
