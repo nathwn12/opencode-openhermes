@@ -23,8 +23,19 @@ export default async (input) => {
   ])
 
   const merged = {}
-  if (bootstrap.config) merged.config = bootstrap.config
-  if (memoryTools.tool) merged.tool = memoryTools.tool
+
+  const configHandler = chain(bootstrap.config, ohc.config)
+  if (configHandler) merged.config = configHandler
+
+  const toolHandlers = { ...memoryTools.tool, ...ohc.tool }
+  if (Object.keys(toolHandlers).length) merged.tool = toolHandlers
+
+  merged["experimental.chat.system.transform"] = chain(ohc["experimental.chat.system.transform"])
+  merged["experimental.chat.messages.transform"] = chain(
+    bootstrap["experimental.chat.messages.transform"],
+    ohc["experimental.chat.messages.transform"],
+  )
+  merged["command.execute.before"] = chain(ohc["command.execute.before"])
 
   const eventHandlers = [autorecall.event, curator.event, skillBuilder.event].filter(Boolean)
   if (eventHandlers.length) {
@@ -32,11 +43,6 @@ export default async (input) => {
       await Promise.all(eventHandlers.map(fn => fn(payload)))
     }
   }
-
-  merged["experimental.chat.messages.transform"] = chain(
-    bootstrap["experimental.chat.messages.transform"],
-    ohc["experimental.chat.messages.transform"],
-  )
 
   for (const hook of ["experimental.session.compacting", "tool.execute.after"]) {
     const handler = chain(curator[hook], skillBuilder[hook])

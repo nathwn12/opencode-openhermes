@@ -12,7 +12,7 @@
 
 ---
 
-**Your OpenCode agent, leveled up.** Add it to your plugins and your agent gains a personality, a memory, a conscience, 7 specialist subagents, 7 slash commands, 5 native memory tools, 10 procedural skills, autonomous checkpointing, and the discipline to self-improve.
+**Your OpenCode agent, leveled up.** Add it to your plugins and your agent gains a personality, a memory, a conscience, 7 specialist subagents, 8 slash commands, 5 native memory tools, 10 procedural skills, autonomous checkpointing, and the discipline to self-improve.
 
 ```bash
 npm i openhermes
@@ -71,7 +71,7 @@ Either way, **no other config needed.** The plugin auto-registers:
 | What | Details |
 |------|---------|
 | **7 subagents** | `architect`, `planner`, `code-reviewer`, `security-reviewer`, `build-error-resolver`, `e2e-runner`, `explore` |
-| **7 slash commands** | `/plan`, `/build-fix`, `/code-review`, `/security`, `/doctor`, `/memory-search`, `/learn` |
+| **7 slash commands** | `/plan`, `/build-fix`, `/code-review`, `/security`, `/doctor`, `/memory-search`, `/learn`, `/ohc` |
 | **5 native memory tools** | `hm_put`, `hm_get`, `hm_list`, `hm_latest`, `hm_search` — in-process, no MCP server needed |
 | **10 procedural skills** | API design, backend patterns, coding standards, E2E testing, frontend patterns, frontend slides, security review, strategic compaction, TDD workflow, verification loop |
 | **6 lifecycle plugins** | bootstrap, curator, autorecall, skill-builder, memory-tools, ohc |
@@ -116,7 +116,13 @@ Configure in `~/.config/opencode/openhermes/ohc.json` — auto-generated with de
 | `max` | `200000` | Prune when context exceeds this |
 | `min` | `50000` | Never prune below this token floor |
 
-Fully silent — no tool calls, no chat output, no toasts.
+System prompt is injected with your budget and floor. As context grows, progressive nudges appear at 70%, 85%, and 95% urging proactive compression. Use `/ohc compress [focus]` or call the `compress` tool to free space on demand.
+
+**Commands:**
+- `/ohc status` — show current context usage
+- `/ohc compress [focus]` — queue compression with optional focus description
+
+**Compress tool:** LLM-available. Model can call `compress` with a technical summary when it detects context pressure. Queued compression is applied on the next message cycle: oldest messages replaced with the summary.
 
 ---
 
@@ -129,7 +135,7 @@ Fully silent — no tool calls, no chat output, no toasts.
 | **CuratorPlugin** | `session.idle`, `.compacted`, `.error`, `.compacting`, `permission.replied` | Writes checkpoints, logs mistakes, records audits, injects state into compaction. |
 | **AutorecallPlugin** | `session.created` | Loads memory from disk, builds session recall cache. |
 | **SkillBuilderPlugin** | `session.idle`, `.created`, `tool.execute.after` | Detects complex sessions (8+ tool calls or 2+ subagent spawns) and creates skill-candidate backlogs. |
-| **OhcPlugin** | `experimental.chat.messages.transform` | Reads `ohc.json` (`max`/`min`), prunes oldest messages when context exceeds `max`, never goes below `min`. |
+| **OhcPlugin** | `config`, `experimental.chat.system.transform`, `.messages.transform`, `command.execute.before`, `tool.compress` | Reads `ohc.json`, injects system prompt with context budget, progressive nudges at 70%/85%/95%, silent reaper enforces hard limit. `/ohc` command + `compress` tool for on-demand. |
 
 ---
 
