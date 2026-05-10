@@ -128,8 +128,6 @@ export const BootstrapPlugin = async ({ client, directory }) => {
   }
 
   return {
-    name: "openhermes-bootstrap",
-
     config: async (config) => {
       config.skills = config.skills || {}
       config.skills.paths = config.skills.paths || []
@@ -137,61 +135,32 @@ export const BootstrapPlugin = async ({ client, directory }) => {
         config.skills.paths.push(SKILLS_DIR)
       }
 
-      config.agent = config.agent || {}
       const PROMPTS_DIR = path.join(HARNESS_DIR, "prompts")
       const p = (name) => `{file:${path.join(PROMPTS_DIR, name)}}`
+      const COMMANDS_DIR = path.join(HARNESS_DIR, "commands")
+      const ct = (file) => `{file:${path.join(COMMANDS_DIR, file)}}\n\n$ARGUMENTS`
 
-      const SUBAGENTS = {
-        "architect": {
-          description: "Software architecture specialist for system design",
-          mode: "subagent",
-          prompt: p("architect.txt"),
-          permission: { read: "allow", edit: "deny", bash: "deny" }
-        },
-        "build-error-resolver": {
-          description: "Build and TypeScript error resolution specialist",
-          mode: "subagent",
-          prompt: p("build-error-resolver.md"),
-          permission: { read: "allow", edit: "allow" }
-        },
-        "code-reviewer": {
-          description: "Expert code review specialist",
-          mode: "subagent",
-          prompt: p("code-reviewer.md"),
-          permission: { read: "allow", edit: "deny", bash: "deny", task: { explore: "allow", "*": "deny" } }
-        },
-        "e2e-runner": {
-          description: "End-to-end testing specialist using Playwright",
-          mode: "subagent",
-          prompt: p("e2e-runner.txt"),
-          permission: { read: "allow", edit: "allow" }
-        },
-        "explore": {
-          description: "Fast read-only codebase exploration agent",
-          mode: "subagent",
-          prompt: p("explore.md"),
-          permission: { read: "allow", grep: "allow", glob: "allow", list: "allow", edit: "deny", bash: "deny" }
-        },
-        "planner": {
-          description: "Expert planning specialist for complex features and refactoring",
-          mode: "subagent",
-          color: "#3B82F6",
-          prompt: p("planner.md"),
-          permission: { read: "allow", edit: "deny", bash: "deny" }
-        },
-        "security-reviewer": {
-          description: "Security vulnerability detection and remediation specialist",
-          mode: "subagent",
-          prompt: p("security-reviewer.md"),
-          permission: { read: "allow", edit: "deny", bash: "deny", task: { "*": "allow" } }
-        }
-      }
-      for (const [name, def] of Object.entries(SUBAGENTS)) {
-        if (!config.agent[name]) config.agent[name] = def
+      const existingCommands = config.command ?? {}
+      const existingAgents = { ...(config.agent ?? {}) }
+
+      if (existingAgents.build && typeof existingAgents.build === "object") {
+        existingAgents.build = { ...existingAgents.build, mode: "subagent", hidden: true }
       }
 
-      if (!config.agent["OpenHermes"]) {
-        config.agent["OpenHermes"] = {
+      config.command = {
+        ...existingCommands,
+        "build-fix": { agent: "build-error-resolver", description: "Fix build and TypeScript errors", subtask: true, template: ct("build-fix.md") },
+        "code-review": { agent: "code-reviewer", description: "Review code for quality, security, and maintainability", subtask: true, template: ct("code-review.md") },
+        "plan": { agent: "planner", description: "Create a detailed implementation plan", subtask: true, template: ct("plan.md") },
+        "security": { agent: "security-reviewer", description: "Run comprehensive security review", subtask: true, template: ct("security.md") },
+        "doctor": { agent: "OpenHermes", description: "Run OpenCode OpenHermes health diagnostics", subtask: true, template: ct("doctor.md") },
+        "memory-search": { agent: "OpenHermes", description: "Search OpenHermes memory with LLM summarization", subtask: true, template: ct("memory-search.md") },
+        "learn": { agent: "OpenHermes", description: "Create a new skill from recent work patterns", subtask: true, template: ct("learn.md") },
+      }
+
+      config.agent = {
+        ...existingAgents,
+        "OpenHermes": {
           description: "Fully autonomous primary coding agent (all tools allowed)",
           mode: "primary",
           color: "#F59E0B",
@@ -199,30 +168,55 @@ export const BootstrapPlugin = async ({ client, directory }) => {
             bash: { "*": "allow" },
             edit: "allow",
             read: "allow",
-            task: { "*": "allow" }
-          }
-        }
-      }
-      if (!config.default_agent) {
-        config.default_agent = "OpenHermes"
+            task: { "*": "allow" },
+          },
+        },
+        "architect": {
+          description: "Software architecture specialist for system design",
+          mode: "subagent",
+          prompt: p("architect.txt"),
+          permission: { read: "allow", edit: "deny", bash: "deny" },
+        },
+        "build-error-resolver": {
+          description: "Build and TypeScript error resolution specialist",
+          mode: "subagent",
+          prompt: p("build-error-resolver.md"),
+          permission: { read: "allow", edit: "allow" },
+        },
+        "code-reviewer": {
+          description: "Expert code review specialist",
+          mode: "subagent",
+          prompt: p("code-reviewer.md"),
+          permission: { read: "allow", edit: "deny", bash: "deny", task: { explore: "allow", "*": "deny" } },
+        },
+        "e2e-runner": {
+          description: "End-to-end testing specialist using Playwright",
+          mode: "subagent",
+          prompt: p("e2e-runner.txt"),
+          permission: { read: "allow", edit: "allow" },
+        },
+        "explore": {
+          description: "Fast read-only codebase exploration agent",
+          mode: "subagent",
+          prompt: p("explore.md"),
+          permission: { read: "allow", grep: "allow", glob: "allow", list: "allow", edit: "deny", bash: "deny" },
+        },
+        "planner": {
+          description: "Expert planning specialist for complex features and refactoring",
+          mode: "subagent",
+          color: "#3B82F6",
+          prompt: p("planner.md"),
+          permission: { read: "allow", edit: "deny", bash: "deny" },
+        },
+        "security-reviewer": {
+          description: "Security vulnerability detection and remediation specialist",
+          mode: "subagent",
+          prompt: p("security-reviewer.md"),
+          permission: { read: "allow", edit: "deny", bash: "deny", task: { "*": "allow" } },
+        },
       }
 
-      config.command = config.command || {}
-      const COMMANDS_DIR = path.join(HARNESS_DIR, "commands")
-      const ct = (file) => `{file:${path.join(COMMANDS_DIR, file)}}\n\n$ARGUMENTS`
-
-      const COMMANDS = {
-        "build-fix": { agent: "build-error-resolver", description: "Fix build and TypeScript errors", subtask: true, template: ct("build-fix.md") },
-        "code-review": { agent: "code-reviewer", description: "Review code for quality, security, and maintainability", subtask: true, template: ct("code-review.md") },
-        "plan": { agent: "planner", description: "Create a detailed implementation plan", subtask: true, template: ct("plan.md") },
-        "security": { agent: "security-reviewer", description: "Run comprehensive security review", subtask: true, template: ct("security.md") },
-        "doctor": { agent: "OpenHermes", description: "Run OpenCode OpenHermes health diagnostics", subtask: true, template: ct("doctor.md") },
-        "memory-search": { agent: "OpenHermes", description: "Search OpenHermes memory with LLM summarization", subtask: true, template: ct("memory-search.md") },
-        "learn": { agent: "OpenHermes", description: "Create a new skill from recent work patterns", subtask: true, template: ct("learn.md") }
-      }
-      for (const [name, def] of Object.entries(COMMANDS)) {
-        if (!config.command[name]) config.command[name] = def
-      }
+      config.default_agent = "OpenHermes"
     },
 
     "experimental.chat.messages.transform": async (_input, output) => {

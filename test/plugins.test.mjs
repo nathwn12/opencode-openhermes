@@ -2,13 +2,9 @@ import { describe, it } from "node:test"
 import assert from "node:assert/strict"
 
 describe("plugin exports", () => {
-  it("index.mjs exports all 5 plugins", async () => {
+  it("index.mjs default exports merged plugin", async () => {
     const pkg = await import("../index.mjs")
-    assert.ok(typeof pkg.AutorecallPlugin === "function")
-    assert.ok(typeof pkg.CuratorPlugin === "function")
-    assert.ok(typeof pkg.SkillBuilderPlugin === "function")
-    assert.ok(typeof pkg.BootstrapPlugin === "function")
-    assert.ok(typeof pkg.MemoryToolsPlugin === "function")
+    assert.ok(typeof pkg.default === "function")
   })
 
   it("autorecall.mjs exports AutorecallPlugin", async () => {
