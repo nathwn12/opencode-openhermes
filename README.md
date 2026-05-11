@@ -25,7 +25,7 @@ No Python. No Docker. No cron. No database. Just Node.js and your existing OpenC
 ## What OpenHermes Does For Your Agent
 
 <table>
-<tr><td width="180"><b>&#129302; Constitutional Spine</b></td><td>An 11-principle constitution (<code>soul.md</code>) injected into every session — pragmatic, concise, subagent-first, verify-don't-claim. Your agent stops rambling and starts delivering.</td></tr>
+<tr><td width="180"><b>&#129302; Constitutional Spine</b></td><td>A 14-principle constitution (<code>CONSTITUTION.md</code>) injected into every session — pragmatic, concise, subagent-first, verify-don't-claim, adaptive. Your agent stops rambling and starts delivering.</td></tr>
 <tr><td><b>&#128204; Structured Handoff Protocol</b></td><td>Every agent knows its permission tier and handoff triggers. Review agents never edit. Builders never approve their own work. Security reports only. Tasks are complexity-graded (easy → very-large) and routed to the right specialist automatically.</td></tr>
 <tr><td><b>&#128190; 9-Class Durable Memory</b></td><td>Checkpoints, decisions, constraints, instincts, mistakes, backlog items, audit reports, verification receipts, and session recall — all schema-validated, fingerprint-aware, persisted to disk. Retrieval is gated and precision-first.</td></tr>
 <tr><td><b>&#128260; Closed Learning Loop</b></td><td>Mistakes are logged with root cause + prevention rule. Complex sessions auto-generate skill-candidate backlogs. Strike tracking escalates repeat failures into structural fixes. The agent gets better — you don't teach it twice.</td></tr>
@@ -199,7 +199,7 @@ The full operational doctrine ships inside the package. Six directories, zero de
 
 | Directory | Contents | Purpose |
 |-----------|----------|---------|
-| `constitution/` | `soul.md` — 11 immutable principles | Your agent's personality, frozen |
+| `codex/` | `CONSTITUTION.md` — 14 immutable principles | Your agent's behavior, frozen per session |
 | `instructions/` | Runtime workflow + coding conventions | The playbook every session runs on |
 | `rules/` | 17 files: retrieval, verification, audit, self-heal, delegation, handoff | The legal framework — no ambiguity |
 | `skills/` | 10 procedural SKILL.md files | Domain expertise discovered automatically |
@@ -245,7 +245,7 @@ openhermes/
 ├── ⚡ schemas/               # 9 Draft-07 memory schemas
 │
 ├── 📦 harness/
-│   ├── constitution/         # soul.md — 11 principles
+│   ├── codex/                # CONSTITUTION.md — 14 principles
 │   ├── instructions/         # runtime + conventions
 │   ├── rules/                # 17 files (handoff.md + 16 existing)
 │   ├── skills/               # 10 procedural skills

@@ -1,10 +1,13 @@
 import path from "node:path"
 import fs from "node:fs"
+import os from "node:os"
 import { fileURLToPath } from "node:url"
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const CONFIG_DIR = path.join(os.homedir(), ".config", "opencode")
+const OVERRIDE_SOUL = path.join(CONFIG_DIR, "SOUL.md")
 const REQUIRED_HARNESS_FILES = [
-  ["constitution", "soul.md"],
+  ["codex", "CONSTITUTION.md"],
   ["instructions", "RUNTIME.md"],
   ["commands", "doctor.md"],
   ["prompts", "architect.txt"],
@@ -67,7 +70,7 @@ export function resolveHarnessRoot({
 const HARNESS_DIR = resolveHarnessRoot()
 const RULES_DIR = path.join(HARNESS_DIR, "rules")
 const SKILLS_DIR = path.join(HARNESS_DIR, "skills")
-const CONSTITUTION_FILE = path.join(HARNESS_DIR, "constitution", "soul.md")
+const CONSTITUTION_FILE = path.join(HARNESS_DIR, "codex", "CONSTITUTION.md")
 const RUNTIME_FILE = path.join(HARNESS_DIR, "instructions", "RUNTIME.md")
 
 
@@ -112,8 +115,23 @@ export function buildCapabilityMap(hDir) {
   ].join("\n")
 }
 
+export function loadLocalSoulOverride(overridePath) {
+  const filePath = overridePath || OVERRIDE_SOUL
+  try {
+    if (fs.existsSync(filePath)) {
+      const text = fs.readFileSync(filePath, "utf8").trim()
+      if (text) return text
+    }
+  } catch {}
+  return null
+}
+
 function buildBootstrapContent() {
-  const constitution = fs.readFileSync(CONSTITUTION_FILE, "utf8")
+  let constitution = fs.readFileSync(CONSTITUTION_FILE, "utf8")
+  const localOverride = loadLocalSoulOverride()
+  if (localOverride) {
+    constitution += `\n\n## Local Overrides (survives reinstalls)\n\n${localOverride}`
+  }
   const runtime = fs.readFileSync(RUNTIME_FILE, "utf8")
   const capMap = buildCapabilityMap(HARNESS_DIR)
 
@@ -121,7 +139,7 @@ function buildBootstrapContent() {
 
 OpenHermes thin constitutional router. Full harness → \`${HARNESS_DIR}\\\`.
 
-## Soul
+## Constitution
 
 Pragmatic. Concise. Task-oriented. Subagent-first. Inspect, then act. Scope to the problem. Verify, don't claim. Receipts over vibes. Recover by narrowing, not posturing. Skeptical — demand proof. Precision-first search: needle then broad, never reverse.
 
@@ -192,7 +210,7 @@ Full tiers: \`${RULES_DIR}\\\\self-heal.md\`.
 
 ## Precedence
 
-1. User instruction. 2. Safety/legal/destructive guard. 3. Constitution (\`${HARNESS_DIR}\\\\constitution\\\`). 4. Project constraints. 5. Project decisions. 6. Verified guards. 7. Checkpoints. 8. Instincts. 9. Freeform notes. Full: \`${RULES_DIR}\\\\precedence.md\`.
+1. User instruction. 2. Safety/legal/destructive guard. 3. Constitution (\`${HARNESS_DIR}\\\\codex\\\`). 4. Project constraints. 5. Project decisions. 6. Verified guards. 7. Checkpoints. 8. Instincts. 9. Freeform notes. Full: \`${RULES_DIR}\\\\precedence.md\`.
 
 ## Hygiene
 

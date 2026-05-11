@@ -92,11 +92,11 @@ describe("plugin structure", () => {
     const badRoot = path.join(tmpRoot, "bad")
     const goodRoot = path.join(tmpRoot, "good")
 
-    fs.mkdirSync(path.join(badRoot, "constitution"), { recursive: true })
-    fs.writeFileSync(path.join(badRoot, "constitution", "soul.md"), "# incomplete\n")
+    fs.mkdirSync(path.join(badRoot, "codex"), { recursive: true })
+    fs.writeFileSync(path.join(badRoot, "codex", "CONSTITUTION.md"), "# incomplete\n")
 
     const requiredFiles = [
-      ["constitution", "soul.md"],
+      ["codex", "CONSTITUTION.md"],
       ["instructions", "RUNTIME.md"],
       ["commands", "doctor.md"],
       ["prompts", "architect.txt"],

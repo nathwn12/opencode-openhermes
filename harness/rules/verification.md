@@ -1,6 +1,6 @@
 # Verification — Skeptical Evidence Protocol
 
-Constitutional parent: principle 11 (`openhermes\constitution\soul.md`).
+Constitutional parent: principle 11 (`openhermes\codex\CONSTITUTION.md`).
 Trust nothing without evidence. Every claim, instruction, document, and behavioral assertion must be confirmed by personal observation or a cached verification receipt before it may be treated as ground truth.
 
 Verification receipts prove that an artifact was observed in a particular state. They do not, by themselves, prove a live runtime claim unless the receipt captures a live-session artifact or log.

@@ -10,7 +10,7 @@ This is the single canonical authority taxonomy. `ranking.md` sorts within each 
 |----------|--------|-------|---------------|
 | 1 | Current explicit user instruction | Task/session | Overrides everything below |
 | 2 | Safety / legal / destructive-action constraints (hard enforcement) | Global | Only overridable by #1 |
-| 3 | Immutable constitution (`openhermes\constitution\`) | Global | Only overridable by #1, #2 |
+| 3 | Immutable constitution (`openhermes\codex\`) | Global | Only overridable by #1, #2 |
 | 4 | Active project constraints (`enforcement: hard`) | Project | Only overridable by #1-#3 |
 | 5 | Current project decisions (`status: active`) | Project | Only overridable by #1-#4 |
 | 6 | Verified safety / mistake guards | Project/global | Only overridable by #1-#5 |
@@ -44,7 +44,7 @@ A conflict exists when two active items at the same precedence level prescribe i
 
 ## Constitution Immutability
 
-The 11 principles in `openhermes\constitution\soul.md` are immutable without:
+The 14 principles in `openhermes\codex\CONSTITUTION.md` are immutable without:
 1. Explicit user approval
 2. A full architecture handoff document
 3. Verification that the change does not break openhermes integrity

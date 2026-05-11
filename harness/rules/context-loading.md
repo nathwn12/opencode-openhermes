@@ -7,7 +7,7 @@
 4. `.cursorrules`
 5. `.cursor/rules/*.mdc`
 
-`openhermes/constitution/soul.md` loads independently — always injected as `OPENHERMES PERSONALITY`, frozen at session start.
+`openhermes/codex/CONSTITUTION.md` loads independently — always injected as `OPENHERMES CONSTITUTION`, frozen at session start.
 
 ## Progressive Subdirectory Discovery
 When navigating into subdirs, check target dir + up to 3 parents for context files. Appended to tool result (not system prompt). Each subdirectory checked once per session.
