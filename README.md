@@ -100,7 +100,7 @@ The LLM reads rules on demand via the injected paths. Memory directories auto-cr
 
 ## Context Pruner (OHC)
 
-Configure in `~/.config/opencode/openhermes/ohc.json` — auto-generated with defaults on first load if missing:
+Configure in `~/.config/opencode/ohc.json` — auto-generated with defaults on first load if missing:
 
 ```json
 {
@@ -159,7 +159,7 @@ OpenHermes follows the same storage contract as OpenCode itself:
 
 | What | Where |
 |---|---|
-| Config (schemas, archive) | `~/.config/opencode/openhermes/` |
+| OHC settings | `~/.config/opencode/ohc.json` |
 | Durable memory + runtime state | `~/.local/share/opencode/openhermes/` |
 | Derived recall cache | `~/.cache/opencode/openhermes/recall/` |
 

@@ -1,6 +1,6 @@
 ## OpenHermes Runtime
 
-Root: `%USERPROFILE%\.config\opencode\openhermes\`. AGENTS.md is the routing layer.
+Root: `%USERPROFILE%\.config\opencode\`. AGENTS.md is the routing layer.
 
 **Memory**: Use `hm_*` MCP tools for deterministic read/write. Raw receipt fallback: `%USERPROFILE%\.local\share\opencode\opencode.db`. Never invent prior state.
 
