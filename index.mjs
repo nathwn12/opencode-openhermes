@@ -3,6 +3,7 @@ import { CuratorPlugin } from "./curator.mjs"
 import { SkillBuilderPlugin } from "./skill-builder.mjs"
 import { BootstrapPlugin } from "./bootstrap.mjs"
 import { MemoryToolsPlugin } from "./lib/memory-tools-plugin.mjs"
+import { AmbientMemoryPlugin } from "./lib/ambient-memory.mjs"
 import { OhcPlugin } from "./lib/ohc/pruner.mjs"
 import { UpdaterPlugin } from "./lib/ohc/updater.mjs"
 
@@ -14,12 +15,13 @@ function chain(...fns) {
 }
 
 export default async (input) => {
-  const [bootstrap, autorecall, curator, skillBuilder, memoryTools, ohc, updater] = await Promise.all([
+  const [bootstrap, autorecall, curator, skillBuilder, memoryTools, ambient, ohc, updater] = await Promise.all([
     BootstrapPlugin(input),
     AutorecallPlugin(input),
     CuratorPlugin(input),
     SkillBuilderPlugin(input),
     MemoryToolsPlugin(input),
+    AmbientMemoryPlugin(input),
     OhcPlugin(input),
     UpdaterPlugin(input),
   ])
@@ -33,6 +35,7 @@ export default async (input) => {
 
   merged["experimental.chat.system.transform"] = chain(ohc["experimental.chat.system.transform"])
   merged["experimental.chat.messages.transform"] = chain(
+    ambient["experimental.chat.messages.transform"],
     bootstrap["experimental.chat.messages.transform"],
     ohc["experimental.chat.messages.transform"],
   )

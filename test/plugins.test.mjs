@@ -10,9 +10,10 @@ describe("plugin exports", () => {
     assert.ok(typeof pkg.default === "function")
   })
 
-  it("autorecall.mjs exports AutorecallPlugin", async () => {
+  it("autorecall.mjs exports AutorecallPlugin and refreshRecallCache", async () => {
     const mod = await import("../autorecall.mjs")
     assert.ok(typeof mod.AutorecallPlugin === "function")
+    assert.ok(typeof mod.refreshRecallCache === "function")
   })
 
   it("curator.mjs exports CuratorPlugin", async () => {
@@ -28,6 +29,11 @@ describe("plugin exports", () => {
   it("bootstrap.mjs exports BootstrapPlugin", async () => {
     const mod = await import("../bootstrap.mjs")
     assert.ok(typeof mod.BootstrapPlugin === "function")
+  })
+
+  it("lib/ambient-memory.mjs exports AmbientMemoryPlugin", async () => {
+    const mod = await import("../lib/ambient-memory.mjs")
+    assert.ok(typeof mod.AmbientMemoryPlugin === "function")
   })
 
   it("lib/ohc/pruner.mjs exports OhcPlugin", async () => {
@@ -73,6 +79,11 @@ describe("plugin structure", () => {
     assert.ok(typeof plugin["experimental.chat.messages.transform"] === "function")
     assert.ok(typeof plugin["command.execute.before"] === "function")
     assert.ok(typeof plugin.tool?.compress?.execute === "function")
+  })
+
+  it("AmbientMemoryPlugin returns chat.transform hook", async () => {
+    const plugin = await AmbientMemoryPlugin()
+    assert.ok(typeof plugin["experimental.chat.messages.transform"] === "function")
   })
 
   it("resolveHarnessRoot picks a complete fallback root", async () => {
@@ -142,4 +153,8 @@ async function BootstrapPlugin(ctx) {
 async function OhcPlugin(ctx) {
   const mod = await import("../lib/ohc/pruner.mjs")
   return mod.OhcPlugin(ctx)
+}
+async function AmbientMemoryPlugin() {
+  const mod = await import("../lib/ambient-memory.mjs")
+  return mod.AmbientMemoryPlugin()
 }

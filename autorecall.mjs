@@ -5,6 +5,76 @@ import { atomicWriteJson, fingerprintEnvironment, isTruthy, readJson, readJsonl,
 import { getDataRoot, getCacheRoot, getMemoryRoot, getRecallRoot, getRuntimeRoot } from "./lib/paths.mjs"
 
 const OLD_BASE = path.join(os.homedir(), ".config", "opencode", "openhermes")
+const BOILERPLATE_SUMMARY = /^(Idle checkpoint for|Pre-compaction checkpoint for|Placeholder checkpoint|Session in progress|No active checkpoint)/i
+const PLURALS = { audit: "audits", checkpoint: "checkpoints", mistake: "mistakes", instinct: "instincts", decision: "decisions", constraint: "constraints", backlog: "backlog", verification_receipt: "verification_receipts" }
+
+function classDir(cls) { return path.join(getMemoryRoot(), PLURALS[cls]) }
+
+function hasExpired(r) {
+  if (r?.status === "expired" || r?.status === "decayed") return true
+  if (r?.decay_at && Date.parse(r.decay_at) < Date.now()) return true
+  if (r?.expires_at && Date.parse(r.expires_at) < Date.now()) return true
+  return false
+}
+
+function sweepStaleRecords() {
+  const classes = ["checkpoints", "constraints", "decisions", "instincts", "audits", "backlog", "verification_receipts"]
+  let swept = 0
+  for (const plural of classes) {
+    const dir = path.join(getMemoryRoot(), plural)
+    let files = []
+    try { files = fs.readdirSync(dir).filter(f => f.endsWith(".json") && f !== "index.json") } catch { continue }
+    for (const f of files) {
+      const fp = path.join(dir, f)
+      const record = readJson(fp, null)
+      if (!record || !hasExpired(record)) continue
+      if (record.status === "expired" || record.status === "decayed") continue
+      record.status = "expired"
+      record.updated_at = new Date().toISOString()
+      atomicWriteJson(fp, record)
+
+      const indexPath = path.join(dir, "index.json")
+      let index = readJson(indexPath, [])
+      if (Array.isArray(index)) {
+        const idx = index.findIndex(e => e?.id === record.id)
+        if (idx >= 0) { index[idx].status = "expired"; index[idx].updated_at = record.updated_at }
+        atomicWriteJson(indexPath, index)
+      }
+      swept++
+    }
+  }
+  return swept
+}
+
+function sweepBoilerplateCheckpoints() {
+  const dir = path.join(getMemoryRoot(), "checkpoints")
+  let files = []
+  try { files = fs.readdirSync(dir).filter(f => f.endsWith(".json") && f !== "index.json") } catch { return 0 }
+  const cutoff = Date.now() - 86400000
+  let archived = 0
+  for (const f of files) {
+    const fp = path.join(dir, f)
+    const record = readJson(fp, null)
+    if (!record || record.status === "expired" || record.status === "archived") continue
+    if (!BOILERPLATE_SUMMARY.test(record.summary || "")) continue
+    const ts = Date.parse(record.updated_at || record.created_at || 0)
+    if (Number.isNaN(ts) || ts > cutoff) continue
+    record.status = "archived"
+    record.archived_at = new Date().toISOString()
+    record.updated_at = record.archived_at
+    atomicWriteJson(fp, record)
+
+    const indexPath = path.join(dir, "index.json")
+    let index = readJson(indexPath, [])
+    if (Array.isArray(index)) {
+      const idx = index.findIndex(e => e?.id === record.id)
+      if (idx >= 0) { index[idx].status = "archived"; index[idx].updated_at = record.updated_at }
+      atomicWriteJson(indexPath, index)
+    }
+    archived++
+  }
+  return archived
+}
 
 function loadMemoryRecord(root, className, entry) {
   const recordPath = path.join(root, "memory", className, `${entry.id}.json`)
@@ -66,7 +136,13 @@ function formatMemoryWriteGap(memory) {
   return `## Memory Write Gap\nThese memory classes are empty: ${gaps.join(", ")}. Write at least one ${gaps[0]} this session.`
 }
 
+export async function refreshRecallCache(projectKey, directory) {
+  await loadMemoryAndWriteCache(projectKey, directory)
+}
+
 async function loadMemoryAndWriteCache(projectKey, directory) {
+  sweepStaleRecords()
+  sweepBoilerplateCheckpoints()
   const SENTINEL = path.join(getDataRoot(), ".migrated-from-v1")
   if (!fs.existsSync(SENTINEL)) {
     const oldMemory = path.join(OLD_BASE, "memory")
