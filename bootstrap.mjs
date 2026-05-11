@@ -170,6 +170,7 @@ export const BootstrapPlugin = async ({ client, directory }) => {
         "memory-search": { agent: "OpenHermes", description: "Search OpenHermes memory with LLM summarization", subtask: true, template: ct("memory-search.md") },
         "learn": { agent: "OpenHermes", description: "Create a new skill from recent work patterns", subtask: true, template: ct("learn.md") },
         "ohc": { template: "", description: "OHC context management: /ohc status, /ohc compress [focus]" },
+        "update-me": { template: "", description: "Force reinstall OpenHermes plugin from latest source" },
         "orchestrate": { agent: "planner", description: "Orchestrate multiple agents for complex tasks", subtask: true, template: ct("orchestrate.md") },
         "eval": { agent: "planner", description: "Evaluate implementation against acceptance criteria", subtask: true, template: ct("eval.md") },
         "model-route": { agent: "OpenHermes", description: "Recommend model tier by task complexity and budget", subtask: true, template: ct("model-route.md") },

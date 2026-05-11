@@ -60,19 +60,19 @@ function printReport(registry, filesOnDisk, hookCommands, cmdNames) {
   console.log("")
   console.log("  COMMAND SYNC REPORT")
   console.log("  " + "=".repeat(50))
-  console.log(`  Registered in bootstrap.mjs:  ${Object.keys(registry).length}`)
-  console.log(`  Files in harness/commands/:    ${Object.keys(filesOnDisk).length}`)
-  console.log(`  Hook-only (no registry):        ${hookCommands.length}`)
-  console.log(`  Total real commands:           ${cmdNames.length}`)
-  console.log("")
-
   const registered = new Set(Object.keys(registry))
   const onDisk = new Set(Object.keys(filesOnDisk))
   const allHooks = new Set(hookCommands.map(h => h.name))
+  const hookNoReg = [...allHooks].filter(n => !registered.has(n) && !onDisk.has(n))
+
+  console.log(`  Registered in bootstrap.mjs:  ${registered.size}`)
+  console.log(`  Files in harness/commands/:    ${onDisk.size}`)
+  console.log(`  Hook-only (no registry):        ${hookNoReg.length}`)
+  console.log(`  Total real commands:           ${cmdNames.length}`)
+  console.log("")
 
   const registeredNoFile = [...registered].filter(n => !onDisk.has(n))
   const fileNotRegistered = [...onDisk].filter(n => !registered.has(n) && !allHooks.has(n))
-  const hookNoReg = [...allHooks].filter(n => !registered.has(n) && !onDisk.has(n))
 
   if (registeredNoFile.length) {
     console.log("  ⚠ REGISTERED, NO FILE:")
@@ -140,7 +140,9 @@ subtask: true
 }
 
 function getCommandNames(registry, hookCommands) {
-  const names = [...Object.keys(registry), ...hookCommands.map(h => h.name)]
+  const registered = new Set(Object.keys(registry))
+  const hookOnly = hookCommands.filter(h => !registered.has(h.name)).map(h => h.name)
+  const names = [...registered, ...hookOnly]
   names.sort()
   return names
 }

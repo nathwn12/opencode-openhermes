@@ -85,7 +85,7 @@ You only need to define primary agents (like `build` or `OpenHermes`) in `openco
 <details>
 <summary><b>What happens on your next session</b></summary>
 
-1. **Config hook** — BootstrapPlugin registers auto-config: 25 subagents, 27 commands, 10 skill dirs.
+1. **Config hook** — BootstrapPlugin registers auto-config: 25 subagents, 28 commands, 10 skill dirs.
 2. **Chat transform hook** — bootstrap content is injected into the first user message:
    - &#9733; **Constitution** (`soul.md`) — 11 immutable principles
    - &#9733; **Runtime** (`RUNTIME.md`) — gather → delegate → verify → compress
@@ -153,7 +153,7 @@ System prompt is injected with your budget and floor. As context grows, progress
 ### BootstrapPlugin
 _Registers agents, commands, skills at config hook; injects constitution + router + runtime into every session._
 - **Hooks:** `config`, `chat.transform`
-- Registers 25 subagents, 27 commands, 10 skill paths
+- Registers 25 subagents, 28 commands, 10 skill paths
 
 ### MemoryToolsPlugin
 _Provides 6 native memory tools — no MCP server, no network, no sidecars._
