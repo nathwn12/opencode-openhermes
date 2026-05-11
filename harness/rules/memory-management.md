@@ -15,13 +15,13 @@
 
 ## Capacity & Dedup
 
-- **80% cap**: Consolidate before adding more. Use `add_memory` with `supersedes` to merge related entries and preserve audit trail.
-- **Dedup**: `search_memory` before writing. If match exists, update existing. Require >=2 confirming instances for `instinct`, >=1 explicit statement for `decision`.
+- **80% cap**: Consolidate before adding more. Use `ohc_save` with `supersedes` to merge related entries and preserve audit trail.
+- **Dedup**: `ohc_search` before writing. If match exists, update existing. Require >=2 confirming instances for `instinct`, >=1 explicit statement for `decision`.
 
 ## Operations
 
-- Write with `add_memory(class="instinct"|"decision", ...)` during sessions, not only at end.
-- Load active records at session start: `list_memory(class="instinct", limit=5)` and `list_memory(class="decision", limit=5)`.
+- Write with `ohc_save(class="instinct"|"decision", ...)` during sessions, not only at end.
+- Load active records at session start: `ohc_list(class="instinct", limit=5)` and `ohc_list(class="decision", limit=5)`.
 
 ## Security
 

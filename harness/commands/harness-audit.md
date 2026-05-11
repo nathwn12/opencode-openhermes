@@ -42,7 +42,7 @@ Evaluate each category by inspecting the harness files directly. No external scr
 - [ ] checkpoint.md enables state tracking
 
 ### 4. Memory Persistence (0-10)
-- [ ] Memory tools documented (add_memory/fetch_memory/list_memory/latest_memory/search_memory)
+- [ ] Memory tools documented (ohc_save/ohc_get/ohc_list/ohc_latest/ohc_search)
 - [ ] Checkpoint command references memory persistence
 - [ ] Mistake/audit logging workflow documented
 - [ ] Recall cache strategy defined

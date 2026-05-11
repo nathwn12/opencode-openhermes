@@ -11,7 +11,7 @@ Create a new reusable skill from recent work patterns. $ARGUMENTS
 ## Your Task
 
 1. **Search backlog** for pending skill candidates:
-   - Use `search_memory` with query="skill-candidate" classes=["backlog"]
+   - Use `ohc_search` with query="skill-candidate" classes=["backlog"]
    - If $ARGUMENTS is non-empty, narrow search to that topic
 2. **Analyze the candidate** — what pattern did the session reveal?
 3. **Create the skill**:
@@ -19,7 +19,7 @@ Create a new reusable skill from recent work patterns. $ARGUMENTS
    - Follow its instructions to create a new SKILL.md
    - Target: `%USERPROFILE%\.config\opencode\skills\<name>\SKILL.md`
    - Naming: lowercase, hyphenated, descriptive
-4. **Close the backlog entry**: `add_memory(class="backlog", id="<candidate-id>", data={..., status:"closed"})`
+4. **Close the backlog entry**: `ohc_save(class="backlog", id="<candidate-id>", data={..., status:"closed"})`
 5. **Report**: What skill was created, where, and what it does
 
 ## Skill Requirements

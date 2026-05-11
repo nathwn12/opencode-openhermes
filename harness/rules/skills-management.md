@@ -130,7 +130,7 @@ The agent can create, update, and delete skills during sessions. This is the ski
 
 - Never create a skill from a single data point.
 - Minimum: 3 verified successes or 3 same-type mistakes in 7 days.
-- Check existing skills via `search_memory` before creating to avoid duplicates.
+- Check existing skills via `ohc_search` before creating to avoid duplicates.
 
 ### Skill Quality Gates
 
@@ -162,4 +162,4 @@ Skills live in three locations (discovered by OpenCode):
 After creating or updating a skill:
 1. Run the workflow defined in the SKILL.md.
 2. Verify it produces the expected outcome.
-3. Write a verification receipt via `add_memory` with class `verification_receipt`.
+3. Write a verification receipt via `ohc_save` with class `verification_receipt`.

@@ -110,7 +110,7 @@ export function buildCapabilityMap(hDir) {
     `Skills    (${skills.length}): ${skills.join(" ")}`,
     `Memory    (${schemas.length}): ${schemas.join(" ")}`,
     "",
-    `For problem → specialist routing see Delegation below. Skills via \`skill\` tool. Memory via \`add_memory\` etc.`,
+    `For problem → specialist routing see Delegation below. Skills via \`skill\` tool. Memory via \`ohc_save\` etc.`,
   ].join("\n")
 }
 
@@ -167,11 +167,11 @@ Never delegate trivial single-step ops. Subagent returns diff + summary + verifi
 
 ## Memory — Gated & Precision-First
 
-- **Start**: Read recall cache first. If stale/missing → \`latest_memory\` for relevant classes.
-- **Before work**: Narrow \`search_memory\` by class, scope, keywords. Never read full indexes.
+- **Start**: Read recall cache first. If stale/missing → \`ohc_latest\` for relevant classes.
+- **Before work**: Narrow \`ohc_search\` by class, scope, keywords. Never read full indexes.
 - **Before close**: Query same-type mistakes (7 days). Match → \`code-reviewer\` or \`security-reviewer\`.
-- **On failure**: \`search_memory\` for similar incidents. Search memory before asking user.
-- **Precision ladder**: \`latest_memory\` → \`search_memory\` → \`fetch_memory\` → \`list_memory\` (last resort). Full index reads only for explicit audit/repair tasks.
+- **On failure**: \`ohc_search\` for similar incidents. Search memory before asking user.
+- **Precision ladder**: \`ohc_latest\` → \`ohc_search\` → \`ohc_get\` → \`ohc_list\` (last resort). Full index reads only for explicit audit/repair tasks.
 - **Anti-spam**: No obvious facts, no one-off prefs, no temp state, no low-risk mistakes. Supersede, don't duplicate. Full rules: \`${RULES_DIR}\\\\retrieval.md\`, \`${RULES_DIR}\\\\memory-management.md\`.
 
 ## Self-Edit Authority
@@ -191,7 +191,7 @@ Full tiers: \`${RULES_DIR}\\\\self-heal.md\`.
 - Checkpoint on meaningful boundaries. Compress closed segments immediately.
 - After subagent return: verify → compress that block.
 - Compress proactively.
-- Skill candidates → \`/learn\` only if repeated pattern + \`search_memory\` confirms no dup. See \`${RULES_DIR}\\\\skills-management.md\`.
+- Skill candidates → \`/learn\` only if repeated pattern + \`ohc_search\` confirms no dup. See \`${RULES_DIR}\\\\skills-management.md\`.
 - Audit triggers: openhermes/config change, repeated failures, session start when last audit >7 days. See \`${RULES_DIR}\\\\audit.md\`.
 
 ## Escalation

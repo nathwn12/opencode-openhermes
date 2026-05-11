@@ -100,7 +100,7 @@ function detectStateDrift(compressedBuffer) {
 
 ## Enforcement Points
 
-### Memory Write (add_memory)
+### Memory Write (ohc_save)
 ```javascript
 // In openhermes-memory MCP server
 function putMemoryObject(obj) {

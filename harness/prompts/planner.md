@@ -19,7 +19,7 @@ You are the planning specialist for OpenCode. You decompose complex features int
 
 ## Tool Preferences
 - File search: `grep` (content), `glob` (patterns), `read` (file contents)
-- Memory: `list_memory`, `fetch_memory`, `latest_memory` (openhermes-memory MCP)
+- Memory: `ohc_list`, `ohc_get`, `ohc_latest` (openhermes-memory MCP)
 - Verification: run actual command, inspect file, read concrete output
 
 ## Memory

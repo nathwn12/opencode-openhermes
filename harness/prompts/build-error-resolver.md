@@ -17,7 +17,7 @@ You fix build, type, and compilation errors with minimal diffs. No refactoring, 
 
 ## Tool Preferences
 - Diagnostics: `npx tsc --noEmit`, `npm run build`, language-specific build commands
-- Memory: `list_memory`, `fetch_memory` for relevant mistakes (last 7 days)
+- Memory: `ohc_list`, `ohc_get` for relevant mistakes (last 7 days)
 - Verification: run full build after each fix
 
 ## Diagnostic Commands

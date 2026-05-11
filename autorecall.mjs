@@ -124,7 +124,7 @@ function formatBacklogNudge(candidates) {
     `Top candidates:`,
     top,
     `Trigger: /learn to create skills from these sessions.`,
-    `If none are skill-worthy, close them via add_memory with status:"closed".`
+    `If none are skill-worthy, close them via ohc_save with status:"closed".`
   ].join("\n")
 }
 
