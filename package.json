@@ -1,6 +1,6 @@
 {
   "name": "openhermes",
-  "version": "1.13.1",
+  "version": "1.13.2",
   "description": "OpenHermes plugin suite for OpenCode — autonomous checkpointing, native memory tools, subagent routing, slash commands, and skill-candidate detection.",
   "type": "module",
   "license": "MIT",

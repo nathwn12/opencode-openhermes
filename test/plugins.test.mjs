@@ -1,5 +1,8 @@
 import { describe, it } from "node:test"
 import assert from "node:assert/strict"
+import fs from "node:fs"
+import os from "node:os"
+import path from "node:path"
 
 describe("plugin exports", () => {
   it("index.mjs default exports merged plugin", async () => {
@@ -70,6 +73,53 @@ describe("plugin structure", () => {
     assert.ok(typeof plugin["experimental.chat.messages.transform"] === "function")
     assert.ok(typeof plugin["command.execute.before"] === "function")
     assert.ok(typeof plugin.tool?.compress?.execute === "function")
+  })
+
+  it("resolveHarnessRoot picks a complete fallback root", async () => {
+    const { resolveHarnessRoot } = await import("../bootstrap.mjs")
+    const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), "openhermes-harness-"))
+    const badRoot = path.join(tmpRoot, "bad")
+    const goodRoot = path.join(tmpRoot, "good")
+
+    fs.mkdirSync(path.join(badRoot, "constitution"), { recursive: true })
+    fs.writeFileSync(path.join(badRoot, "constitution", "soul.md"), "# incomplete\n")
+
+    const requiredFiles = [
+      ["constitution", "soul.md"],
+      ["instructions", "RUNTIME.md"],
+      ["commands", "doctor.md"],
+      ["prompts", "architect.txt"],
+      ["rules", "precedence.md"],
+      ["skills", "coding-standards", "SKILL.md"],
+    ]
+
+    for (const parts of requiredFiles) {
+      const filePath = path.join(goodRoot, ...parts)
+      fs.mkdirSync(path.dirname(filePath), { recursive: true })
+      fs.writeFileSync(filePath, "ok\n")
+    }
+
+    const resolved = resolveHarnessRoot({ candidateRoots: [badRoot, goodRoot] })
+    assert.equal(resolved, goodRoot)
+  })
+
+  it("findCacheDirs scans packages and node_modules caches", async () => {
+    const { findCacheDirs } = await import("../lib/ohc/updater.mjs")
+    const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), "openhermes-cache-"))
+    const packagesRoot = path.join(tmpRoot, "packages")
+    const nodeModulesRoot = path.join(tmpRoot, "node_modules")
+    const pkgCache = path.join(packagesRoot, "openhermes@git+https_foo")
+    const nestedCache = path.join(nodeModulesRoot, "cache", "openhermes")
+
+    fs.mkdirSync(pkgCache, { recursive: true })
+    fs.mkdirSync(nestedCache, { recursive: true })
+    fs.mkdirSync(path.join(nodeModulesRoot, "keep", "not-openhermes"), { recursive: true })
+
+    const found = findCacheDirs({ cacheRoots: [packagesRoot, nodeModulesRoot] })
+    assert.deepEqual(
+      found.map(entry => entry.path).sort(),
+      [pkgCache, nestedCache].sort(),
+    )
   })
 })
 
