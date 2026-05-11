@@ -38,7 +38,7 @@ npm i openhermes
 <tr><td><b>&#128293; Autonomous Checkpointing</b></td><td>Pre-compaction snapshots capture mission, current state, next actions, blockers, and risk notes so compaction never loses the plot.</td></tr>
 <tr><td><b>&#128260; Closed Learning Loop</b></td><td>Mistakes are logged with root cause + prevention rule. Complex sessions auto-generate skill-candidate backlogs. Strike tracking escalates repeat failures. The agent gets better — you don't have to teach it twice.</td></tr>
 <tr><td><b>&#128736; 10 Bundled Procedural Skills</b></td><td>Pre-built skills for API design, backend patterns, coding standards, E2E testing, frontend patterns, frontend slides, security reviews, strategic compaction, TDD workflow, and verification loops. Discovered automatically — use <code>skill</code> to list and load.</td></tr>
-<tr><td><b>&#128270; Context Pruner</b></td><td>Silent hook-based pruning via <code>ohc.json</code>. Set <code>max</code> (prune trigger) and <code>min</code> (token floor). No tool calls, no chat output, no toasts — runs in <code>experimental.chat.messages.transform</code>.</td></tr>
+<tr><td><b>&#128270; Context Pruner</b></td><td>Agent-controlled compression via <code>ohc.json</code> (soft defaults) + <code>compress</code> tool with <code>targetTokens</code> override. No token claims — reports message count only. Recommend <code>compaction.auto: false</code> to prevent double pruning with OpenCode's built-in system.</td></tr>
 <tr><td><b>&#129513; Zero Infrastructure</b></td><td>No Python. No uv. No Docker. No PostgreSQL. No gateway. No cron daemon. Just Node.js and your existing OpenCode runtime.</td></tr>
 </table>
 
@@ -102,7 +102,23 @@ The LLM reads rules on demand via the injected paths. Memory directories auto-cr
 
 ## Context Pruner (OHC)
 
-Configure in `~/.config/opencode/ohc.json` — auto-generated with defaults on first load if missing:
+### Required: disable OpenCode's built-in compaction
+
+Add to your `opencode.json` to prevent double pruning:
+
+```json
+{
+  "compaction": {
+    "auto": false
+  }
+}
+```
+
+See [OpenCode compaction docs](https://opencode.ai/docs/config/#compaction).
+
+### Configure OHC
+
+Config lives at `~/.config/opencode/ohc.json` — auto-generated with defaults on first load if missing:
 
 ```json
 {
@@ -115,16 +131,18 @@ Configure in `~/.config/opencode/ohc.json` — auto-generated with defaults on f
 | Field | Default | Job |
 |-------|---------|-----|
 | `enabled` | `true` | Master switch |
-| `max` | `200000` | Prune when context exceeds this |
-| `min` | `50000` | Never prune below this token floor |
+| `max` | `200000` | Advisory prune threshold (soft — agent can override) |
+| `min` | `50000` | Advisory token floor (soft — agent can override via `targetTokens`) |
+
+Values are **soft defaults** — the agent has full control. When the user asks "compress to X", pass `targetTokens` to the `compress` tool.
 
 System prompt is injected with your budget and floor. As context grows, progressive nudges appear at 70%, 85%, and 95% urging proactive compression. Use `/ohc compress [focus]` or call the `compress` tool to free space on demand.
 
 **Commands:**
 - `/ohc status` — show current context usage
-- `/ohc compress [focus]` — queue compression with optional focus description
+- `/ohc compress [targetTokens] [focus]` — queue compression with optional numeric target
 
-**Compress tool:** LLM-available. Model can call `compress` with a technical summary when it detects context pressure. Queued compression is applied on the next message cycle: oldest messages replaced with the summary.
+**Compress tool:** LLM-available. Call `compress` with a technical summary and optional `targetTokens` (lower = more aggressive). Token counts are rough estimates — the tool reports message count removed, not token savings.
 
 ---
 
