@@ -12,7 +12,7 @@
 
 ---
 
-**Your OpenCode agent, leveled up.** Add it to your plugins and your agent gains a personality, a memory, a conscience, 25 specialist subagents, 27 slash commands, 6 native memory tools, 10 procedural skills, autonomous checkpointing, and the discipline to self-improve.
+**Your OpenCode agent, leveled up.** Add it to your plugins and your agent gains a personality, a memory, a conscience, 25 specialist subagents, 28 slash commands, 6 native memory tools, 10 procedural skills, autonomous checkpointing, and the discipline to self-improve.
 
 ```bash
 npm i openhermes
@@ -73,7 +73,7 @@ Either way, **no other config needed.** The plugin auto-registers:
 | What | Details |
 |------|---------|
 | **25 subagents** | 7 core + 18 specialist:<br>**Core:** architect, planner, build-error-resolver, code-reviewer, security-reviewer, e2e-runner, explore<br>**Specialist:** tdd-guide, docs-lookup, doc-updater, refactor-cleaner, loop-operator, harness-optimizer, review-go, build-go, review-rust, build-rust, review-python, review-java, build-java, review-kotlin, build-kotlin, review-cpp, build-cpp, review-database |
-| **27 slash commands** | `/plan`, `/build-fix`, `/code-review`, `/security`, `/doctor`, `/memory-search`, `/learn`, `/ohc`, `/orchestrate`, `/eval`, `/model-route`, `/quality-gate`, `/test-coverage`, `/update-docs`, `/update-codemaps`, `/refactor-clean`, `/verify`, `/checkpoint`, `/loop-start`, `/loop-status`, `/harness-audit`, `/setup-pm`, `/go-build`, `/go-review`, `/rust-build`, `/rust-review`, `/skill-create`, `/update-me` |
+| **28 slash commands** | `/build-fix`, `/checkpoint`, `/code-review`, `/doctor`, `/eval`, `/go-build`, `/go-review`, `/harness-audit`, `/learn`, `/loop-start`, `/loop-status`, `/memory-search`, `/model-route`, `/ohc`, `/orchestrate`, `/plan`, `/quality-gate`, `/refactor-clean`, `/rust-build`, `/rust-review`, `/security`, `/setup-pm`, `/skill-create`, `/test-coverage`, `/update-codemaps`, `/update-docs`, `/update-me`, `/verify` |
 | **6 native memory tools** | `add_memory`, `fetch_memory`, `list_memory`, `latest_memory`, `search_memory`, `archive_memory` — in-process, no MCP server needed |
 | **10 procedural skills** | API design, backend patterns, coding standards, E2E testing, frontend patterns, frontend slides, security review, strategic compaction, TDD workflow, verification loop |
 | **6 lifecycle plugins** | bootstrap, curator, autorecall, skill-builder, memory-tools, ohc |

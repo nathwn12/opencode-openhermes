@@ -37,6 +37,7 @@ Snapshot before mutation. Never delete unrelated files. Never assume \`%USERPROF
 | **Memory recall cache** | \`openhermes/memory/recall/cache.json\` — read on session start, no MCP round-trip |
 | **Subagents** | \`explore\` (read-only), \`general\` (multi-step), \`architect\`, \`planner\`, \`build-error-resolver\`, \`code-reviewer\`, \`security-reviewer\`, \`e2e-runner\`, \`docs-lookup\`, \`doc-updater\`, \`refactor-cleaner\`, \`loop-operator\`, \`harness-optimizer\`, \`tdd-guide\`, \`review-go\`, \`build-go\`, \`review-database\`, \`review-cpp\`, \`build-cpp\`, \`review-java\`, \`build-java\`, \`review-kotlin\`, \`build-kotlin\`, \`review-python\`, \`review-rust\`, \`build-rust\` |
 | **Plugins** | \`curator\` (checkpoints, mistakes, audit, compaction), \`autorecall\` (recall cache on \`session.created\`), \`skill-builder\` (complex session detection) |
+| **Slash commands** | <!-- COMMANDS:START --> \`/build-fix\`, \`/checkpoint\`, \`/code-review\`, \`/doctor\`, \`/eval\`, \`/go-build\`, \`/go-review\`, \`/harness-audit\`, \`/learn\`, \`/loop-start\`, \`/loop-status\`, \`/memory-search\`, \`/model-route\`, \`/ohc\`, \`/orchestrate\`, \`/plan\`, \`/quality-gate\`, \`/refactor-clean\`, \`/rust-build\`, \`/rust-review\`, \`/security\`, \`/setup-pm\`, \`/skill-create\`, \`/test-coverage\`, \`/update-codemaps\`, \`/update-docs\`, \`/update-me\`, \`/verify\`<!-- COMMANDS:END --> |
 
 ## Skills (available via \`skill\` tool)
 
