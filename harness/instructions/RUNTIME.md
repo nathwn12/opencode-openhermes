@@ -19,3 +19,10 @@ Root: `%USERPROFILE%\.config\opencode\`. AGENTS.md is the routing layer.
 
 **Context loading**: See `openhermes\rules\context-loading.md`.
 **Memory mgmt**: See `rules\memory-management.md`.
+
+## Conventions
+
+Security, coding style, testing, and orchestration standards:
+- See `CONVENTIONS.md` for the shared baseline.
+- Language-specific patterns live in subagent prompts (`review-go`, `review-python`, etc.).
+- Skills provide detailed walkthroughs for specialized domains.

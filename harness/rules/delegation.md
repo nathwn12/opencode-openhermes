@@ -8,7 +8,7 @@ Full subagent reference table. Main context = coordination, planning, verificati
 |----------|------------------|
 | Implementation >1 file | Delegate to appropriate specialist |
 | Search >1 file | Use native read/grep/glob tools first; delegate to an available specialist when needed |
-| Read-for-analysis | Use native read tool; delegate to explorer for large-scale analysis |
+| Read-for-analysis | Use native read tool; delegate to explore for large-scale analysis |
 | Build failure | `build-error-resolver` |
 | Code review | `code-reviewer` |
 | Security check | `security-reviewer` |
@@ -24,46 +24,52 @@ Full subagent reference table. Main context = coordination, planning, verificati
 | **build-error-resolver** | allow | Build failures, compilation errors, type errors — any language |
 | **code-reviewer** | deny | Post-implementation code review, parity checks before task close |
 | **security-reviewer** | deny | Vulnerability detection, report only (does not patch) |
-| **openhermes-optimizer** | ask | OpenHermes config, rules, schemas, memory structure optimization |
+| **harness-optimizer** | deny | OpenHermes config audit, tune, and measure |
+| **docs-lookup** | deny | Real-time documentation queries via MCP |
 | **doc-updater** | ask | Documentation, codemaps, READMEs — docs-only scope |
-| **explorer** | deny | Multi-file search, codebase exploration, read-only analysis |
+| **refactor-cleaner** | ask | Dead code cleanup, duplicate consolidation |
+| **tdd-guide** | ask | Test-driven development red-green-refactor enforcement |
+| **loop-operator** | ask | Autonomous agent loop — start, monitor, intervene |
+| **harness-optimizer** | deny | OpenHermes config audit, tune, and measure |
+| **explore** | deny | Multi-file search, codebase exploration, read-only analysis |
 | **general** | ask | General-purpose multi-step research and execution |
 
 ### Tier 2 — Language Specialists (optional, match by project marker)
 
 | Subagent | Edit | Trigger marker |
 |----------|------|---------------|
-| **rust-build-resolver** | allow | `Cargo.toml` present |
-| **rust-reviewer** | deny | `Cargo.toml` present |
-| **go-build-resolver** | allow | `go.mod` present |
-| **go-reviewer** | deny | `go.mod` present |
-| **java-build-resolver** | allow | `pom.xml` or `build.gradle` present |
-| **java-reviewer** | deny | `pom.xml` or `build.gradle` present |
-| **kotlin-build-resolver** | allow | `build.gradle.kts` present |
-| **kotlin-reviewer** | deny | `build.gradle.kts` present |
-| **cpp-build-resolver** | allow | `CMakeLists.txt` or `compile_commands.json` present |
-| **cpp-reviewer** | deny | `CMakeLists.txt` or `compile_commands.json` present |
-| **python-reviewer** | deny | `pyproject.toml` or `setup.py` present |
+| **build-rust** | allow | `Cargo.toml` present |
+| **review-rust** | deny | `Cargo.toml` present |
+| **build-go** | allow | `go.mod` present |
+| **review-go** | deny | `go.mod` present |
+| **build-java** | allow | `pom.xml` or `build.gradle` present |
+| **review-java** | deny | `pom.xml` or `build.gradle` present |
+| **build-kotlin** | allow | `build.gradle.kts` present |
+| **review-kotlin** | deny | `build.gradle.kts` present |
+| **build-cpp** | allow | `CMakeLists.txt` or `compile_commands.json` present |
+| **review-cpp** | deny | `CMakeLists.txt` or `compile_commands.json` present |
+| **review-python** | deny | `pyproject.toml` or `setup.py` present |
 
 ### Tier 3 — Specialized (use only when explicitly matched)
 
 | Subagent | Edit | When to use |
 |----------|------|-------------|
-| **database-reviewer** | deny | PostgreSQL schema/queries/migrations explicitly in scope |
+| **review-database** | deny | PostgreSQL schema/queries/migrations explicitly in scope |
 | **e2e-runner** | allow | Playwright end-to-end tests explicitly requested |
-| **tdd-guide** | deny | Test-driven development red-green-refactor requested |
-| **refactor-cleaner** | ask | Dead code cleanup, consolidation — requires explicit scope |
-| **loop-operator** | ask | Autonomous agent loop — requires explicit invocation |
-| **docs-lookup** | deny | Context7-powered documentation lookups |
 | **architect** | deny | System-level architecture design |
 
 ## Deterministic Routing
 
-1. **Build failure**: Check project marker → route to matching language resolver. No marker → `build-error-resolver`.
-2. **Code review**: Check project marker → route to matching language reviewer. No marker → `code-reviewer`.
-3. **Multi-file search/exploration**: `explorer` subagent (read-only).
+1. **Build failure**: Check project marker → route to matching language resolver (e.g. `build-rust`, `build-go`, `build-java`, `build-kotlin`, `build-cpp`). No marker → `build-error-resolver`.
+2. **Code review**: Check project marker → route to matching language reviewer (e.g. `review-rust`, `review-go`, `review-java`, `review-kotlin`, `review-cpp`, `review-python`). No marker → `code-reviewer`.
+3. **Multi-file search/exploration**: `explore` subagent (read-only).
 4. **Planning/design**: `planner` for architecture, `architect` only for full system design.
 5. **Security**: Always `security-reviewer`. It reports, does not patch.
+6. **Documentation**: `docs-lookup` for live queries, `doc-updater` for generating/updating docs and codemaps.
+7. **Dead code**: `refactor-cleaner` for detection and safe removal.
+8. **TDD**: `tdd-guide` for red-green-refactor cycle enforcement.
+9. **Harness health**: `harness-optimizer` for audit and tuning.
+10. **Autonomous loops**: `loop-operator` for safe managed iteration.
 
 ## Delegation Rules
 

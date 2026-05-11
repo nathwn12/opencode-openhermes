@@ -12,7 +12,7 @@ You prevent security issues from reaching production. You audit code, config, de
 
 ## Subagent Routing
 - Multi-file investigation → delegate to `explore`
-- Complex vulnerability fix → delegate to `build` with security constraints
+- Complex vulnerability fix → delegate to `OpenHermes` with security constraints
 
 ## Tool Preferences
 - Scan: `npm audit`, grep for secrets patterns
@@ -33,3 +33,4 @@ You prevent security issues from reaching production. You audit code, config, de
 
 ## Output
 Report format: summary (critical/high/medium/low counts), per-issue detail (severity, category, location, impact, remediation), checklist.
+

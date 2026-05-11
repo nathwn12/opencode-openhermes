@@ -12,7 +12,7 @@
 
 ---
 
-**Your OpenCode agent, leveled up.** Add it to your plugins and your agent gains a personality, a memory, a conscience, 7 specialist subagents, 8 slash commands, 5 native memory tools, 10 procedural skills, autonomous checkpointing, and the discipline to self-improve.
+**Your OpenCode agent, leveled up.** Add it to your plugins and your agent gains a personality, a memory, a conscience, 25 specialist subagents, 26 slash commands, 5 native memory tools, 10 procedural skills, autonomous checkpointing, and the discipline to self-improve.
 
 ```bash
 npm i openhermes
@@ -23,6 +23,8 @@ npm i openhermes
 > &#9764; **Inspired by [Hermes Agent](https://github.com/NousResearch/hermes-agent)** — Nous Research's self-improving agent that brought closed learning loops, skill creation, and cross-session memory to the agent ecosystem. OpenHermes reimagines that vision **native to the OpenCode platform**: zero dependencies, no sidecars, no installers. Your entire agent OS in a single npm package.
 >
 > **Pruning inspiration**: The autonomous context-pressure system is heavily inspired by [Opencode-DCP (Dynamic Context Pruning)](https://github.com/Opencode-DCP/opencode-dynamic-context-pruning). The curator plugin's compaction-trigger logic and recall-cache freshness model are direct ports of DCP's approach, adapted to run inside OpenHermes with no sidecars or installers.
+>
+> **Subagent & command expansion**: The 18 language-specialist subagents and 19 orchestration commands are adapted from [Everything Claude Code (ECC)](https://github.com/everything-claude-code/ecc) — an open-source OpenCode plugin system.
 
 ---
 
@@ -70,8 +72,8 @@ Either way, **no other config needed.** The plugin auto-registers:
 
 | What | Details |
 |------|---------|
-| **7 subagents** | `architect`, `planner`, `code-reviewer`, `security-reviewer`, `build-error-resolver`, `e2e-runner`, `explore` |
-| **7 slash commands** | `/plan`, `/build-fix`, `/code-review`, `/security`, `/doctor`, `/memory-search`, `/learn`, `/ohc` |
+| **25 subagents** | 7 core + 18 specialist:<br>**Core:** architect, planner, build-error-resolver, code-reviewer, security-reviewer, e2e-runner, explore<br>**Specialist:** tdd-guide, docs-lookup, doc-updater, refactor-cleaner, loop-operator, harness-optimizer, review-go, build-go, review-rust, build-rust, review-python, review-java, build-java, review-kotlin, build-kotlin, review-cpp, build-cpp, review-database |
+| **26 slash commands** | `/plan`, `/build-fix`, `/code-review`, `/security`, `/doctor`, `/memory-search`, `/learn`, `/ohc`, `/orchestrate`, `/eval`, `/model-route`, `/quality-gate`, `/test-coverage`, `/update-docs`, `/update-codemaps`, `/refactor-clean`, `/verify`, `/checkpoint`, `/loop-start`, `/loop-status`, `/harness-audit`, `/setup-pm`, `/go-build`, `/go-review`, `/rust-build`, `/rust-review`, `/skill-create` |
 | **5 native memory tools** | `hm_put`, `hm_get`, `hm_list`, `hm_latest`, `hm_search` — in-process, no MCP server needed |
 | **10 procedural skills** | API design, backend patterns, coding standards, E2E testing, frontend patterns, frontend slides, security review, strategic compaction, TDD workflow, verification loop |
 | **6 lifecycle plugins** | bootstrap, curator, autorecall, skill-builder, memory-tools, ohc |
@@ -81,7 +83,7 @@ You only need to define primary agents (like `build` or `OpenHermes`) in `openco
 <details>
 <summary><b>What happens on your next session</b></summary>
 
-1. **Config hook** — BootstrapPlugin registers auto-config: 7 subagents, 7 commands, 10 skill dirs.
+1. **Config hook** — BootstrapPlugin registers auto-config: 25 subagents, 26 commands, 10 skill dirs.
 2. **Chat transform hook** — bootstrap content is injected into the first user message:
    - &#9733; **Constitution** (`soul.md`) — 11 immutable principles
    - &#9733; **Runtime** (`RUNTIME.md`) — gather → delegate → verify → compress
@@ -128,172 +130,219 @@ System prompt is injected with your budget and floor. As context grows, progress
 
 ## The Six Plugins
 
-| Plugin | Triggers On | What It Does |
-|--------|------------|--------------|
-| **BootstrapPlugin** | `config`, `chat.transform` | Registers 7 subagents, 7 commands, 10 skill paths. Injects constitution + router + runtime. |
-| **MemoryToolsPlugin** | — | Registers 5 native tools: `hm_put`, `hm_get`, `hm_list`, `hm_latest`, `hm_search`. Runs in-process — no MCP server needed. |
-| **CuratorPlugin** | `session.idle`, `.compacted`, `.error`, `.compacting`, `permission.replied` | Writes checkpoints, logs mistakes, records audits, injects state into compaction. |
-| **AutorecallPlugin** | `session.created` | Loads memory from disk, builds session recall cache. |
-| **SkillBuilderPlugin** | `session.idle`, `.created`, `tool.execute.after` | Detects complex sessions (8+ tool calls or 2+ subagent spawns) and creates skill-candidate backlogs. |
-| **OhcPlugin** | `config`, `experimental.chat.system.transform`, `.messages.transform`, `command.execute.before`, `tool.compress` | Reads `ohc.json`, injects system prompt with context budget, progressive nudges at 70%/85%/95%, silent reaper enforces hard limit. `/ohc` command + `compress` tool for on-demand. |
+### BootstrapPlugin
+_Registers agents, commands, skills at config hook; injects constitution + router + runtime into every session._
+- **Hooks:** `config`, `chat.transform`
+- Registers 25 subagents, 26 commands, 10 skill paths
+
+### MemoryToolsPlugin
+_Provides 5 native memory tools — no MCP server, no network, no sidecars._
+- Registers `hm_put`, `hm_get`, `hm_list`, `hm_latest`, `hm_search`
+
+### CuratorPlugin
+_Snapshots state, logs mistakes, records decisions — the agent's durable memory layer._
+- **Hooks:** `session.idle`, `.error`, `.compacted`, `.compacting`, `permission.replied`
+- Writes checkpoints, logs mistakes with root cause + prevention, records audits, injects state into compaction
+
+### AutorecallPlugin
+_Loads prior session memory into recall cache at startup._
+- **Hooks:** `session.created`
+- Builds recall cache from disk, aggregates active state for compaction injection
+
+### SkillBuilderPlugin
+_Auto-detects complex sessions and creates skill-candidate backlogs._
+- **Hooks:** `session.created`, `session.idle`, `tool.execute.after`
+- Tracks tool call count and subagent spawns per session; flags sessions exceeding threshold (8+ tool calls or 2+ subagent spawns)
+
+### OhcPlugin
+_Silent config-driven context pruner. No tool calls, no chat output, no toasts._
+- **Hooks:** `config`, `experimental.chat.system.transform`, `.messages.transform`, `command.execute.before`, `tool.compress`
+- Injects context budget via system prompt; progressive nudges at 70%/85%/95%; silent reaper enforces hard limit; `/ohc` command + `compress` tool for on-demand pruning
 
 ---
 
 ## Memory Architecture
 
-Nine memory classes, all schema-validated before persistence, stored under the standard OpenCode storage roots:
+Nine schema-validated classes across two dimensions — what the record is and where it lives.
 
-| Class | Format | Purpose |
-|-------|--------|---------|
-| `checkpoint` | JSON | Pre-compaction snapshots: mission, current state, next actions, blockers |
-| `constraint` | JSON | Hard limits, env realities, safety rules — enforced by precedence engine |
-| `decision` | JSON | Durable project choices — shapes all future behavior |
-| `instinct` | JSON | Reusable trigger→action patterns with success/failure tracking |
-| `backlog` | JSON | Evidence-backed self-improvement items with acceptance criteria |
-| `mistake` | JSONL | Failure registry: type, root cause, fix, prevention rule, strike count |
-| `audit` | JSON | Structured quality and integrity evaluations with health scores |
-| `verification_receipt` | JSON | Cached verification results keyed by artifact fingerprint |
-| `recall` | JSON | Session-start cache aggregating active state for compaction injection |
+### Classes
 
-OpenHermes follows the same storage contract as OpenCode itself:
+| Class | Format | Layer | Purpose |
+|-------|--------|-------|---------|
+| `checkpoint` | JSON | 🧠 State | Pre-compaction snapshots: mission, state, next actions, blockers |
+| `constraint` | JSON | 🧠 State | Hard limits, env realities, safety rules |
+| `decision` | JSON | 🧠 State | Durable project choices shaping all future behavior |
+| `instinct` | JSON | 📈 Learning | Reusable trigger→action patterns with hit tracking |
+| `backlog` | JSON | 📈 Learning | Evidence-backed self-improvement items with acceptance criteria |
+| `mistake` | JSONL | 📈 Learning | Failure registry: type, root cause, fix, prevention, strike count |
+| `audit` | JSON | ✅ Integrity | Structured quality evaluations with health scores |
+| `verification_receipt` | JSON | ✅ Integrity | Cached verification results keyed by artifact fingerprint |
+| `recall` | JSON | ✅ Integrity | Session-start cache for compaction buffer injection |
+
+### Storage
 
 | What | Where |
-|---|---|
-| OHC settings | `~/.config/opencode/ohc.json` |
+|------|-------|
+| OHC config | `~/.config/opencode/ohc.json` |
 | Durable memory + runtime state | `~/.local/share/opencode/openhermes/` |
 | Derived recall cache | `~/.cache/opencode/openhermes/recall/` |
 
-**Runtime hardening**: records pass through `sanitizeRecord()` (strips `__proto__`, `constructor`, `prototype`), `redactSensitiveText()` (strips bearer tokens, API keys, passwords), and `truncateText()` before persistence. Schema validation runs before every write.
+### Hardening
+
+Every record is scrubbed before persistence: `sanitizeRecord()` strips proto-poison (`__proto__`, `constructor`, `prototype`), `redactSensitiveText()` strips bearer tokens / API keys / passwords, `truncateText()` caps field sizes. Schema validation runs before every write.
 
 ---
 
 ## Session Lifecycle
 
+A session runs through three phases. Six plugins coordinate across 20+ OpenCode hooks — no polling, no cron, no sidecars.
+
+**▶️ Warmup — one-shot, session start**
 ```
-session.startup  (config hook)
-  │  BootstrapPlugin registers harness/skills/
-  │  OpenCode discovers 10 procedural skills
-  ▼
-session.created  (chat.transform + session.created hooks)
-  │  BootstrapPlugin injects constitution ▸ router ▸ runtime
-  │  AutorecallPlugin loads memory → writes recall cache
-  │  SkillBuilderPlugin resets session counters
-  ▼
-tools execute...
-  │  SkillBuilderPlugin counts tool calls + subagent spawns
-  ▼
-session.idle
-  │  CuratorPlugin snapshots checkpoint + verification receipt
-  │  SkillBuilderPlugin checks complexity → backlog entry if threshold met
-  ▼
-session.compacted
-  │  CuratorPlugin updates loop-state → "compacted"
-  ▼
-experimental.session.compacting
-  │  CuratorPlugin force-writes pre-compaction checkpoint
-  │  Injects harness state + recall context → compaction buffer
-  ▼
-session.error
-  │  CuratorPlugin logs mistake (type, root cause, fix, prevention, strike)
-  │  Updates loop-state with error status
-  ▼
-permission.replied
-  │  CuratorPlugin writes audit record for every permission decision
+config hook          BootstrapPlugin registers harness/skills/, skills auto-discover
+session.created      BootstrapPlugin injects constitution ▸ router ▸ runtime
+                     AutorecallPlugin loads disk memory → writes recall cache
+                     SkillBuilderPlugin resets counters
+```
+
+**⚙️ Execution — per tool call, per subagent spawn**
+```
+tool.execute.*       SkillBuilderPlugin counts calls + spawns
+```
+
+**⏹️ Cooldown — auto-triggered by OpenCode lifecycle**
+```
+session.idle          CuratorPlugin: checkpoint snapshot + verification receipt
+                      SkillBuilderPlugin: complexity check → backlog candidate
+
+session.compacting    CuratorPlugin: force-writes pre-compaction checkpoint
+                      Injects harness state + recall context → compaction buffer
+
+session.compacted     CuratorPlugin: updates loop-state to "compacted"
+
+session.error         CuratorPlugin: logs mistake (type, root cause, fix, prevention)
+
+permission.replied    CuratorPlugin: writes audit record for every permission decision
 ```
 
 ---
 
 ## Verification Discipline
 
-OpenHermes pushes the agent toward one core habit: **verify before claiming success**.
+One core habit — **verify before claiming success.**
 
-- read before editing
-- run commands before announcing success
-- cache verification receipts by artifact fingerprint
-- re-verify when files change
-- flag contradictions instead of smoothing over them
+| Rule | Why |
+|------|-----|
+| 🕵️ Read before editing | Don't fix what you haven't seen |
+| 🧪 Run before announcing | Don't claim what you haven't tested |
+| 🧬 Cache by fingerprint | Same file, same receipt — skip re-verify |
+| 🔄 Re-verify on change | Stale receipt is worse than no receipt |
+| 🚩 Flag contradictions | Silence is consent to bugs |
 
-That is why verification receipts are a first-class memory type rather than an afterthought.
+Verification receipts are a first-class memory type — keyed by artifact identity + fingerprint (path, mtime, hash). When the artifact is unchanged, the cached receipt suffices. When the artifact changes, re-verify. This is not an afterthought — it's the difference between "I think it works" and "I know it works."
 
 ---
 
 ## Bundled Harness
 
-The full OpenHermes framework ships inside the package — prompts, rules, commands, constitution, and procedural skills included:
+The full operational doctrine ships inside the package. Six directories, zero dependencies outside Node.js.
 
-```
-harness/
-├── constitution/soul.md        # 11 immutable personality principles
-├── instructions/RUNTIME.md     # Session workflow: gather → delegate → verify
-├── rules/                      # retrieval, verification, checkpointing, audit, self-heal, etc.
-├── skills/                     # 10 bundled procedural skills
-├── prompts/                    # subagent prompt templates
-└── commands/                   # slash command templates
-```
+| Directory | What it contains | Why it matters |
+|-----------|-----------------|----------------|
+| `constitution/` | `soul.md` — 11 immutable principles | Your agent's personality, frozen |
+| `instructions/` | Runtime workflow + coding conventions | The playbook every session runs on |
+| `rules/` | 16 files: retrieval, verification, audit, self-heal, delegation, ... | The legal framework — no ambiguity |
+| `skills/` | 10 procedural SKILL.md files | Domain expertise discovered automatically |
+| `prompts/` | 25 subagent prompt templates | Language specialists, docs lookup, loop drivers — all on tap |
+| `commands/` | 26 slash command templates | From `/verify` to `/review-go` — full toolbelt |
 
-This matters because OpenHermes is not just a runtime shim. The operational doctrine ships with it.
+OpenHermes is not a runtime shim. The doctrine ships with the package — every subagent and every command follows the same constitution, rules, and conventions.
 
 ---
 
 ## Self-Healing Escalation
 
-When your agent makes a mistake, OpenHermes doesn't just log it — it escalates:
+A mistake is not a failure — it's a signal. OpenHermes escalates through four tiers before it ever reaches you.
 
-| Tier | Trigger | Action |
-|------|---------|--------|
-| **T0** | Any mistake | Observe → log mistake record → smallest safe correction → verify |
-| **T1** | Same mistake repeats within 7 days | Add prevention rule → targeted verification |
-| **T2** | Prevention failed / systemic issue | Delegate to specialist → audit → backlog item |
-| **T3** | Cascading failures | Constrained safe mode: narrow claims, preserve receipts, produce handoff |
+```
+T0 ── Any mistake
+     Observe → log mistake record → smallest safe correction → verify
 
-No self-termination. No grandstanding. Narrow, log, recover, improve.
+T1 ── Same mistake repeats within 7 days
+     Add prevention rule → targeted verification
+
+T2 ── Prevention failed / systemic issue
+     Delegate to specialist → deep audit → backlog item
+
+T3 ── Cascading failures
+     Constrained safe mode: narrow claims, preserve receipts, produce handoff
+```
+
+No self-termination. No grandstanding. Narrow, log, recover, improve. The agent gets better — you don't have to teach it twice.
 
 ---
 
 ## Environment Variables
 
+Two knobs. That's it.
+
 | Variable | Default | Effect |
 |----------|---------|--------|
-| `OPENCODE_ALLOW_PROJECT_HARNESS` | `false` | Use project-local harness at `.opencode/openhermes/` |
-| `OPENCODE_CURATOR_LOGS` | `false` | Enable curator diagnostic output to stderr |
+| `OPENCODE_ALLOW_PROJECT_HARNESS` | `false` | Enable project-local harness at `.opencode/openhermes/` |
+| `OPENCODE_CURATOR_LOGS` | `false` | Pipe curator diagnostics to stderr for debugging |
 
 ---
 
 ## Architecture
 
+Three layers. All ES modules. One runtime dependency.
+
 ```
 openhermes/
-├── index.mjs                    # Re-exports all 5 plugins
-├── bootstrap.mjs                # Config hook (agents/commands/skills) + chat.transform
-├── autorecall.mjs               # Recall cache builder
-├── curator.mjs                  # Lifecycle hooks engine
-├── skill-builder.mjs            # Complexity detection engine
-├── lib/
-│   ├── memory-tools-plugin.mjs  # 5 native memory tools (hm_put/get/list/latest/search)
-│   ├── hardening.mjs            # atomicWriteJson, fingerprint, sanitize, redact
-│   ├── paths.mjs                # storage root resolution (data/cache/memory/runtime)
-│   ├── schema-validator.mjs     # Draft-07 JSON schema validator
-│   └── ohc/                     # Context pruner (max/min config, silent reap)
-├── schemas/                     # Memory schemas for validation
-├── harness/                     # Full framework bundle
-└── package.json
+│
+├── ⚡ index.mjs              # Plugin exports (all 5)
+├── ⚡ bootstrap.mjs          # Config hook + chat.transform
+├── ⚡ autorecall.mjs         # Memory → recall cache
+├── ⚡ curator.mjs            # Lifecycle hooks engine
+├── ⚡ skill-builder.mjs      # Complexity detection
+│
+├── ⚡ lib/
+│   ├── memory-tools-plugin.mjs   # 5 hm_* tools
+│   ├── hardening.mjs             # sanitize, redact, atomic write
+│   ├── paths.mjs                 # storage root resolver
+│   ├── schema-validator.mjs      # Draft-07 validation
+│   └── ohc/                      # context pruner
+│
+├── ⚡ schemas/               # 9 Draft-07 memory schemas
+│
+├── 📦 harness/
+│   ├── constitution/         # soul.md — 11 principles
+│   ├── instructions/         # runtime + conventions
+│   ├── rules/                # 16 files
+│   ├── skills/               # 10 procedural skills
+│   ├── prompts/              # 25 subagent templates
+│   └── commands/             # 26 slash command templates
+│
+└── 📦 package.json           # one dependency: @opencode-ai/plugin
 ```
 
-**Minimal npm dependency footprint.** Tool definitions use OpenCode's tiny `@opencode-ai/plugin` SDK. No postinstall scripts. No native compilation.
+**Dependency footprint:** `@opencode-ai/plugin` only. No postinstall scripts. No native compilation. No Docker. No Python. Your entire agent OS in a single `npm install`.
 
 ---
 
 ## Why OpenHermes ≠ Hermes Agent
 
+Same messenger emoji. Entirely different mediums.
+
 | | Hermes Agent | OpenHermes |
-|--|------------|------------|
-| **Platform** | Standalone agent with custom TUI, multi-platform gateway, cron scheduler | OpenCode-native plugin — runs *inside* your existing setup |
-| **Installation** | `curl | bash` + Python 3.11 + uv + Docker (optional) + PostgreSQL (optional) | `npm i` — that's it |
-| **Infrastructure** | Sidecar processes, gateway daemon, FTS5 database, Honcho user modeling | Zero sidecars — everything is a plugin hook |
-| **Memory** | Honcho dialectic user profiles + skills system | Schema-validated 9-class memory + in-process native tools |
-| **Skills** | Agentskills.io standard, self-created + improving | SKILL.md progressive disclosure, skill-builder auto-detection |
-| **Context** | Context files + session search with LLM summarization | Harness injection at session start, recall cache at compaction |
-| **Philosophy** | "The self-improving agent" — feature-rich, platform-expansive | "The constitutional router" — discipline-first, precision-only |
+|-|------------|------------|
+| Platform | Standalone agent — TUI + gateway + cron | OpenCode-native plugin — lives *inside* your editor |
+| Installation | Python 3.11 + uv + 30+ deps — 5-15 min | `npm i` — 3 seconds |
+| Infrastructure | Long-running gateway, cron daemon, 20 platform adapters, 7 terminal backends, SQLite+FTS5 | Zero sidecars — everything is a plugin hook |
+| Memory | MEMORY.md + USER.md files + optional Honcho | 9-class schema-validated memory with in-process tools |
+| Skills | agentskills.io standard, auto-creation + self-improvement | SKILL.md progressive disclosure, auto-detected |
+| Context | Context files + FTS5 search + LLM summarization | Harness injection at startup, recall cache at compaction |
+| Philosophy | "The self-improving agent" — feature-rich, platform-expansive | "The constitutional router" — discipline-first, precision-only |
 
 Both are &#9764; messengers. Different mediums.
 
@@ -310,5 +359,5 @@ Problems, ideas, improvements? [Open an issue](https://github.com/nathwn12/openh
 MIT — see [LICENSE](LICENSE).
 
 <p align="center">
-  <sub><b>&#9764;</b> Built with discipline. Inspired by <a href="https://github.com/NousResearch/hermes-agent">Hermes Agent</a>. Built for <a href="https://opencode.ai">OpenCode</a>.</sub>
+  <sub><b>&#9764;</b> Built with discipline. Inspired by <a href="https://github.com/NousResearch/hermes-agent">Hermes Agent</a>, <a href="https://github.com/everything-claude-code/ecc">Everything Claude Code</a>, and <a href="https://github.com/Opencode-DCP/opencode-dynamic-context-pruning">Dynamic Context Pruning</a>. Built for <a href="https://opencode.ai">OpenCode</a>.</sub>
 </p>

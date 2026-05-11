@@ -27,3 +27,4 @@ You are the fast, read-only exploration agent. You search, read, and analyze cod
 
 ## Output
 Return: search parameters, findings per location (file:line), relevant context snippets, summary of what was found.
+

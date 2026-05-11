@@ -35,7 +35,7 @@ Snapshot before mutation. Never delete unrelated files. Never assume \`%USERPROF
 | **Native tools** | \`read\`, \`write\`, \`edit\`, \`glob\`, \`grep\`, \`bash\`, \`task\`, \`webfetch\`, \`skill\`, \`todowrite\`, \`todoread\` |
 | **In-process tools** | \`hm_put\`, \`hm_get\`, \`hm_list\`, \`hm_latest\`, \`hm_search\` |
 | **Memory recall cache** | \`openhermes/memory/recall/cache.json\` — read on session start, no MCP round-trip |
-| **Subagents** | \`explore\` (read-only), \`general\` (multi-step), \`architect\`, \`planner\`, \`build-error-resolver\`, \`code-reviewer\`, \`security-reviewer\`, \`e2e-runner\` |
+| **Subagents** | \`explore\` (read-only), \`general\` (multi-step), \`architect\`, \`planner\`, \`build-error-resolver\`, \`code-reviewer\`, \`security-reviewer\`, \`e2e-runner\`, \`docs-lookup\`, \`doc-updater\`, \`refactor-cleaner\`, \`loop-operator\`, \`harness-optimizer\`, \`tdd-guide\`, \`review-go\`, \`build-go\`, \`review-database\`, \`review-cpp\`, \`build-cpp\`, \`review-java\`, \`build-java\`, \`review-kotlin\`, \`build-kotlin\`, \`review-python\`, \`review-rust\`, \`build-rust\` |
 | **Plugins** | \`curator\` (checkpoints, mistakes, audit, compaction), \`autorecall\` (recall cache on \`session.created\`), \`skill-builder\` (complex session detection) |
 
 ## Skills (available via \`skill\` tool)
@@ -56,6 +56,22 @@ Main context = coordination + verification only. Substantive work → subagent.
 | Security audit | \`security-reviewer\` |
 | E2E testing | \`e2e-runner\` |
 | Multi-file search/exploration | \`explore\` or \`general\` |
+| Documentation lookup | \`docs-lookup\` |
+| Doc/codemap update | \`doc-updater\` |
+| Dead code cleanup | \`refactor-cleaner\` |
+| TDD workflow | \`tdd-guide\` |
+| Autonomous loop | \`loop-operator\` |
+| Go review | \`review-go\` |
+| Go build fix | \`build-go\` |
+| Database review | \`review-database\` |
+| C++ review | \`review-cpp\` |
+| Java review | \`review-java\` |
+| Java build fix | \`build-java\` |
+| Kotlin review | \`review-kotlin\` |
+| Kotlin build fix | \`build-kotlin\` |
+| Python review | \`review-python\` |
+| Rust review | \`review-rust\` |
+| Rust build fix | \`build-rust\` |
 | Any non-trivial multi-step | appropriate specialist |
 
 Never delegate trivial single-step ops. Subagent returns diff + summary + verification; inspect return only. Full ref: \`${RULES_DIR}\\\\delegation.md\`.
@@ -153,6 +169,25 @@ export const BootstrapPlugin = async ({ client, directory }) => {
         "memory-search": { agent: "OpenHermes", description: "Search OpenHermes memory with LLM summarization", subtask: true, template: ct("memory-search.md") },
         "learn": { agent: "OpenHermes", description: "Create a new skill from recent work patterns", subtask: true, template: ct("learn.md") },
         "ohc": { template: "", description: "OHC context management: /ohc status, /ohc compress [focus]" },
+        "orchestrate": { agent: "planner", description: "Orchestrate multiple agents for complex tasks", subtask: true, template: ct("orchestrate.md") },
+        "eval": { agent: "planner", description: "Evaluate implementation against acceptance criteria", subtask: true, template: ct("eval.md") },
+        "model-route": { agent: "OpenHermes", description: "Recommend model tier by task complexity and budget", subtask: true, template: ct("model-route.md") },
+        "quality-gate": { agent: "OpenHermes", description: "Run quality pipeline (format, lint, type check)", subtask: true, template: ct("quality-gate.md") },
+        "test-coverage": { agent: "tdd-guide", description: "Analyze coverage reports and identify gaps", subtask: true, template: ct("test-coverage.md") },
+        "update-docs": { agent: "doc-updater", description: "Update documentation for recent code changes", subtask: true, template: ct("update-docs.md") },
+        "update-codemaps": { agent: "doc-updater", description: "Generate/update architecture codemaps", subtask: true, template: ct("update-codemaps.md") },
+        "refactor-clean": { agent: "refactor-cleaner", description: "Remove dead code and consolidate duplicates", subtask: true, template: ct("refactor-clean.md") },
+        "verify": { agent: "OpenHermes", description: "Run comprehensive verification loop (typecheck, lint, test, build)", subtask: true, template: ct("verify.md") },
+        "checkpoint": { agent: "OpenHermes", description: "Save verification state and progress checkpoint", subtask: true, template: ct("checkpoint.md") },
+        "loop-start": { agent: "loop-operator", description: "Start managed autonomous loop with safety defaults", subtask: true, template: ct("loop-start.md") },
+        "loop-status": { agent: "OpenHermes", description: "Inspect active loop state, progress, and failure signals", subtask: true, template: ct("loop-status.md") },
+        "harness-audit": { agent: "harness-optimizer", description: "Run harness self-audit across 7 categories", subtask: true, template: ct("harness-audit.md") },
+        "setup-pm": { agent: "OpenHermes", description: "Configure package manager preference for the project", subtask: true, template: ct("setup-pm.md") },
+        "go-build": { agent: "build-go", description: "Fix Go build, vet, and compilation errors", subtask: true, template: ct("go-build.md") },
+        "go-review": { agent: "review-go", description: "Review Go code for idiomatic patterns and best practices", subtask: true, template: ct("go-review.md") },
+        "rust-build": { agent: "build-rust", description: "Fix Rust build, clippy, and dependency errors", subtask: true, template: ct("rust-build.md") },
+        "rust-review": { agent: "review-rust", description: "Review Rust code for safety, ownership, and idioms", subtask: true, template: ct("rust-review.md") },
+        "skill-create": { agent: "OpenHermes", description: "Generate a new skill from git history analysis", subtask: true, template: ct("skill-create.md") },
       }
 
       config.experimental ??= {}
@@ -216,6 +251,114 @@ export const BootstrapPlugin = async ({ client, directory }) => {
           mode: "subagent",
           prompt: p("security-reviewer.md"),
           permission: { read: "allow", edit: "deny", bash: "deny", task: { "*": "allow" } },
+        },
+        "docs-lookup": {
+          description: "Documentation lookup via MCP — query any library docs in real-time",
+          mode: "subagent",
+          prompt: p("docs-lookup.md"),
+          permission: { read: "allow", bash: "allow", edit: "deny" },
+        },
+        "doc-updater": {
+          description: "Documentation and codemap generation/update specialist",
+          mode: "subagent",
+          prompt: p("doc-updater.md"),
+          permission: { read: "allow", edit: "allow", bash: "allow" },
+        },
+        "refactor-cleaner": {
+          description: "Dead code detection and safe removal specialist",
+          mode: "subagent",
+          prompt: p("refactor-cleaner.md"),
+          permission: { read: "allow", edit: "allow" },
+        },
+        "loop-operator": {
+          description: "Autonomous agent loop operator — safe iteration with stop conditions",
+          mode: "subagent",
+          prompt: p("loop-operator.md"),
+          permission: { read: "allow", edit: "allow", bash: "allow", task: { "*": "allow" } },
+        },
+        "harness-optimizer": {
+          description: "OpenHermes harness configuration optimizer — audit, tune, measure",
+          mode: "subagent",
+          prompt: p("harness-optimizer.md"),
+          permission: { read: "allow", bash: "allow", edit: "deny" },
+        },
+        "tdd-guide": {
+          description: "Test-Driven Development coach — red-green-refactor cycle enforcement",
+          mode: "subagent",
+          prompt: p("tdd-guide.md"),
+          permission: { read: "allow", edit: "allow", bash: "allow" },
+        },
+        "review-go": {
+          description: "Go code review specialist — idiomatic Go, concurrency, error handling",
+          mode: "subagent",
+          prompt: p("review-go.md"),
+          permission: { read: "allow", bash: "allow", edit: "deny" },
+        },
+        "build-go": {
+          description: "Go build error resolution specialist — go build, vet, staticcheck fixes",
+          mode: "subagent",
+          prompt: p("build-go.md"),
+          permission: { read: "allow", edit: "allow", bash: "allow" },
+        },
+        "review-database": {
+          description: "PostgreSQL database specialist — query optimization, schema, RLS, indexes",
+          mode: "subagent",
+          prompt: p("review-database.md"),
+          permission: { read: "allow", bash: "allow", edit: "deny" },
+        },
+        "review-cpp": {
+          description: "C++ code review specialist — memory safety, modern C++, RAII",
+          mode: "subagent",
+          prompt: p("review-cpp.md"),
+          permission: { read: "allow", bash: "allow", edit: "deny" },
+        },
+        "build-cpp": {
+          description: "C++ build error resolution specialist — CMake, linker, template errors",
+          mode: "subagent",
+          prompt: p("build-cpp.md"),
+          permission: { read: "allow", edit: "allow", bash: "allow" },
+        },
+        "review-java": {
+          description: "Java/Spring Boot review specialist — JPA, architecture, security",
+          mode: "subagent",
+          prompt: p("review-java.md"),
+          permission: { read: "allow", bash: "allow", edit: "deny" },
+        },
+        "build-java": {
+          description: "Java/Maven/Gradle build error resolution specialist",
+          mode: "subagent",
+          prompt: p("build-java.md"),
+          permission: { read: "allow", edit: "allow", bash: "allow" },
+        },
+        "review-kotlin": {
+          description: "Kotlin/Android review specialist — coroutines, Compose, architecture",
+          mode: "subagent",
+          prompt: p("review-kotlin.md"),
+          permission: { read: "allow", bash: "allow", edit: "deny" },
+        },
+        "build-kotlin": {
+          description: "Kotlin/Gradle build error resolution specialist",
+          mode: "subagent",
+          prompt: p("build-kotlin.md"),
+          permission: { read: "allow", edit: "allow", bash: "allow" },
+        },
+        "review-python": {
+          description: "Python code review specialist — PEP 8, type hints, security",
+          mode: "subagent",
+          prompt: p("review-python.md"),
+          permission: { read: "allow", bash: "allow", edit: "deny" },
+        },
+        "review-rust": {
+          description: "Rust code review specialist — ownership, lifetimes, safety",
+          mode: "subagent",
+          prompt: p("review-rust.md"),
+          permission: { read: "allow", bash: "allow", edit: "deny" },
+        },
+        "build-rust": {
+          description: "Rust build error resolution specialist — cargo, borrow checker, clippy",
+          mode: "subagent",
+          prompt: p("build-rust.md"),
+          permission: { read: "allow", edit: "allow", bash: "allow" },
         },
       }
 

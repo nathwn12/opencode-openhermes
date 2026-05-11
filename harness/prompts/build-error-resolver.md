@@ -35,3 +35,4 @@ npm run build                # Full build
 
 ## Output
 Report: date, target, initial errors, fixed count, remaining, build status. No architectural discussion.
+
