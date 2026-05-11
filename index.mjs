@@ -4,6 +4,7 @@ import { SkillBuilderPlugin } from "./skill-builder.mjs"
 import { BootstrapPlugin } from "./bootstrap.mjs"
 import { MemoryToolsPlugin } from "./lib/memory-tools-plugin.mjs"
 import { OhcPlugin } from "./lib/ohc/pruner.mjs"
+import { UpdaterPlugin } from "./lib/ohc/updater.mjs"
 
 function chain(...fns) {
   const h = fns.filter(Boolean)
@@ -13,13 +14,14 @@ function chain(...fns) {
 }
 
 export default async (input) => {
-  const [bootstrap, autorecall, curator, skillBuilder, memoryTools, ohc] = await Promise.all([
+  const [bootstrap, autorecall, curator, skillBuilder, memoryTools, ohc, updater] = await Promise.all([
     BootstrapPlugin(input),
     AutorecallPlugin(input),
     CuratorPlugin(input),
     SkillBuilderPlugin(input),
     MemoryToolsPlugin(input),
     OhcPlugin(input),
+    UpdaterPlugin(input),
   ])
 
   const merged = {}
@@ -34,7 +36,7 @@ export default async (input) => {
     bootstrap["experimental.chat.messages.transform"],
     ohc["experimental.chat.messages.transform"],
   )
-  merged["command.execute.before"] = chain(ohc["command.execute.before"])
+  merged["command.execute.before"] = chain(updater["command.execute.before"], ohc["command.execute.before"])
 
   const eventHandlers = [autorecall.event, curator.event, skillBuilder.event].filter(Boolean)
   if (eventHandlers.length) {

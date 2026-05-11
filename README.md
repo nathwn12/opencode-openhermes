@@ -73,17 +73,19 @@ Either way, **no other config needed.** The plugin auto-registers:
 | What | Details |
 |------|---------|
 | **25 subagents** | 7 core + 18 specialist:<br>**Core:** architect, planner, build-error-resolver, code-reviewer, security-reviewer, e2e-runner, explore<br>**Specialist:** tdd-guide, docs-lookup, doc-updater, refactor-cleaner, loop-operator, harness-optimizer, review-go, build-go, review-rust, build-rust, review-python, review-java, build-java, review-kotlin, build-kotlin, review-cpp, build-cpp, review-database |
-| **26 slash commands** | `/plan`, `/build-fix`, `/code-review`, `/security`, `/doctor`, `/memory-search`, `/learn`, `/ohc`, `/orchestrate`, `/eval`, `/model-route`, `/quality-gate`, `/test-coverage`, `/update-docs`, `/update-codemaps`, `/refactor-clean`, `/verify`, `/checkpoint`, `/loop-start`, `/loop-status`, `/harness-audit`, `/setup-pm`, `/go-build`, `/go-review`, `/rust-build`, `/rust-review`, `/skill-create` |
+| **27 slash commands** | `/plan`, `/build-fix`, `/code-review`, `/security`, `/doctor`, `/memory-search`, `/learn`, `/ohc`, `/orchestrate`, `/eval`, `/model-route`, `/quality-gate`, `/test-coverage`, `/update-docs`, `/update-codemaps`, `/refactor-clean`, `/verify`, `/checkpoint`, `/loop-start`, `/loop-status`, `/harness-audit`, `/setup-pm`, `/go-build`, `/go-review`, `/rust-build`, `/rust-review`, `/skill-create`, `/update-me` |
 | **5 native memory tools** | `hm_put`, `hm_get`, `hm_list`, `hm_latest`, `hm_search` — in-process, no MCP server needed |
 | **10 procedural skills** | API design, backend patterns, coding standards, E2E testing, frontend patterns, frontend slides, security review, strategic compaction, TDD workflow, verification loop |
 | **6 lifecycle plugins** | bootstrap, curator, autorecall, skill-builder, memory-tools, ohc |
 
 You only need to define primary agents (like `build` or `OpenHermes`) in `opencode.json` — subagents are injected automatically.
 
+> **🔄 Force update / repair:** Run `/update-me` anytime to clear the cached OpenHermes and reload from source. Works with both git-backed and npm installs. Use when the plugin feels stale, broken, or you just pushed changes upstream.
+
 <details>
 <summary><b>What happens on your next session</b></summary>
 
-1. **Config hook** — BootstrapPlugin registers auto-config: 25 subagents, 26 commands, 10 skill dirs.
+1. **Config hook** — BootstrapPlugin registers auto-config: 25 subagents, 27 commands, 10 skill dirs.
 2. **Chat transform hook** — bootstrap content is injected into the first user message:
    - &#9733; **Constitution** (`soul.md`) — 11 immutable principles
    - &#9733; **Runtime** (`RUNTIME.md`) — gather → delegate → verify → compress
@@ -146,12 +148,12 @@ System prompt is injected with your budget and floor. As context grows, progress
 
 ---
 
-## The Six Plugins
+## The Seven Plugins
 
 ### BootstrapPlugin
 _Registers agents, commands, skills at config hook; injects constitution + router + runtime into every session._
 - **Hooks:** `config`, `chat.transform`
-- Registers 25 subagents, 26 commands, 10 skill paths
+- Registers 25 subagents, 27 commands, 10 skill paths
 
 ### MemoryToolsPlugin
 _Provides 5 native memory tools — no MCP server, no network, no sidecars._
@@ -176,6 +178,11 @@ _Auto-detects complex sessions and creates skill-candidate backlogs._
 _Silent config-driven context pruner. No tool calls, no chat output, no toasts._
 - **Hooks:** `config`, `experimental.chat.system.transform`, `.messages.transform`, `command.execute.before`, `tool.compress`
 - Injects context budget via system prompt; progressive nudges at 70%/85%/95%; silent reaper enforces hard limit; `/ohc` command + `compress` tool for on-demand pruning
+
+### UpdaterPlugin
+_Force-update / repair command for OpenHermes itself._
+- **Hooks:** `command.execute.before`
+- Registers `/update-me` — detects install method (git or npm), clears stale cache, tells user to restart. Safe to run anytime.
 
 ---
 
