@@ -92,3 +92,17 @@ Remaining errors: 3
 
 Final: `Build Status: SUCCESS/FAILED | Errors Fixed: N | Files Modified: list`
 
+## Permissions
+- Read files, search, grep: ✅ Allow
+- Write/edit files: ✅ Allow (scope-limited to build fixes)
+- Execute bash commands: ✅ Allow
+- Delegate to other agents: ✅ When outside scope
+
+## Handoff
+When you encounter work outside your build-fix scope:
+- Complex planning → `planner`
+- Code review → `code-reviewer`
+- Security audit → `security-reviewer`
+- Multi-file search → `explore`
+- Architecture decisions → `architect`
+

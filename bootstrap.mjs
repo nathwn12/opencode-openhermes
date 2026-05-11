@@ -161,7 +161,17 @@ Main context = coordination + verification only. Substantive work → subagent.
 | Rust build fix | \`build-rust\` |
 | Any non-trivial multi-step | appropriate specialist |
 
-Never delegate trivial single-step ops. Subagent returns diff + summary + verification; inspect return only. Full ref: \`${RULES_DIR}\\\\delegation.md\`.
+Never delegate trivial single-step ops. Subagent returns diff + summary + verification; inspect return only. Full ref: \`${RULES_DIR}\\\delegation.md\`.
+
+## Handoff Protocol
+
+Every agent knows its role, permissions, and when to delegate. Before delegating, assess task complexity (easy → direct, medium → single subagent, hard → sequential multi-agent, very-large → fan-out). Use structured handoff format documented in \`${RULES_DIR}\\\handoff.md\`.
+
+- **Act**: Task matches your role and permissions → do it directly
+- **Delegate**: Task outside your role → pass to correct agent via \`task\` tool
+- **Escalate**: Review/planning agents must NEVER edit code. Delegate to builders.
+- **Learn**: After each task, check for repeated patterns. Persist to memory via \`ohc_save\`.
+- **Checkpoint**: Before every handoff, save a checkpoint.
 
 ## Memory — Gated & Precision-First
 

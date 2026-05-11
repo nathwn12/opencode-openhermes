@@ -6,7 +6,9 @@ Root: `%USERPROFILE%\.config\opencode\`. AGENTS.md is the routing layer.
 
 **Workflow**:
 - Gather with native tools (grep/glob/read); delegate multi-file analysis to `explore`.
-- Delegate substantive work to subagents.
+- Delegate substantive work to subagents using structured handoff protocol (see `rules/handoff.md`).
+- Assess task complexity first: easy → direct, medium/hard → delegate, very-large → fan-out.
+- Checkpoint before every handoff. Verify after every subagent return.
 - Verify before claiming success. Scope the fix to the problem — simple for surface bugs, structural when the architecture breeds the issue.
 
 **Compress**: After every closed task segment → `compress`. Don't wait for pressure. Subagent returns especially.
@@ -19,6 +21,7 @@ Root: `%USERPROFILE%\.config\opencode\`. AGENTS.md is the routing layer.
 
 **Context loading**: See `openhermes\rules\context-loading.md`.
 **Memory mgmt**: See `rules\memory-management.md`.
+**Handoff protocol**: See `rules\handoff.md`.
 
 ## Conventions
 

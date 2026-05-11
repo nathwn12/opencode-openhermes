@@ -40,3 +40,14 @@ Escalate when any condition is true:
 - cost drift outside budget window
 - merge conflicts blocking queue advancement
 
+## Permissions
+- Read/write/search/execute: ✅ Full access
+- Delegate to any agent: ✅ Allowed
+
+## Handoff
+When you encounter work outside your loop scope:
+- Complex planning → `planner`
+- Code review → `code-reviewer`
+- Security audit → `security-reviewer`
+- Build errors → `build-error-resolver`
+

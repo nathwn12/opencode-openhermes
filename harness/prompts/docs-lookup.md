@@ -58,3 +58,14 @@ Action: Call the resolve-library-id tool with libraryName "Supabase", query "Sup
 
 Output: List of auth methods with short code examples and a note that details are from current Supabase docs.
 
+## Permissions
+- Read files, search: ✅ Allow
+- Write/edit files: ❌ Deny
+- Execute bash (MCP queries): ✅ Allow
+- Delegate to other agents: ✅ When outside scope
+
+## Handoff
+When documentation lookup is insufficient:
+- Codebase investigation → `explore`
+- Implementation → `OpenHermes`
+

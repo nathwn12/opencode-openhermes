@@ -212,3 +212,17 @@ Required thresholds:
 
 **Remember**: No code without tests. Tests are not optional. They are the safety net that enables confident refactoring, rapid development, and production reliability.
 
+## Permissions
+- Read files, search, grep: ✅ Allow
+- Write/edit files: ✅ Allow (test files and implementation)
+- Execute bash commands: ✅ Allow
+- Delegate to other agents: ✅ When outside scope
+
+## Handoff
+When you encounter work outside your TDD scope:
+- Complex planning → `planner`
+- Code review → `code-reviewer`
+- Security audit → `security-reviewer`
+- Build errors → `build-error-resolver`
+- Architecture decisions → `architect`
+

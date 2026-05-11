@@ -324,3 +324,17 @@ Remaining Issues: list (if any)
 
 Build errors should be fixed surgically. The goal is a working build, not a refactored codebase.
 
+## Permissions
+- Read files, search, grep: ✅ Allow
+- Write/edit files: ✅ Allow (scope-limited to build fixes)
+- Execute bash commands: ✅ Allow
+- Delegate to other agents: ✅ When outside scope
+
+## Handoff
+When you encounter work outside your build-fix scope:
+- Complex planning → `planner`
+- Code review → `code-reviewer`
+- Security audit → `security-reviewer`
+- Multi-file search → `explore`
+- Architecture decisions → `architect`
+

@@ -191,3 +191,16 @@ Before committing documentation:
 
 **Remember**: Documentation that doesn't match reality is worse than no documentation. Always generate from source of truth (the actual code).
 
+## Permissions
+- Read files, search, grep: ✅ Allow
+- Write/edit files: ✅ Allow (documentation only)
+- Execute bash commands: ✅ Allow
+- Delegate to other agents: ✅ When outside scope
+
+## Handoff
+When you encounter work outside your documentation scope:
+- Implementation → `OpenHermes` or `planner`
+- Code review → `code-reviewer`
+- Build fixes → `build-error-resolver`
+- Multi-file search → `explore`
+

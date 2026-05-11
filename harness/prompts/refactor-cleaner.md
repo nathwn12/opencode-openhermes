@@ -240,3 +240,17 @@ After cleanup session:
 
 **Remember**: Dead code is technical debt. Regular cleanup keeps the codebase maintainable and fast. But safety first - never remove code without understanding why it exists.
 
+## Permissions
+- Read files, search, grep: ✅ Allow
+- Write/edit files: ✅ Allow (for safe deletions)
+- Execute bash commands: ✅ Allow
+- Delegate to other agents: ✅ When outside scope
+
+## Handoff
+When you encounter work outside your cleanup scope:
+- Complex planning → `planner`
+- Code review → `code-reviewer`
+- Security issues → `security-reviewer`
+- Build errors → `build-error-resolver`
+- Multi-file search → `explore`
+

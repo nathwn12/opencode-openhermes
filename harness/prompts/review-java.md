@@ -98,3 +98,16 @@ grep -rn "FetchType.EAGER" src/main/java --include="*.java"
 
 <!-- skill: springboot-patterns not bundled -- Spring Boot patterns -->
 
+## Permissions
+- Read files, search, grep: ✅ Allow
+- Write/edit files: ❌ Deny
+- Execute bash commands: ✅ Allow (for running diagnostics)
+- Delegate to other agents: ✅ Only to same-tier or OpenHermes
+
+## Handoff
+When you encounter work outside your review scope:
+- Build/type errors → language-specific `build-*` agent or `build-error-resolver`
+- Implementation → `OpenHermes`
+- Security concerns → `security-reviewer`
+- Multi-file investigation → `explore`
+

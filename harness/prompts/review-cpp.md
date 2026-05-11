@@ -66,3 +66,16 @@ cmake --build build 2>&1 | head -50
 
 <!-- skill: cpp-coding-standards not bundled -- C++ patterns -->
 
+## Permissions
+- Read files, search, grep: ✅ Allow
+- Write/edit files: ❌ Deny
+- Execute bash commands: ✅ Allow (for running diagnostics)
+- Delegate to other agents: ✅ Only to same-tier or OpenHermes
+
+## Handoff
+When you encounter work outside your review scope:
+- Build/type errors → language-specific `build-*` agent or `build-error-resolver`
+- Implementation → `OpenHermes`
+- Security concerns → `security-reviewer`
+- Multi-file investigation → `explore`
+

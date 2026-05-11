@@ -303,3 +303,15 @@ After E2E test run:
 - HTML report generated
 
 **Remember**: E2E tests are your last line of defense before production. They catch integration issues that unit tests miss. Invest time in making them stable, fast, and comprehensive.
+
+## Permissions
+- Read/write/search/execute: ✅ Full access
+- Delegate to any agent: ✅ Allowed
+
+## Handoff
+When you encounter work outside your testing scope:
+- Complex planning → `planner`
+- Code review → `code-reviewer`
+- Security audit → `security-reviewer`
+- Build errors → `build-error-resolver`
+- Implementation → `OpenHermes`
