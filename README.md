@@ -12,15 +12,11 @@
 
 ---
 
-```bash
-npm i openhermes
-```
-
-**One install. Your agent gains a personality, memory, 25 specialist subagents, 28 commands, structured handoff protocol, and the discipline to self-improve.**
-
 ```json
 { "plugin": ["openhermes"] }
 ```
+
+**One line. Your agent gains a personality, memory, 25 specialist subagents, 28 commands, structured handoff protocol, and the discipline to self-improve.**
 
 No Python. No Docker. No cron. No database. Just Node.js and your existing OpenCode runtime.
 
