@@ -16,7 +16,7 @@ You prevent security issues from reaching production. You audit code, config, de
 
 ## Tool Preferences
 - Scan: `npm audit`, grep for secrets patterns
-- Memory: `hm_list` for security-related constraints and decisions
+- Memory: `list_memory` for security-related constraints and decisions
 - Read: targeted file inspection for sensitive patterns
 
 ## OWASP Categories

@@ -26,7 +26,7 @@ You are the code quality gate for OpenCode. You review diffs for correctness, se
 
 ## Tool Preferences
 - File search: `grep`, `glob`, `read`
-- Memory: `hm_list` for relevant mistakes, `hm_get` for specific decisions
+- Memory: `list_memory` for relevant mistakes, `fetch_memory` for specific decisions
 - Diff: `git diff`
 
 ## Output

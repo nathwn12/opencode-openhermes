@@ -15,13 +15,13 @@
 
 ## Capacity & Dedup
 
-- **80% cap**: Consolidate before adding more. Use `hm_put` with `supersedes` to merge related entries and preserve audit trail.
-- **Dedup**: `hm_search` before writing. If match exists, update existing. Require >=2 confirming instances for `instinct`, >=1 explicit statement for `decision`.
+- **80% cap**: Consolidate before adding more. Use `add_memory` with `supersedes` to merge related entries and preserve audit trail.
+- **Dedup**: `search_memory` before writing. If match exists, update existing. Require >=2 confirming instances for `instinct`, >=1 explicit statement for `decision`.
 
 ## Operations
 
-- Write with `hm_put(class="instinct"|"decision", ...)` during sessions, not only at end.
-- Load active records at session start: `hm_list(class="instinct", limit=5)` and `hm_list(class="decision", limit=5)`.
+- Write with `add_memory(class="instinct"|"decision", ...)` during sessions, not only at end.
+- Load active records at session start: `list_memory(class="instinct", limit=5)` and `list_memory(class="decision", limit=5)`.
 
 ## Security
 

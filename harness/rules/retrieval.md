@@ -56,10 +56,10 @@ Self-improving agents rot by saving too much. These rules prevent memory spam:
 
 ## Retrieval Implementation
 
-1. Start with `hm_latest(class)` for the most likely relevant class.
-2. Then use `hm_search(query, classes, project, limit)` with narrow, task-shaped filters.
-3. Use `hm_get(class, id)` only for specific records surfaced by step 1 or 2.
-4. Use `hm_list(class, limit)` only when you need a small class sample or a bounded discovery pass.
+1. Start with `latest_memory(class)` for the most likely relevant class.
+2. Then use `search_memory(query, classes, project, limit)` with narrow, task-shaped filters.
+3. Use `fetch_memory(class, id)` only for specific records surfaced by step 1 or 2.
+4. Use `list_memory(class, limit)` only when you need a small class sample or a bounded discovery pass.
 5. Never read full memory index files for routine task work.
 6. Read whole indexes only when the task is explicitly about auditing, repairing, or regenerating the index itself.
 7. For project-level file search with grep/glob patterns: delegate to `explore` subagent.
@@ -69,7 +69,7 @@ Self-improving agents rot by saving too much. These rules prevent memory spam:
 
 **NEVER start broad. Always needle-precision first.**
 
-1. Start with the single most targeted tool for the question: `grep` for a pattern, `glob` for a filename, `hm_latest` for a memory class, `hm_search` with narrow filters.
+1. Start with the single most targeted tool for the question: `grep` for a pattern, `glob` for a filename, `latest_memory` for a memory class, `search_memory` with narrow filters.
 2. Read the minimum number of files to answer the question — often 1-3, not 16+.
 3. Stop immediately when you have enough signal to answer.
 4. Only broaden when every precise method is exhausted and the answer is still missing.

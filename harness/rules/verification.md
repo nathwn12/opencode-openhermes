@@ -14,7 +14,7 @@ Verification receipts prove that an artifact was observed in a particular state.
 
 ## Verification Cache (Memory-Backed)
 
-Successful verifications are stored via `hm_put` so repeated checks of unchanged artifacts are skipped.
+Successful verifications are stored via `add_memory` so repeated checks of unchanged artifacts are skipped.
 
 ### Cache Key
 
@@ -24,14 +24,14 @@ Each verification receipt is keyed by:
 
 ### Cache Lifecycle
 
-1. **Before trusting a claim**: search memory (`hm_get` or `hm_list`) for matching receipt.
+1. **Before trusting a claim**: search memory (`fetch_memory` or `list_memory`) for matching receipt.
 2. **Receipt found + fingerprint matches**: artifact unchanged. Trust cached result. Skip re-verify.
 3. **Receipt found + fingerprint differs**: artifact changed. Re-verify. Stale receipt is invalid.
 4. **No receipt found**: verify fresh. Store receipt on success.
 
 ### Receipt Storage
 
-Use `hm_put` with class `verification_receipt` — a dedicated memory class (schema: `schemas\verification_receipt.schema.json`). Receipts are stored as file-per-object in `memory\verification_receipts\<id>.json`.
+Use `add_memory` with class `verification_receipt` — a dedicated memory class (schema: `schemas\verification_receipt.schema.json`). Receipts are stored as file-per-object in `memory\verification_receipts\<id>.json`.
 
 Required fields:
 - **artifact**: path or logical identity of the verified artifact
@@ -69,7 +69,7 @@ Receipts stored under `decision` with `v:` prefix are deprecated. Migrate to `ve
 When verification reveals evidence contradicts a document or user claim:
 
 1. **Pause** — do not proceed on either source.
-2. **Log** — `hm_put` as `constraint` or `backlog` with both claim and contradictory evidence.
+2. **Log** — `add_memory` as `constraint` or `backlog` with both claim and contradictory evidence.
 3. **Flag** — ask user about the discrepancy. Present both sides.
 4. **Resolve** — let user decide which source is authoritative. Update document if needed.
 

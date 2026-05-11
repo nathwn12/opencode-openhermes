@@ -8,9 +8,9 @@ Run this at the start of every new session and every resume before substantive w
 2. Load openhermes status from `%USERPROFILE%\.config\opencode\ohc.json` if rule paths or memory locations are needed.
 3. **Read autorecall cache**: If `openhermes\memory\recall\cache.json` exists, load it — it contains active checkpoint, constraints, decisions, and mistakes from the prior session. The autorecall plugin writes this at session start. Use this context before probing MCP tools.
 4. Check only the smallest relevant curated memory slice in `openhermes\memory\`:
-   - latest checkpoint via `hm_latest`
-   - active decisions via `hm_latest` or a narrow `hm_search`
-   - active constraints via `hm_latest` or a narrow `hm_search`
+   - latest checkpoint via `latest_memory`
+   - active decisions via `latest_memory` or a narrow `search_memory`
+   - active constraints via `latest_memory` or a narrow `search_memory`
    - recent same-type mistakes only if the task matches a known pattern
    - do not read whole memory indexes unless the task is explicitly about index auditing or repair
 5. If no relevant memory exists, proceed fresh without pretending there is prior state.

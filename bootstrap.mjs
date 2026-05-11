@@ -33,7 +33,7 @@ Snapshot before mutation. Never delete unrelated files. Never assume \`%USERPROF
 | Category | Items |
 |----------|-------|
 | **Native tools** | \`read\`, \`write\`, \`edit\`, \`glob\`, \`grep\`, \`bash\`, \`task\`, \`webfetch\`, \`skill\`, \`todowrite\`, \`todoread\` |
-| **In-process tools** | \`hm_put\`, \`hm_get\`, \`hm_list\`, \`hm_latest\`, \`hm_search\` |
+| **In-process tools** | \`add_memory\`, \`fetch_memory\`, \`list_memory\`, \`latest_memory\`, \`search_memory\`, \`archive_memory\` |
 | **Memory recall cache** | \`openhermes/memory/recall/cache.json\` — read on session start, no MCP round-trip |
 | **Subagents** | \`explore\` (read-only), \`general\` (multi-step), \`architect\`, \`planner\`, \`build-error-resolver\`, \`code-reviewer\`, \`security-reviewer\`, \`e2e-runner\`, \`docs-lookup\`, \`doc-updater\`, \`refactor-cleaner\`, \`loop-operator\`, \`harness-optimizer\`, \`tdd-guide\`, \`review-go\`, \`build-go\`, \`review-database\`, \`review-cpp\`, \`build-cpp\`, \`review-java\`, \`build-java\`, \`review-kotlin\`, \`build-kotlin\`, \`review-python\`, \`review-rust\`, \`build-rust\` |
 | **Plugins** | \`curator\` (checkpoints, mistakes, audit, compaction), \`autorecall\` (recall cache on \`session.created\`), \`skill-builder\` (complex session detection) |
@@ -78,11 +78,11 @@ Never delegate trivial single-step ops. Subagent returns diff + summary + verifi
 
 ## Memory — Gated & Precision-First
 
-- **Start**: Read recall cache first. If stale/missing → \`hm_latest\` for relevant classes.
-- **Before work**: Narrow \`hm_search\` by class, scope, keywords. Never read full indexes.
+- **Start**: Read recall cache first. If stale/missing → \`latest_memory\` for relevant classes.
+- **Before work**: Narrow \`search_memory\` by class, scope, keywords. Never read full indexes.
 - **Before close**: Query same-type mistakes (7 days). Match → \`code-reviewer\` or \`security-reviewer\`.
-- **On failure**: \`hm_search\` for similar incidents. Search memory before asking user.
-- **Precision ladder**: \`hm_latest\` → \`hm_search\` → \`hm_get\` → \`hm_list\` (last resort). Full index reads only for explicit audit/repair tasks.
+- **On failure**: \`search_memory\` for similar incidents. Search memory before asking user.
+- **Precision ladder**: \`latest_memory\` → \`search_memory\` → \`fetch_memory\` → \`list_memory\` (last resort). Full index reads only for explicit audit/repair tasks.
 - **Anti-spam**: No obvious facts, no one-off prefs, no temp state, no low-risk mistakes. Supersede, don't duplicate. Full rules: \`${RULES_DIR}\\\\retrieval.md\`, \`${RULES_DIR}\\\\memory-management.md\`.
 
 ## Self-Edit Authority
@@ -102,7 +102,7 @@ Full tiers: \`${RULES_DIR}\\\\self-heal.md\`.
 - Checkpoint on meaningful boundaries. Compress closed segments immediately.
 - After subagent return: verify → compress that block.
 - Compress proactively.
-- Skill candidates → \`/learn\` only if repeated pattern + \`hm_search\` confirms no dup. See \`${RULES_DIR}\\\\skills-management.md\`.
+- Skill candidates → \`/learn\` only if repeated pattern + \`search_memory\` confirms no dup. See \`${RULES_DIR}\\\\skills-management.md\`.
 - Audit triggers: openhermes/config change, repeated failures, session start when last audit >7 days. See \`${RULES_DIR}\\\\audit.md\`.
 
 ## Escalation

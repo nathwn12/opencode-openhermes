@@ -10,7 +10,7 @@ Search openhermes memory for: $ARGUMENTS
 
 ## Your Task
 
-1. Call `hm_search` with query="$ARGUMENTS" to get raw results
+1. Call `search_memory` with query="$ARGUMENTS" to get raw results
 2. Summarize the top 5 results with natural language interpretation
 3. Highlight patterns, recurring themes, and actionable insights
 4. Return a structured report
@@ -34,4 +34,4 @@ Search openhermes memory for: $ARGUMENTS
 
 ### Recommended Next Query
 
-[Suggest a follow-up hm_search query for deeper exploration]
+[Suggest a follow-up search_memory query for deeper exploration]

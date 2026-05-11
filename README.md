@@ -12,7 +12,7 @@
 
 ---
 
-**Your OpenCode agent, leveled up.** Add it to your plugins and your agent gains a personality, a memory, a conscience, 25 specialist subagents, 26 slash commands, 5 native memory tools, 10 procedural skills, autonomous checkpointing, and the discipline to self-improve.
+**Your OpenCode agent, leveled up.** Add it to your plugins and your agent gains a personality, a memory, a conscience, 25 specialist subagents, 27 slash commands, 6 native memory tools, 10 procedural skills, autonomous checkpointing, and the discipline to self-improve.
 
 ```bash
 npm i openhermes
@@ -34,7 +34,7 @@ npm i openhermes
 <tr><td width="160"><b>&#129302; Personality Layer</b></td><td>An 11-principle constitution (<code>soul.md</code>) injected into every session — pragmatic, concise, subagent-first, verify-don't-claim. Your agent stops rambling and starts delivering.</td></tr>
 <tr><td><b>&#128204; Delegation Discipline</b></td><td>Mandated routing table — every non-trivial task goes to the right specialist subagent. Main context stays clean, coordination-only. No more bloated chat logs.</td></tr>
 <tr><td><b>&#128190; 9-Class Durable Memory</b></td><td>Checkpoints, decisions, constraints, instincts, mistakes, backlog items, audit reports, verification receipts, and session recall — all schema-validated, fingerprint-aware, persisted to disk.</td></tr>
-<tr><td><b>&#129520; Precision-First Retrieval</b></td><td>Gated retrieval with anti-spam controls. <code>hm_latest</code> → <code>hm_search</code> → <code>hm_get</code> → <code>hm_list</code>. No full-index reads unless explicitly scoped. Memory stays lean.</td></tr>
+<tr><td><b>&#129520; Precision-First Retrieval</b></td><td>Gated retrieval with anti-spam controls. <code>latest_memory</code> → <code>search_memory</code> → <code>fetch_memory</code> → <code>list_memory</code>. No full-index reads unless explicitly scoped. Memory stays lean.</td></tr>
 <tr><td><b>&#128293; Autonomous Checkpointing</b></td><td>Pre-compaction snapshots capture mission, current state, next actions, blockers, and risk notes so compaction never loses the plot.</td></tr>
 <tr><td><b>&#128260; Closed Learning Loop</b></td><td>Mistakes are logged with root cause + prevention rule. Complex sessions auto-generate skill-candidate backlogs. Strike tracking escalates repeat failures. The agent gets better — you don't have to teach it twice.</td></tr>
 <tr><td><b>&#128736; 10 Bundled Procedural Skills</b></td><td>Pre-built skills for API design, backend patterns, coding standards, E2E testing, frontend patterns, frontend slides, security reviews, strategic compaction, TDD workflow, and verification loops. Discovered automatically — use <code>skill</code> to list and load.</td></tr>
@@ -74,7 +74,7 @@ Either way, **no other config needed.** The plugin auto-registers:
 |------|---------|
 | **25 subagents** | 7 core + 18 specialist:<br>**Core:** architect, planner, build-error-resolver, code-reviewer, security-reviewer, e2e-runner, explore<br>**Specialist:** tdd-guide, docs-lookup, doc-updater, refactor-cleaner, loop-operator, harness-optimizer, review-go, build-go, review-rust, build-rust, review-python, review-java, build-java, review-kotlin, build-kotlin, review-cpp, build-cpp, review-database |
 | **27 slash commands** | `/plan`, `/build-fix`, `/code-review`, `/security`, `/doctor`, `/memory-search`, `/learn`, `/ohc`, `/orchestrate`, `/eval`, `/model-route`, `/quality-gate`, `/test-coverage`, `/update-docs`, `/update-codemaps`, `/refactor-clean`, `/verify`, `/checkpoint`, `/loop-start`, `/loop-status`, `/harness-audit`, `/setup-pm`, `/go-build`, `/go-review`, `/rust-build`, `/rust-review`, `/skill-create`, `/update-me` |
-| **5 native memory tools** | `hm_put`, `hm_get`, `hm_list`, `hm_latest`, `hm_search` — in-process, no MCP server needed |
+| **6 native memory tools** | `add_memory`, `fetch_memory`, `list_memory`, `latest_memory`, `search_memory`, `archive_memory` — in-process, no MCP server needed |
 | **10 procedural skills** | API design, backend patterns, coding standards, E2E testing, frontend patterns, frontend slides, security review, strategic compaction, TDD workflow, verification loop |
 | **6 lifecycle plugins** | bootstrap, curator, autorecall, skill-builder, memory-tools, ohc |
 
@@ -156,8 +156,8 @@ _Registers agents, commands, skills at config hook; injects constitution + route
 - Registers 25 subagents, 27 commands, 10 skill paths
 
 ### MemoryToolsPlugin
-_Provides 5 native memory tools — no MCP server, no network, no sidecars._
-- Registers `hm_put`, `hm_get`, `hm_list`, `hm_latest`, `hm_search`
+_Provides 6 native memory tools — no MCP server, no network, no sidecars._
+- Registers `add_memory`, `fetch_memory`, `list_memory`, `latest_memory`, `search_memory`, `archive_memory`
 
 ### CuratorPlugin
 _Snapshots state, logs mistakes, records decisions — the agent's durable memory layer._
