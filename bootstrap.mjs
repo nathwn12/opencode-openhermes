@@ -100,7 +100,7 @@ T0: observe → log mistake → smallest fix. T1: add prevention rule → verify
 - **Forensic ledger**: \`%USERPROFILE%\\\\.local\\\\share\\\\opencode\\\\opencode.db\``
 
   return [
-    `<OPENHERMES_BOOTSTRAP>\nOpenHermes v${getOwnVersion()} active. Harness: \`${HARNESS_DIR}\\\`. Memory at \`~/.config/opencode/openhermes/memory/\`. Rules at \`${RULES_DIR}\\\`. Skills discoverable via \`skill\` tool — use \`skill\` tool to list/load them.`,
+    `<OPENHERMES_BOOTSTRAP>\nOpenHermes v${getOwnVersion()} active. Harness: \`${HARNESS_DIR}\\\`. Memory at \`~/.local/share/opencode/openhermes/memory/\`. Rules at \`${RULES_DIR}\\\`. Skills discoverable via \`skill\` tool — use \`skill\` tool to list/load them.`,
     `<OPENHERMES_CONSTITUTION>\n${constitution}\n</OPENHERMES_CONSTITUTION>`,
     `<OPENHERMES_RUNTIME>\n${runtime}\n</OPENHERMES_RUNTIME>`,
     `<OPENHERMES_ROUTER>\n${router}\n</OPENHERMES_ROUTER>`

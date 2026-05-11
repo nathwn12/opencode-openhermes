@@ -1,5 +1,8 @@
 node_modules/
 *.tgz
+package-lock.json
+bun.lock
+bun.lockb
 PLAN.d
 .DS_Store
 AGENTS.md
