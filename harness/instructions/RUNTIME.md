@@ -7,7 +7,7 @@ Root: `%USERPROFILE%\.config\opencode\`. AGENTS.md is the routing layer.
 **Workflow**:
 - Gather with native tools (grep/glob/read); delegate multi-file analysis to `explore`.
 - Delegate substantive work to subagents.
-- Verify before claiming success. Make smallest correct change.
+- Verify before claiming success. Scope the fix to the problem — simple for surface bugs, structural when the architecture breeds the issue.
 
 **Compress**: After every closed task segment → `compress`. Don't wait for pressure. Subagent returns especially.
 

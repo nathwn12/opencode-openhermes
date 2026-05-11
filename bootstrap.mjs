@@ -73,9 +73,51 @@ const RUNTIME_FILE = path.join(HARNESS_DIR, "instructions", "RUNTIME.md")
 
 let _bootstrapCache = undefined
 
+function scanDirNames(dir) {
+  try { return fs.readdirSync(dir).filter(f => f.endsWith(".md")).map(f => f.replace(/\.md$/, "")).sort() }
+  catch { return [] }
+}
+
+function scanPromptNames(dir) {
+  try { return fs.readdirSync(dir).map(f => path.basename(f, path.extname(f))).sort() }
+  catch { return [] }
+}
+
+function scanSkillDirs(dir) {
+  try { return fs.readdirSync(dir).filter(f => fs.statSync(path.join(dir, f)).isDirectory()).sort() }
+  catch { return [] }
+}
+
+function scanSchemaNames(dir) {
+  try { return fs.readdirSync(dir).filter(f => f.endsWith(".schema.json")).map(f => f.replace(/\.schema\.json$/, "")).filter(f => f !== "loop-state").sort() }
+  catch { return [] }
+}
+
+export function buildCapabilityMap(hDir) {
+  const cmds = scanDirNames(path.join(hDir, "commands"))
+  if (!cmds.includes("update-me")) cmds.push("update-me")
+  cmds.sort()
+
+  const agents = scanPromptNames(path.join(hDir, "prompts"))
+  const skills = scanSkillDirs(path.join(hDir, "skills"))
+  const schemas = scanSchemaNames(path.join(__dirname, "schemas"))
+
+  return [
+    "## Capability Map",
+    "",
+    `Commands  (${cmds.length}):  /${cmds.join(" /")}`,
+    `Subagents (${agents.length}): ${agents.join(" ")}`,
+    `Skills    (${skills.length}): ${skills.join(" ")}`,
+    `Memory    (${schemas.length}): ${schemas.join(" ")}`,
+    "",
+    `For problem → specialist routing see Delegation below. Skills via \`skill\` tool. Memory via \`add_memory\` etc.`,
+  ].join("\n")
+}
+
 function buildBootstrapContent() {
   const constitution = fs.readFileSync(CONSTITUTION_FILE, "utf8")
   const runtime = fs.readFileSync(RUNTIME_FILE, "utf8")
+  const capMap = buildCapabilityMap(HARNESS_DIR)
 
   const router = `## AGENTS.md
 
@@ -83,28 +125,13 @@ OpenHermes thin constitutional router. Full harness → \`${HARNESS_DIR}\\\`.
 
 ## Soul
 
-Pragmatic. Concise. Task-oriented. Subagent-first. Inspect, then act. Smallest correct change. Verify, don't claim. Receipts over vibes. Recover by narrowing, not posturing. Skeptical — demand proof. Precision-first search: needle then broad, never reverse.
+Pragmatic. Concise. Task-oriented. Subagent-first. Inspect, then act. Scope to the problem. Verify, don't claim. Receipts over vibes. Recover by narrowing, not posturing. Skeptical — demand proof. Precision-first search: needle then broad, never reverse.
 
 ## Safety
 
 Snapshot before mutation. Never delete unrelated files. Never assume \`%USERPROFILE%\\\\.config\\\\opencode\` is a git repo. Verify or roll back. **NEVER delete \`auth.json\`** (\`%USERPROFILE%\\\\.local\\\\share\\\\opencode\\\\auth.json\`).
 
-## Arsenal
-
-| Category | Items |
-|----------|-------|
-| **Native tools** | \`read\`, \`write\`, \`edit\`, \`glob\`, \`grep\`, \`bash\`, \`task\`, \`webfetch\`, \`skill\`, \`todowrite\`, \`todoread\` |
-| **In-process tools** | \`add_memory\`, \`fetch_memory\`, \`list_memory\`, \`latest_memory\`, \`search_memory\`, \`archive_memory\` |
-| **Memory recall cache** | \`openhermes/memory/recall/cache.json\` — read on session start, no MCP round-trip |
-| **Subagents** | \`explore\` (read-only), \`general\` (multi-step), \`architect\`, \`planner\`, \`build-error-resolver\`, \`code-reviewer\`, \`security-reviewer\`, \`e2e-runner\`, \`docs-lookup\`, \`doc-updater\`, \`refactor-cleaner\`, \`loop-operator\`, \`harness-optimizer\`, \`tdd-guide\`, \`review-go\`, \`build-go\`, \`review-database\`, \`review-cpp\`, \`build-cpp\`, \`review-java\`, \`build-java\`, \`review-kotlin\`, \`build-kotlin\`, \`review-python\`, \`review-rust\`, \`build-rust\` |
-| **Plugins** | \`curator\` (checkpoints, mistakes, audit, compaction), \`autorecall\` (recall cache on \`session.created\`), \`skill-builder\` (complex session detection) |
-| **Slash commands** | <!-- COMMANDS:START --> \`/build-fix\`, \`/checkpoint\`, \`/code-review\`, \`/doctor\`, \`/eval\`, \`/go-build\`, \`/go-review\`, \`/harness-audit\`, \`/learn\`, \`/loop-start\`, \`/loop-status\`, \`/memory-search\`, \`/model-route\`, \`/ohc\`, \`/orchestrate\`, \`/plan\`, \`/quality-gate\`, \`/refactor-clean\`, \`/rust-build\`, \`/rust-review\`, \`/security\`, \`/setup-pm\`, \`/skill-create\`, \`/test-coverage\`, \`/update-codemaps\`, \`/update-docs\`, \`/update-me\`, \`/verify\`<!-- COMMANDS:END --> |
-
-## Skills (available via \`skill\` tool)
-
-\`agent-browser\` \`batch-files\` \`caveman\` \`create-architectural-decision-record\` \`create-readme\` \`design-md\` \`diagnose\` \`docker-expert\` \`enhance-prompt\` \`find-skills\` \`grill-me\` \`grill-with-docs\` \`improve-codebase-architecture\` \`opencode-doctor\` \`opencode-ecc-lifecycle\` \`opencode-docs\` \`opencode-expert\` \`opencode-models\` \`opencode-recall\` \`react:components\` \`setup-matt-pocock-skills\` \`skill-creator\` \`squeez-expert\` \`stitch-design\` \`stitch-loop\` \`tailored-resume-generator\` \`taste-design\` \`tdd\` \`to-issues\` \`to-prd\` \`triage\` \`typescript-expert\` \`write-a-skill\` \`write-coding-standards-from-file\` \`zoom-out\`
-
-**OpenHermes-specific skills (discovered from harness):** \`api-design\` \`backend-patterns\` \`coding-standards\` \`e2e-testing\` \`frontend-patterns\` \`frontend-slides\` \`security-review\` \`strategic-compact\` \`tdd-workflow\` \`verification-loop\`
+${capMap}
 
 ## Delegation (Mandatory)
 

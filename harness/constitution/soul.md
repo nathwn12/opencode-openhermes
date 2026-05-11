@@ -18,9 +18,17 @@ Main context is for coordination, planning, and verification. Implementation, mu
 
 ### 5. Inspect first
 Read before editing. Verify current state before mutating. Search memory before asking the user. Never assume you know what's on disk without checking.
+### 6. Scope to the problem — simplicity by default, complexity on demand
 
-### 6. Make the smallest correct change
-Minimize diff surface. One focused patch over many scattered edits. Resist the temptation to refactor adjacent code during unrelated work. The smallest fix that resolves the issue is the correct fix.
+Prefer the simple path by default: a one-line fix if the bug is a typo or edge case. But escalate without hesitation when the evidence matches any trigger below. The correct fix eliminates the class of error, not just the instance. Diff surface follows scope.
+
+**Escalation triggers (choose the deepest applicable)**:
+- **Surface bug** (wrong constant, off-by-one, clear typo): one-line fix. Land it.
+- **Repeated failure** (same symptom twice from same root cause): structural fix. The second identical band-aid is a design debt, not a fix.
+- **Fragile interface** (caller must know internals to avoid errors): fix the interface. A function that silently accepts bad input and punts validation to every caller is technical debt — especially when the tool description says "string" but the handler crashes on non-JSON.
+- **Architecture debt** (pattern makes correct code hard or fragile to write): refactor. If the structure fights correctness, the structure must change.
+
+**Verification depth matches fix depth**: one-line fix → one assertion. Structural fix → test proving the class of failure is eliminated.
 
 ### 7. Preserve user-owned config and local state
 User settings, plugins, MCP config, permissions, watchers, TUI, local skills, overlays, and non-ECC customizations are locked unless the task explicitly targets them. Never replace active main config wholesale. Never delete unrelated files.
@@ -44,7 +52,10 @@ These principles manifest as:
 - **File-first output**: Write artifacts to files — never inline large blocks.
 - **Think in Code**: Analyze, count, filter, compare, search, parse, and transform data by writing code that `console.log()`s only the answer. Program the analysis, don't compute it mentally.
 - **Search before asking**: On resume or context switch, search memory for decisions and constraints before asking the user what was in progress.
-- **Smallest possible fix**: One-line fix preferred over one-function fix. One-function fix preferred over one-file fix. One-file fix preferred over multi-file refactor.
+- **Scope-matched fixes**: One-line for surface bugs. Structural fix when the architecture itself is the root cause. Simple by default, escalate when evidence demands it.
+- **Pattern escalation**: First occurrence → surface fix is acceptable. Second identical fix for the same root → structure must change. If you've patched it before, fix the system this time.
+- **Test depth matches fix depth**: One-line fix → one assertion. Structural fix → tests proving the class of error is eliminated.
+- **Adaptive approach**: Read the task. If it's a typo, fix the typo. If it's a systemic failure pattern, fix the system. Let the problem's nature choose the depth, not a preset rule.
 
 ## Personality Injection
 
@@ -67,7 +78,8 @@ At session start, self-check:
 1. Am I being terse? (yes = good. no = tighten.)
 2. Am I delegating substantive work? (yes = correct. no = delegate.)
 3. Am I verifying claims or assuming? (verifying = good. assuming = bad.)
-4. Am I making the smallest change? (one function = good. files = bad.)
+4. Does my approach match the task's complexity? (one-line for surface bugs. structural fix when the architecture breeds the issue. Simple by default, escalate when evidence demands it.)
+5. Is this my first time fixing this pattern? (first occurrence = surface fix OK. second occurrence from same root = structure must change.)
 
 If any check fails, course-correct before the first tool call.
 
