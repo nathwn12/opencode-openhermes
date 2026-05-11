@@ -1,20 +1,10 @@
 import path from "node:path"
 import os from "node:os"
 import fs from "node:fs"
-import { atomicWriteJson, fingerprintEnvironment, isTruthy, sanitizeRecord, truncateText } from "./lib/hardening.mjs"
+import { atomicWriteJson, fingerprintEnvironment, isTruthy, readJson, readJsonl, sanitizeRecord, truncateText } from "./lib/hardening.mjs"
 import { getDataRoot, getCacheRoot, getMemoryRoot, getRecallRoot, getRuntimeRoot } from "./lib/paths.mjs"
 
 const OLD_BASE = path.join(os.homedir(), ".config", "opencode", "openhermes")
-
-function readJson(fp, fallback) {
-  try { return JSON.parse(fs.readFileSync(fp, "utf8")) } catch { return fallback }
-}
-
-function readJsonl(fp) {
-  try {
-    return fs.readFileSync(fp, "utf8").trim().split("\n").filter(Boolean).map(l => JSON.parse(l))
-  } catch { return [] }
-}
 
 function loadMemoryRecord(root, className, entry) {
   const recordPath = path.join(root, "memory", className, `${entry.id}.json`)

@@ -1,12 +1,8 @@
 import path from "node:path"
 import fs from "node:fs"
 import os from "node:os"
-import { atomicWriteJson, fingerprintEnvironment, isTruthy, sanitizeRecord } from "./lib/hardening.mjs"
+import { atomicWriteJson, fingerprintEnvironment, readJson, sanitizeRecord } from "./lib/hardening.mjs"
 import { getConfigRoot, getDataRoot, getMemoryRoot } from "./lib/paths.mjs"
-
-function readJson(fp, fallback) {
-  try { return JSON.parse(fs.readFileSync(fp, "utf8")) } catch { return fallback }
-}
 
 function buildEnvironmentFingerprint(root, directory, project) {
   return fingerprintEnvironment({
@@ -94,7 +90,7 @@ export const SkillBuilderPlugin = async ({ project, directory }) => {
             })
             atomicWriteJson(path.join(dir, "index.json"), index)
 
-          } catch (err) {}
+          } catch (err) { process.stderr.write(`[skill-builder] backlog write error: ${err?.message || err}\n`) }
         }
         sessionStats = { toolCalls: 0, subagents: 0, startTime: Date.now() }
       }

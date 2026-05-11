@@ -2,7 +2,7 @@ import path from "node:path"
 import fs from "node:fs"
 import os from "node:os"
 import { findUnsupportedSchemaKeywords, validateSchema } from "./lib/schema-validator.mjs"
-import { atomicWriteJson, fingerprintEnvironment, fingerprintFile, isTruthy, redactSensitiveText, sanitizeRecord, truncateText } from "./lib/hardening.mjs"
+import { atomicWriteJson, fingerprintEnvironment, fingerprintFile, readJson, redactSensitiveText, sanitizeRecord, truncateText } from "./lib/hardening.mjs"
 import { fileURLToPath } from "node:url"
 import { dirname } from "node:path"
 import { getDataRoot, getMemoryRoot, getRuntimeRoot, getArchiveRoot } from "./lib/paths.mjs"
@@ -18,10 +18,6 @@ const CURATOR_LOGS = /^(1|true|yes)$/i.test(process.env.OPENCODE_CURATOR_LOGS ||
 function curatorLog(message) {
   if (!CURATOR_LOGS) return
   process.stderr.write(`${message}\n`)
-}
-
-function readJson(fp, fallback) {
-  try { return JSON.parse(fs.readFileSync(fp, "utf8")) } catch { return fallback }
 }
 
 function buildEnvironmentFingerprint(root, directory, project) {
