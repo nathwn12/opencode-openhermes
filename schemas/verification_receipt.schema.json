@@ -20,7 +20,9 @@
         "task_id": { "type": "string" },
         "db_refs": { "type": "array", "items": { "type": "string" } },
         "file_refs": { "type": "array", "items": { "type": "string" } },
-        "log_refs": { "type": "array", "items": { "type": "string" } }
+        "log_refs": { "type": "array", "items": { "type": "string" } },
+        "harness_root": { "type": "string" },
+        "project_root": { "type": "string" }
       }
     },
     "created_at": { "type": "string", "format": "date-time", "description": "ISO-8601 timestamp" },
@@ -62,6 +64,25 @@
     "result_detail": { "type": "string", "description": "Detailed result description or output summary" },
     "supersedes": { "type": "array", "items": { "type": "string" }, "description": "Receipt IDs this receipt supersedes" },
     "superseded_by": { "type": "array", "items": { "type": "string" }, "description": "Receipt IDs that supersede this one" },
-    "invalidation_reason": { "type": "string", "description": "If status is expired/superseded, why the receipt was invalidated" }
+    "invalidation_reason": { "type": "string", "description": "If status is expired/superseded, why the receipt was invalidated" },
+    "description": { "type": "string", "description": "Optional description" },
+    "environment_fingerprint": {
+      "type": "object",
+      "description": "System fingerprint at creation time",
+      "properties": {
+        "cwd": { "type": "string" },
+        "harness_root": { "type": "string" },
+        "project_root": { "type": "string" },
+        "project": { "type": "string" },
+        "session_id": { "type": "string" },
+        "os": { "type": "string" },
+        "release": { "type": "string" },
+        "arch": { "type": "string" },
+        "shell": { "type": "string" },
+        "provider": { "type": "string" },
+        "model": { "type": "string" },
+        "sha256": { "type": "string" }
+      }
+    }
   }
 }

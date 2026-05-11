@@ -35,7 +35,7 @@ Self-correction escalates through structured tiers. There is no self-termination
    - Build failure → `build-error-resolver`
    - Logic/scope/other → `diagnose` skill + `code-reviewer`
    - Security → `security-reviewer`
-    - Config/tool → `openhermes-optimizer` + openhermes audit
+    - Config/tool → `harness-optimizer` + openhermes audit
 2. If structural (affects openhermes behavior across projects), generate a backlog item.
 3. Run an openhermes audit to check for broken references, stale constraints, or provenance gaps.
 4. Document findings and updated prevention rules.

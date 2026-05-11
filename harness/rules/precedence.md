@@ -44,7 +44,7 @@ A conflict exists when two active items at the same precedence level prescribe i
 
 ## Constitution Immutability
 
-The 10 principles in `openhermes\constitution\soul.md` are immutable without:
+The 11 principles in `openhermes\constitution\soul.md` are immutable without:
 1. Explicit user approval
 2. A full architecture handoff document
 3. Verification that the change does not break openhermes integrity

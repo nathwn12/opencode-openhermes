@@ -20,7 +20,9 @@
         "task_id": { "type": "string" },
         "db_refs": { "type": "array", "items": { "type": "string" } },
         "file_refs": { "type": "array", "items": { "type": "string" } },
-        "log_refs": { "type": "array", "items": { "type": "string" } }
+        "log_refs": { "type": "array", "items": { "type": "string" } },
+        "harness_root": { "type": "string" },
+        "project_root": { "type": "string" }
       }
     },
     "created_at": { "type": "string", "format": "date-time", "description": "ISO-8601 timestamp" },
@@ -37,6 +39,25 @@
     "action": { "type": "string", "description": "Recommended action when triggered" },
     "success_count": { "type": "integer", "minimum": 0, "default": 0, "description": "Number of successful applications" },
     "failure_count": { "type": "integer", "minimum": 0, "default": 0, "description": "Number of failed applications" },
-    "promotion_state": { "type": "string", "enum": ["project", "candidate_global", "global"], "description": "Current promotion level" }
+    "promotion_state": { "type": "string", "enum": ["project", "candidate_global", "global"], "description": "Current promotion level" },
+    "description": { "type": "string", "description": "Optional description" },
+    "environment_fingerprint": {
+      "type": "object",
+      "description": "System fingerprint at creation time",
+      "properties": {
+        "cwd": { "type": "string" },
+        "harness_root": { "type": "string" },
+        "project_root": { "type": "string" },
+        "project": { "type": "string" },
+        "session_id": { "type": "string" },
+        "os": { "type": "string" },
+        "release": { "type": "string" },
+        "arch": { "type": "string" },
+        "shell": { "type": "string" },
+        "provider": { "type": "string" },
+        "model": { "type": "string" },
+        "sha256": { "type": "string" }
+      }
+    }
   }
 }

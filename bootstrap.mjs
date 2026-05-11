@@ -71,15 +71,13 @@ const CONSTITUTION_FILE = path.join(HARNESS_DIR, "constitution", "soul.md")
 const RUNTIME_FILE = path.join(HARNESS_DIR, "instructions", "RUNTIME.md")
 
 
-let _bootstrapCache = undefined
-
 function scanDirNames(dir) {
   try { return fs.readdirSync(dir).filter(f => f.endsWith(".md")).map(f => f.replace(/\.md$/, "")).sort() }
   catch { return [] }
 }
 
 function scanPromptNames(dir) {
-  try { return fs.readdirSync(dir).map(f => path.basename(f, path.extname(f))).sort() }
+  try { return fs.readdirSync(dir).filter(f => f.endsWith('.md') || f.endsWith('.txt')).map(f => path.basename(f, path.extname(f))).sort() }
   catch { return [] }
 }
 
@@ -220,6 +218,7 @@ function getOwnVersion() {
 }
 
 export const BootstrapPlugin = async ({ client, directory }) => {
+  let _bootstrapCache
 
   const getContent = () => {
     if (_bootstrapCache !== undefined) return _bootstrapCache

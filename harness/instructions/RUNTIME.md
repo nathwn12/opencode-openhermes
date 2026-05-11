@@ -2,7 +2,7 @@
 
 Root: `%USERPROFILE%\.config\opencode\`. AGENTS.md is the routing layer.
 
-**Memory**: Use `hm_*` MCP tools for deterministic read/write. Raw receipt fallback: `%USERPROFILE%\.local\share\opencode\opencode.db`. Never invent prior state.
+**Memory**: Use `ohc_*` MCP tools for deterministic read/write. Raw receipt fallback: `%USERPROFILE%\.local\share\opencode\opencode.db`. Never invent prior state.
 
 **Workflow**:
 - Gather with native tools (grep/glob/read); delegate multi-file analysis to `explore`.

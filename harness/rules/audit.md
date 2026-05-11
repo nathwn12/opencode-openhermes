@@ -47,8 +47,8 @@ Each audit targets one or more of:
 3. AGENTS.md does not reference deprecated paths.
 
 ### Structural Integrity
-1. All 7 memory class directories exist.
-2. All 7 schema files exist and are valid JSON.
+1. All 8 memory class directories exist.
+2. All 9 schema files exist and are valid JSON.
 3. All required rule files referenced by `AGENTS.md` exist.
 4. Constitution file exists.
 5. Archive directories exist.

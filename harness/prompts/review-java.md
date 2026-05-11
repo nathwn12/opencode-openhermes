@@ -96,5 +96,5 @@ grep -rn "FetchType.EAGER" src/main/java --include="*.java"
 - **Warning**: MEDIUM issues only
 - **Block**: CRITICAL or HIGH issues found
 
-For detailed Spring Boot patterns and examples, see `skill: springboot-patterns`.
+<!-- skill: springboot-patterns not bundled -- Spring Boot patterns -->
 

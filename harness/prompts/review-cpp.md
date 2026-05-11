@@ -64,5 +64,5 @@ cmake --build build 2>&1 | head -50
 - **Warning**: MEDIUM issues only
 - **Block**: CRITICAL or HIGH issues found
 
-For detailed C++ coding standards and anti-patterns, see `skill: cpp-coding-standards`.
+<!-- skill: cpp-coding-standards not bundled -- C++ patterns -->
 

@@ -1,18 +1,8 @@
 import path from "node:path"
 import fs from "node:fs"
 import os from "node:os"
-import { atomicWriteJson, fingerprintEnvironment, readJson, sanitizeRecord } from "./lib/hardening.mjs"
-import { getConfigRoot, getDataRoot, getMemoryRoot } from "./lib/paths.mjs"
-
-function buildEnvironmentFingerprint(root, directory, project) {
-  return fingerprintEnvironment({
-    cwd: directory,
-    harnessRoot: root,
-    projectRoot: directory,
-    project: project?.name || path.basename(directory),
-    sessionId: project?.session_id || null,
-  })
-}
+import { atomicWriteJson, buildEnvironmentFingerprint, readJson, sanitizeRecord } from "./lib/hardening.mjs"
+import { getDataRoot, getMemoryRoot } from "./lib/paths.mjs"
 
 const COMPLEXITY_THRESHOLD = { toolCalls: 8, subagents: 2 }
 let sessionStats = { toolCalls: 0, subagents: 0, startTime: Date.now() }
@@ -30,9 +20,12 @@ export const SkillBuilderPlugin = async ({ project, directory }) => {
       }
 
       if (event.type === "session.idle") {
-        const durationMin = Math.round((Date.now() - sessionStats.startTime) / 60000)
-        const isComplex = sessionStats.toolCalls >= COMPLEXITY_THRESHOLD.toolCalls
-          || sessionStats.subagents >= COMPLEXITY_THRESHOLD.subagents
+        const stats = { ...sessionStats }
+        sessionStats = { toolCalls: 0, subagents: 0, startTime: Date.now() }
+
+        const durationMin = Math.round((Date.now() - stats.startTime) / 60000)
+        const isComplex = stats.toolCalls >= COMPLEXITY_THRESHOLD.toolCalls
+          || stats.subagents >= COMPLEXITY_THRESHOLD.subagents
 
         if (isComplex) {
           try {
@@ -44,18 +37,15 @@ export const SkillBuilderPlugin = async ({ project, directory }) => {
             const hasOpenCandidate = Array.isArray(backlogIndex)
               ? backlogIndex.some(e => e.status === "open" && String(e.summary || "").includes("[skill-candidate]"))
               : false
-            if (hasOpenCandidate) {
-              sessionStats = { toolCalls: 0, subagents: 0, startTime: Date.now() }
-              return
-            }
+            if (hasOpenCandidate) return
             const environmentFingerprint = buildEnvironmentFingerprint(root, directory, project)
             const record = {
               id,
               class: "backlog",
               scope: "global",
-              summary: `[skill-candidate] Complex session: ${sessionStats.toolCalls} tool calls, ${sessionStats.subagents} subagents, ${durationMin}min`,
-              description: `Session exceeded complexity thresholds (toolCalls>=${COMPLEXITY_THRESHOLD.toolCalls} or subagents>=${COMPLEXITY_THRESHOLD.subagents}). Session had ${sessionStats.toolCalls} tool calls and ${sessionStats.subagents} subagent spawns over ${durationMin} minutes.`,
-              title: `Skill candidate: Complex session (${sessionStats.toolCalls} tool calls${sessionStats.subagents ? `, ${sessionStats.subagents} subagents`:""})`,
+              summary: `[skill-candidate] Complex session: ${stats.toolCalls} tool calls, ${stats.subagents} subagents, ${durationMin}min`,
+              description: `Session exceeded complexity thresholds (toolCalls>=${COMPLEXITY_THRESHOLD.toolCalls} or subagents>=${COMPLEXITY_THRESHOLD.subagents}). Session had ${stats.toolCalls} tool calls and ${stats.subagents} subagent spawns over ${durationMin} minutes.`,
+              title: `Skill candidate: Complex session (${stats.toolCalls} tool calls${stats.subagents ? `, ${stats.subagents} subagents`:""})`,
               priority: "medium",
               trigger: "drift",
               status: "open",
@@ -92,7 +82,6 @@ export const SkillBuilderPlugin = async ({ project, directory }) => {
 
           } catch (err) { process.stderr.write(`[skill-builder] backlog write error: ${err?.message || err}\n`) }
         }
-        sessionStats = { toolCalls: 0, subagents: 0, startTime: Date.now() }
       }
     },
   }

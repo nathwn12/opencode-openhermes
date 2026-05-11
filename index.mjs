@@ -15,7 +15,7 @@ function chain(...fns) {
 }
 
 export default async (input) => {
-  const [bootstrap, autorecall, curator, skillBuilder, memoryTools, ambient, ohc, updater] = await Promise.all([
+  const results = await Promise.allSettled([
     BootstrapPlugin(input),
     AutorecallPlugin(input),
     CuratorPlugin(input),
@@ -25,6 +25,7 @@ export default async (input) => {
     OhcPlugin(input),
     UpdaterPlugin(input),
   ])
+  const [bootstrap, autorecall, curator, skillBuilder, memoryTools, ambient, ohc, updater] = results.map(r => r.status === 'fulfilled' ? r.value : {})
 
   const merged = {}
 
@@ -44,7 +45,7 @@ export default async (input) => {
   const eventHandlers = [autorecall.event, curator.event, skillBuilder.event].filter(Boolean)
   if (eventHandlers.length) {
     merged.event = async (payload) => {
-      await Promise.all(eventHandlers.map(fn => fn(payload)))
+      await Promise.allSettled(eventHandlers.map(fn => fn(payload)))
     }
   }
 

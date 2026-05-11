@@ -30,9 +30,7 @@ Full subagent reference table. Main context = coordination, planning, verificati
 | **refactor-cleaner** | ask | Dead code cleanup, duplicate consolidation |
 | **tdd-guide** | ask | Test-driven development red-green-refactor enforcement |
 | **loop-operator** | ask | Autonomous agent loop — start, monitor, intervene |
-| **harness-optimizer** | deny | OpenHermes config audit, tune, and measure |
 | **explore** | deny | Multi-file search, codebase exploration, read-only analysis |
-| **general** | ask | General-purpose multi-step research and execution |
 
 ### Tier 2 — Language Specialists (optional, match by project marker)
 

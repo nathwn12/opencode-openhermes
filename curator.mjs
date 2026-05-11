@@ -1,11 +1,10 @@
 import path from "node:path"
 import fs from "node:fs"
-import os from "node:os"
 import { findUnsupportedSchemaKeywords, validateSchema } from "./lib/schema-validator.mjs"
-import { atomicWriteJson, fingerprintEnvironment, fingerprintFile, readJson, redactSensitiveText, sanitizeRecord, truncateText } from "./lib/hardening.mjs"
+import { atomicWriteJson, buildEnvironmentFingerprint, fingerprintFile, readJson, redactSensitiveText, sanitizeRecord, truncateText } from "./lib/hardening.mjs"
 import { fileURLToPath } from "node:url"
 import { dirname } from "node:path"
-import { getDataRoot, getMemoryRoot, getRuntimeRoot, getArchiveRoot } from "./lib/paths.mjs"
+import { getDataRoot, getMemoryRoot } from "./lib/paths.mjs"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -18,16 +17,6 @@ const CURATOR_LOGS = /^(1|true|yes)$/i.test(process.env.OPENCODE_CURATOR_LOGS ||
 function curatorLog(message) {
   if (!CURATOR_LOGS) return
   process.stderr.write(`${message}\n`)
-}
-
-function buildEnvironmentFingerprint(root, directory, project) {
-  return fingerprintEnvironment({
-    cwd: directory,
-    harnessRoot: root,
-    projectRoot: directory,
-    project: project?.name || path.basename(directory),
-    sessionId: project?.session_id || null,
-  })
 }
 
 function isMeaningfulText(value) {
@@ -83,7 +72,7 @@ function validateRecordAgainstSchema(record) {
   if (!schema) {
     curatorLog(`[curator] no schema found for class "${record.class}", fallback check`)
     const required = record.class === "checkpoint"
-      ? ["id", "class", "summary", "mission", "current_state", "next_actions", "provenance", "created_at", "status"]
+      ? ["id", "class", "summary", "mission", "current_state", "next_actions", "blockers", "risk_notes", "provenance", "created_at", "status"]
       : ["id", "class", "summary", "provenance", "created_at", "status"]
     const missing = required.filter(r => !record[r] && record[r] !== null)
     if (missing.length) {
@@ -392,32 +381,7 @@ async function handlePermissionReplied(directory, project, event) {
 export const CuratorPlugin = async ({ project, directory }) => {
   return {
     event: async ({ event }) => {
-      const OLD_BASE = path.join(os.homedir(), ".config", "opencode", "openhermes")
-      const SENTINEL = path.join(getDataRoot(), ".migrated-from-v1")
-      if (!fs.existsSync(SENTINEL)) {
-        const oldMemory = path.join(OLD_BASE, "memory")
-        const oldCache = path.join(oldMemory, "recall")
-        if (fs.existsSync(oldMemory)) {
-          fs.cpSync(oldMemory, getMemoryRoot(), { recursive: true })
-          if (fs.existsSync(oldCache)) {
-            fs.mkdirSync(getRecallRoot(), { recursive: true })
-            const files = fs.readdirSync(oldCache).filter(f => f.endsWith(".json"))
-            for (const f of files) fs.cpSync(path.join(oldCache, f), path.join(getRecallRoot(), f))
-          }
-          fs.rmSync(oldMemory, { recursive: true, force: true })
-        }
-        const oldRuntime = path.join(OLD_BASE, "runtime")
-        if (fs.existsSync(oldRuntime)) {
-          fs.cpSync(oldRuntime, getRuntimeRoot(), { recursive: true })
-          fs.rmSync(oldRuntime, { recursive: true, force: true })
-        }
-        const oldArchive = path.join(OLD_BASE, "archive")
-        if (fs.existsSync(oldArchive)) {
-          fs.rmSync(oldArchive, { recursive: true, force: true })
-        }
-        fs.mkdirSync(path.dirname(SENTINEL), { recursive: true })
-        fs.writeFileSync(SENTINEL, new Date().toISOString(), "utf8")
-      }
+      // A1: v1 migration owned by autorecall.mjs — removed to avoid race
       if (event.type === "session.created") {
         lastCheckpoint.ts = 0
         writtenThisSession.length = 0

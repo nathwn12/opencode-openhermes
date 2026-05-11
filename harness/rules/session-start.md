@@ -14,7 +14,7 @@ Run this at the start of every new session and every resume before substantive w
    - recent same-type mistakes only if the task matches a known pattern
    - do not read whole memory indexes unless the task is explicitly about index auditing or repair
 5. If no relevant memory exists, proceed fresh without pretending there is prior state.
-6. If last openhermes audit is missing or older than 7 days, flag `/openhermes-audit` as due.
+6. If last openhermes audit is missing or older than 7 days, flag `/harness-audit` as due.
 7. Before substantial work, choose the smallest correct path:
    - native read/grep/glob for search/gather
    - `explore` subagent for multi-file analysis
@@ -23,7 +23,7 @@ Run this at the start of every new session and every resume before substantive w
 ## User Entry Points
 
 - `/openhermes`: bootstrap openhermes state, summarize current readiness, and surface due actions.
-- `/openhermes-audit`: run an openhermes audit workflow and return findings.
+- `/harness-audit`: run an openhermes audit workflow and return findings.
 
 ## Output Contract
 

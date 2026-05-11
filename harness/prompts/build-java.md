@@ -122,5 +122,5 @@ Remaining errors: 1
 
 Final: `Build Status: SUCCESS/FAILED | Errors Fixed: N | Files Modified: list`
 
-For detailed Java and Spring Boot patterns, see `skill: springboot-patterns`.
+<!-- skill: springboot-patterns not bundled -- common Java patterns -->
 

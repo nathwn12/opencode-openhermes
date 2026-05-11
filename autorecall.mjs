@@ -1,7 +1,7 @@
 import path from "node:path"
 import os from "node:os"
 import fs from "node:fs"
-import { atomicWriteJson, fingerprintEnvironment, isTruthy, readJson, readJsonl, sanitizeRecord, truncateText } from "./lib/hardening.mjs"
+import { atomicWriteJson, buildEnvironmentFingerprint, fingerprintEnvironment, isTruthy, readJson, readJsonl, sanitizeRecord, truncateText } from "./lib/hardening.mjs"
 import { getDataRoot, getCacheRoot, getMemoryRoot, getRecallRoot, getRuntimeRoot } from "./lib/paths.mjs"
 
 const OLD_BASE = path.join(os.homedir(), ".config", "opencode", "openhermes")
@@ -87,15 +87,6 @@ function loadMemoryRecord(root, className, entry) {
   }
 }
 
-function buildEnvironmentFingerprint(harnessRoot, directory, projectKey) {
-  return fingerprintEnvironment({
-    cwd: directory,
-    harnessRoot,
-    projectRoot: directory,
-    project: projectKey,
-  })
-}
-
 function formatContext(memory) {
   const parts = []
   if (memory.checkpoint) parts.push(`## Active Checkpoint\n${memory.checkpoint.summary || "N/A"}\n`)
@@ -170,7 +161,7 @@ async function loadMemoryAndWriteCache(projectKey, directory) {
   }
 
   const memory = { constraints: [], decisions: [], mistakes: [], checkpoint: null, pendingSkillCandidates: [] }
-  const fingerprint = buildEnvironmentFingerprint(getDataRoot(), directory, projectKey)
+  const fingerprint = buildEnvironmentFingerprint(getDataRoot(), directory, { name: projectKey })
 
   const constraintsIndex = readJson(path.join(getMemoryRoot(), "constraints", "index.json"), [])
   if (Array.isArray(constraintsIndex)) memory.constraints = constraintsIndex.filter(e => e.status === "active")
