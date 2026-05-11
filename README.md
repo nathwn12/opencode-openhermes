@@ -300,7 +300,7 @@ Problems, ideas, improvements? [Open an issue](https://github.com/nathwn12/openh
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE). All credited inspirations are independent implementations — no code copied. ECC and Hermes Agent are MIT. DCP is AGPL-3.0 but shared concepts (compress, dedup, purge) are uncopyrightable ideas (17 U.S.C. § 102(b); *Computer Assocs. v. Altai*, 982 F.2d 693). AGPL copyleft requires copying or adapting the work (§ 0) — independent implementation does not trigger it.
 
 <p align="center">
   <sub><b>&#9764;</b> Built with discipline. Inspired by <a href="https://github.com/NousResearch/hermes-agent">Hermes Agent</a> (MIT), <a href="https://github.com/affaan-m/everything-claude-code">ECC</a> (MIT), and <a href="https://github.com/Opencode-DCP/opencode-dynamic-context-pruning">DCP</a> (AGPL-3.0). Built for <a href="https://opencode.ai">OpenCode</a>.</sub>
