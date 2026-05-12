@@ -139,6 +139,41 @@ describe("plugin structure", () => {
       [pkgCache, nestedCache].sort(),
     )
   })
+
+  it("runUpdateMe falls back cleanly when config is missing and cache is absent", async () => {
+    const { runUpdateMe } = await import("../lib/ohc/updater.mjs")
+    const output = { parts: [] }
+    const result = await runUpdateMe({
+      output,
+      configPath: path.join(os.tmpdir(), "missing-opencode.json"),
+      cacheRoots: [path.join(os.tmpdir(), "missing-openhermes-cache")],
+    })
+
+    assert.equal(result.clearedCount, 0)
+    assert.match(output.parts[0].text, /redownload openhermes@git\+https:\/\/github\.com\/nathwn12\/openhermes\.git/i)
+  })
+
+  it("runUpdateMe survives cache deletion failure", async () => {
+    const { runUpdateMe } = await import("../lib/ohc/updater.mjs")
+    const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), "openhermes-update-me-"))
+    const configPath = path.join(tmpRoot, "opencode.json")
+    const cacheRoot = path.join(tmpRoot, "packages")
+    const cacheDir = path.join(cacheRoot, "openhermes@git+https_foo")
+    fs.mkdirSync(cacheDir, { recursive: true })
+    fs.writeFileSync(configPath, JSON.stringify({ plugin: ["openhermes@git+https://github.com/nathwn12/openhermes.git"] }))
+
+    const output = { parts: [] }
+    const result = await runUpdateMe({
+      output,
+      configPath,
+      cacheRoots: [cacheRoot],
+      rmSync: () => { throw new Error("locked") },
+    })
+
+    assert.equal(result.failedCount, 1)
+    assert.match(output.parts[0].text, /could not be removed/i)
+    assert.match(output.parts[0].text, /redownload openhermes@git\+https:\/\/github\.com\/nathwn12\/openhermes\.git/i)
+  })
 })
 
 async function AutorecallPlugin(ctx) {
