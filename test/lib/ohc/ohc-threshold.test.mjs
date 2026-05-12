@@ -35,9 +35,9 @@ describe("OHC Threshold Gates", () => {
     assert.equal(result.state, OHC_STATES.EVALUATION_ALLOWED)
   })
 
-  it("150,000+ tokens returns ACTION_REQUIRED", async () => {
+  it("100,000+ tokens returns ACTION_REQUIRED", async () => {
     const { evaluateState, OHC_STATES } = await import("../../../lib/ohc/policy.mjs")
-    const result = evaluateState(150000, 50000, 150000, {}, { currentTurn: 1, manualMode: false, hasPriorState: false })
+    const result = evaluateState(100000, 50000, 100000, {}, { currentTurn: 1, manualMode: false, hasPriorState: false })
     assert.equal(result.state, OHC_STATES.ACTION_REQUIRED)
   })
 
@@ -154,30 +154,30 @@ describe("OHC Presets", () => {
     const { applyPreset } = await import("../../../lib/ohc/config.mjs")
     const cfg = {
       preset: "safe",
-      compress: { nudgeFrequency: 5, iterationNudgeThreshold: 25, protectedTools: [], protectUserMessages: false, summaryBuffer: true },
+      compress: { nudgeFrequency: 5, iterationNudgeThreshold: 15, protectedTools: [], protectTags: false, protectUserMessages: false, summaryBuffer: true },
       strategies: { deduplication: { enabled: true, protectedTools: [] }, purgeErrors: { enabled: true, turns: 4, protectedTools: [] } },
       turnProtection: { enabled: false, turns: 4 },
     }
     applyPreset(cfg)
-    assert.equal(cfg.compress.nudgeFrequency, 10)
-    assert.equal(cfg.compress.iterationNudgeThreshold, 50)
+    assert.equal(cfg.compress.nudgeFrequency, 8)
+    assert.equal(cfg.compress.iterationNudgeThreshold, 20)
     assert.equal(cfg.strategies.deduplication.enabled, false)
     assert.equal(cfg.strategies.purgeErrors.turns, 8)
     assert.equal(cfg.turnProtection.enabled, false)
-    assert.equal(cfg.turnProtection.turns, 0)
+    assert.equal(cfg.turnProtection.turns, 4)
   })
 
   it("preset max sets aggressive values", async () => {
     const { applyPreset } = await import("../../../lib/ohc/config.mjs")
     const cfg = {
       preset: "max",
-      compress: { nudgeFrequency: 5, iterationNudgeThreshold: 25, protectedTools: [], protectUserMessages: false, summaryBuffer: true },
+      compress: { nudgeFrequency: 5, iterationNudgeThreshold: 15, protectedTools: [], protectTags: false, protectUserMessages: false, summaryBuffer: true },
       strategies: { deduplication: { enabled: true, protectedTools: [] }, purgeErrors: { enabled: true, turns: 4, protectedTools: [] } },
       turnProtection: { enabled: false, turns: 4 },
     }
     applyPreset(cfg)
     assert.equal(cfg.compress.nudgeFrequency, 2)
-    assert.equal(cfg.compress.iterationNudgeThreshold, 10)
+    assert.equal(cfg.compress.iterationNudgeThreshold, 8)
     assert.equal(cfg.strategies.deduplication.enabled, true)
     assert.equal(cfg.strategies.purgeErrors.turns, 2)
     assert.equal(cfg.turnProtection.enabled, true)
@@ -264,6 +264,7 @@ describe("OHC JSONC Config", () => {
         iterationNudgeThreshold: 30,
         nudgeForce: "strong",
         protectedTools: ["task"],
+        protectTags: false,
         protectUserMessages: true,
         summaryBuffer: false,
       },
@@ -293,6 +294,7 @@ describe("OHC JSONC Config", () => {
     assert.equal(parsed.compress.iterationNudgeThreshold, 30)
     assert.equal(parsed.compress.nudgeForce, "strong")
     assert.deepEqual(parsed.compress.protectedTools, ["task"])
+    assert.equal(parsed.compress.protectTags, false)
     assert.equal(parsed.compress.protectUserMessages, true)
     assert.equal(parsed.compress.summaryBuffer, false)
     assert.equal(parsed.strategies.deduplication.enabled, false)
@@ -309,7 +311,7 @@ describe("OHC JSONC Config", () => {
       manualMode: { enabled: false, automaticStrategies: false },
       turnProtection: { enabled: false, turns: 0 },
       protectedFilePatterns: [],
-      compress: { nudgeFrequency: 8, iterationNudgeThreshold: 40, nudgeForce: "soft", protectedTools: [], protectUserMessages: true, summaryBuffer: true },
+      compress: { nudgeFrequency: 8, iterationNudgeThreshold: 40, nudgeForce: "soft", protectedTools: [], protectTags: false, protectUserMessages: true, summaryBuffer: true },
       strategies: { deduplication: { enabled: true, protectedTools: [] }, purgeErrors: { enabled: false, turns: 0, protectedTools: [] } },
     })
     // Write to temp file, then parse with comment stripping like loadFile does
