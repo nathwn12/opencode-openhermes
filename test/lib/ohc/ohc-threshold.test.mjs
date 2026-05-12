@@ -150,27 +150,27 @@ describe("OHC Presets", () => {
     assert.equal(cfg.preset, "default")
   })
 
-  it("preset safe sets conservative values", async () => {
+  it("preset soft sets conservative values", async () => {
     const { applyPreset } = await import("../../../lib/ohc/config.mjs")
     const cfg = {
-      preset: "safe",
+      preset: "soft",
       compress: { nudgeFrequency: 5, iterationNudgeThreshold: 15, protectedTools: [], protectTags: false, protectUserMessages: false, summaryBuffer: true },
       strategies: { deduplication: { enabled: true, protectedTools: [] }, purgeErrors: { enabled: true, turns: 4, protectedTools: [] } },
       turnProtection: { enabled: false, turns: 4 },
     }
     applyPreset(cfg)
-    assert.equal(cfg.compress.nudgeFrequency, 8)
-    assert.equal(cfg.compress.iterationNudgeThreshold, 20)
+    assert.equal(cfg.compress.nudgeFrequency, 10)
+    assert.equal(cfg.compress.iterationNudgeThreshold, 30)
     assert.equal(cfg.strategies.deduplication.enabled, false)
     assert.equal(cfg.strategies.purgeErrors.turns, 8)
     assert.equal(cfg.turnProtection.enabled, false)
     assert.equal(cfg.turnProtection.turns, 4)
   })
 
-  it("preset max sets aggressive values", async () => {
+  it("preset hard sets aggressive values", async () => {
     const { applyPreset } = await import("../../../lib/ohc/config.mjs")
     const cfg = {
-      preset: "max",
+      preset: "hard",
       compress: { nudgeFrequency: 5, iterationNudgeThreshold: 15, protectedTools: [], protectTags: false, protectUserMessages: false, summaryBuffer: true },
       strategies: { deduplication: { enabled: true, protectedTools: [] }, purgeErrors: { enabled: true, turns: 4, protectedTools: [] } },
       turnProtection: { enabled: false, turns: 4 },
@@ -187,7 +187,7 @@ describe("OHC Presets", () => {
   it("user-set values survive preset override", async () => {
     const { applyPreset } = await import("../../../lib/ohc/config.mjs")
     const cfg = {
-      preset: "safe",
+      preset: "soft",
       compress: { nudgeFrequency: 1, iterationNudgeThreshold: 50, protectedTools: [], protectUserMessages: false, summaryBuffer: true },
       strategies: { deduplication: { enabled: false, protectedTools: [] }, purgeErrors: { enabled: true, turns: 4, protectedTools: [] } },
       turnProtection: { enabled: true, turns: 2 },
@@ -233,10 +233,10 @@ describe("OHC Presets", () => {
   it("preset field traverses mergeLayer", async () => {
     const { loadConfig } = await import("../../../lib/ohc/config.mjs")
     const cfg = loadConfig()
-    assert.ok(["safe", "default", "max"].includes(cfg.preset))
+    assert.ok(["soft", "default", "hard"].includes(cfg.preset))
   })
 
-  it("preset safe does NOT override user-set min/max", async () => {
+  it("preset soft does NOT override user-set min/max", async () => {
     const { loadConfig } = await import("../../../lib/ohc/config.mjs")
     const cfg = loadConfig()
     assert.ok(cfg.min >= 10000)
