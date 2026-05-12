@@ -1,5 +1,8 @@
 import { describe, it } from "node:test"
 import assert from "node:assert/strict"
+import fs from "node:fs"
+import os from "node:os"
+import path from "node:path"
 
 describe("OHC Threshold Gates", () => {
   it("fresh empty chat returns DISABLED_BELOW_THRESHOLD", async () => {
@@ -238,5 +241,96 @@ describe("OHC Presets", () => {
     const cfg = loadConfig()
     assert.ok(cfg.min >= 10000)
     assert.ok(cfg.max > cfg.min)
+  })
+})
+
+describe("OHC JSONC Config", () => {
+  it("getDefaultJsoncContent produces parseable JSONC", async () => {
+    const mod = await import("../../../lib/ohc/config.mjs")
+    const content = mod.getDefaultJsoncContent({
+      enabled: true,
+      preset: "default",
+      notification: "chat",
+      notificationMode: "minimal",
+      max: 100000,
+      min: 40000,
+      modelMaxLimits: { "gpt-4": "80%" },
+      modelMinLimits: {},
+      manualMode: { enabled: false, automaticStrategies: true },
+      turnProtection: { enabled: true, turns: 6 },
+      protectedFilePatterns: ["*.secret"],
+      compress: {
+        nudgeFrequency: 3,
+        iterationNudgeThreshold: 30,
+        nudgeForce: "strong",
+        protectedTools: ["task"],
+        protectUserMessages: true,
+        summaryBuffer: false,
+      },
+      strategies: {
+        deduplication: { enabled: false, protectedTools: ["read"] },
+        purgeErrors: { enabled: true, turns: 8, protectedTools: [] },
+      },
+    })
+    // Strip comments like loadFile does
+    const stripped = content
+      .replace(/"(?:[^"\\]|\\.)*"|\/\/.*/gm, m => m.startsWith('"') ? m : "")
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+    const parsed = JSON.parse(stripped)
+    assert.equal(parsed.enabled, true)
+    assert.equal(parsed.preset, "default")
+    assert.equal(parsed.notification, "chat")
+    assert.equal(parsed.notificationMode, "minimal")
+    assert.equal(parsed.max, 100000)
+    assert.equal(parsed.min, 40000)
+    assert.deepEqual(parsed.modelMaxLimits, { "gpt-4": "80%" })
+    assert.equal(parsed.manualMode.enabled, false)
+    assert.equal(parsed.manualMode.automaticStrategies, true)
+    assert.equal(parsed.turnProtection.enabled, true)
+    assert.equal(parsed.turnProtection.turns, 6)
+    assert.deepEqual(parsed.protectedFilePatterns, ["*.secret"])
+    assert.equal(parsed.compress.nudgeFrequency, 3)
+    assert.equal(parsed.compress.iterationNudgeThreshold, 30)
+    assert.equal(parsed.compress.nudgeForce, "strong")
+    assert.deepEqual(parsed.compress.protectedTools, ["task"])
+    assert.equal(parsed.compress.protectUserMessages, true)
+    assert.equal(parsed.compress.summaryBuffer, false)
+    assert.equal(parsed.strategies.deduplication.enabled, false)
+    assert.deepEqual(parsed.strategies.deduplication.protectedTools, ["read"])
+    assert.equal(parsed.strategies.purgeErrors.enabled, true)
+    assert.equal(parsed.strategies.purgeErrors.turns, 8)
+  })
+
+  it("JSONC with comments round-trips via loadFile-equivalent parse", async () => {
+    const mod = await import("../../../lib/ohc/config.mjs")
+    const content = mod.getDefaultJsoncContent({
+      enabled: true, preset: "default", notification: "toast", notificationMode: "minimal",
+      max: 120000, min: 30000, modelMaxLimits: {}, modelMinLimits: {},
+      manualMode: { enabled: false, automaticStrategies: false },
+      turnProtection: { enabled: false, turns: 0 },
+      protectedFilePatterns: [],
+      compress: { nudgeFrequency: 8, iterationNudgeThreshold: 40, nudgeForce: "soft", protectedTools: [], protectUserMessages: true, summaryBuffer: true },
+      strategies: { deduplication: { enabled: true, protectedTools: [] }, purgeErrors: { enabled: false, turns: 0, protectedTools: [] } },
+    })
+    // Write to temp file, then parse with comment stripping like loadFile does
+    const tmpFile = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "ohc-jsonc-")), "test.jsonc")
+    fs.mkdirSync(path.dirname(tmpFile), { recursive: true })
+    fs.writeFileSync(tmpFile, content + "\n", "utf8")
+
+    const raw = fs.readFileSync(tmpFile, "utf8")
+    assert.ok(raw.includes("//"), "JSONC should contain comments")
+
+    const stripped = raw
+      .replace(/"(?:[^"\\]|\\.)*"|\/\/.*/gm, m => m.startsWith('"') ? m : "")
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+    const parsed = JSON.parse(stripped)
+    assert.equal(parsed.enabled, true)
+    assert.equal(parsed.preset, "default")
+    assert.equal(parsed.max, 120000)
+    assert.equal(parsed.compress.nudgeFrequency, 8)
+    assert.equal(parsed.manualMode.automaticStrategies, false)
+    assert.equal(parsed.strategies.purgeErrors.enabled, false)
+
+    try { fs.rmSync(path.dirname(tmpFile), { recursive: true }) } catch {}
   })
 })
