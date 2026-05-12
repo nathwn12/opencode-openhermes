@@ -36,7 +36,7 @@ No Python. No Docker. No cron. No database. Just Node.js and your existing OpenC
 
 ---
 
-## Agent Handoff Protocol — New in v2.5
+## Agent Handoff Protocol
 
 The reason most agent sessions descend into chaos: every agent thinks it can do everything. OpenHermes fixes that with a **structured handoff system** baked into every subagent prompt.
 
@@ -256,17 +256,6 @@ openhermes/
 ```
 
 **Dependency footprint:** `@opencode-ai/plugin` only. No postinstall scripts. No native compilation. No Docker. No Python. Your entire agent OS in a single `npm install`.
-
----
-
-## Environment Variables
-
-Two knobs. That's it.
-
-| Variable | Default | Effect |
-|----------|---------|--------|
-| `OPENCODE_ALLOW_PROJECT_HARNESS` | `false` | Enable project-local harness at `.opencode/openhermes/` |
-| `OPENCODE_CURATOR_LOGS` | `false` | Pipe curator diagnostics to stderr for debugging |
 
 ---
 
