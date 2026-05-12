@@ -6,6 +6,20 @@ import { MemoryToolsPlugin } from "./lib/memory-tools-plugin.mjs"
 import { AmbientMemoryPlugin } from "./lib/ambient-memory.mjs"
 import { OhcPlugin } from "./lib/ohc/pruner.mjs"
 import { UpdaterPlugin } from "./lib/ohc/updater.mjs"
+import { createLogger } from "./lib/logger.mjs"
+
+const log = createLogger("index")
+
+const PLUGINS = [
+  { name: "Bootstrap", factory: BootstrapPlugin },
+  { name: "Autorecall", factory: AutorecallPlugin },
+  { name: "Curator", factory: CuratorPlugin },
+  { name: "SkillBuilder", factory: SkillBuilderPlugin },
+  { name: "MemoryTools", factory: MemoryToolsPlugin },
+  { name: "AmbientMemory", factory: AmbientMemoryPlugin },
+  { name: "Ohc", factory: OhcPlugin },
+  { name: "Updater", factory: UpdaterPlugin },
+]
 
 function chain(...fns) {
   const h = fns.filter(Boolean)
@@ -15,25 +29,39 @@ function chain(...fns) {
 }
 
 export default async (input) => {
-  const results = await Promise.allSettled([
-    BootstrapPlugin(input),
-    AutorecallPlugin(input),
-    CuratorPlugin(input),
-    SkillBuilderPlugin(input),
-    MemoryToolsPlugin(input),
-    AmbientMemoryPlugin(input),
-    OhcPlugin(input),
-    UpdaterPlugin(input),
-  ])
-  const pluginNames = ["Bootstrap", "Autorecall", "Curator", "SkillBuilder", "MemoryTools", "AmbientMemory", "Ohc", "Updater"]
-  results.forEach((r, i) => { if (r.status === "rejected") console.error(`[openhermes] ${pluginNames[i]} plugin failed:`, r.reason) })
-  const [bootstrap, autorecall, curator, skillBuilder, memoryTools, ambient, ohc, updater] = results.map(r => r.status === "fulfilled" ? r.value : {})
+  const results = await Promise.allSettled(PLUGINS.map(p => p.factory(input)))
+
+  const _degraded = []
+  for (let i = 0; i < results.length; i++) {
+    const r = results[i]
+    if (r.status === "rejected") {
+      _degraded.push({ plugin: PLUGINS[i].name, error: r.reason?.message || String(r.reason) })
+      log.error(`${PLUGINS[i].name} plugin failed:`, r.reason)
+    }
+  }
+
+  function resolve(idx) {
+    const r = results[idx]
+    if (r.status === "fulfilled") return r.value
+    return {}
+  }
+
+  const [bootstrap, autorecall, curator, skillBuilder, memoryTools, ambient, ohc, updater] = PLUGINS.map((_, i) => resolve(i))
 
   const merged = {}
 
   if (bootstrap.config) merged.config = bootstrap.config
 
   const toolHandlers = { ...memoryTools.tool, ...ohc.tool }
+  if (_degraded.length > 0) {
+    toolHandlers._degraded = {
+      description: "List degraded/errored plugins",
+      execute: async () => {
+        const lines = _degraded.map(d => `  - ${d.plugin}: ${d.error}`)
+        return `Degraded plugins (${_degraded.length}):\n${lines.join("\n")}`
+      },
+    }
+  }
   if (Object.keys(toolHandlers).length) merged.tool = toolHandlers
 
   merged["experimental.chat.system.transform"] = chain(ohc["experimental.chat.system.transform"])

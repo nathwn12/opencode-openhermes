@@ -2,7 +2,9 @@ import path from "node:path"
 import fs from "node:fs"
 import os from "node:os"
 import { fileURLToPath } from "node:url"
+import { createLogger } from "./lib/logger.mjs"
 
+const log = createLogger("bootstrap")
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const CONFIG_DIR = path.join(os.homedir(), ".config", "opencode")
 const OVERRIDE_SOUL = path.join(CONFIG_DIR, "SOUL.md")
@@ -258,7 +260,7 @@ export const BootstrapPlugin = async ({ client, directory }) => {
     try {
       _bootstrapCache = buildBootstrapContent()
     } catch (err) {
-      console.error("[openhermes-bootstrap] failed to build bootstrap content:", err.message)
+      log.error("failed to build bootstrap content:", err.message)
       _bootstrapCache = null
     }
     return _bootstrapCache
@@ -318,6 +320,7 @@ export const BootstrapPlugin = async ({ client, directory }) => {
         "rust-build": { agent: "build-rust", description: "Fix Rust build, clippy, and dependency errors", subtask: true, template: ct("rust-build.md") },
         "rust-review": { agent: "review-rust", description: "Review Rust code for safety, ownership, and idioms", subtask: true, template: ct("rust-review.md") },
         "skill-create": { agent: "OpenHermes", description: "Generate a new skill from git history analysis", subtask: true, template: ct("skill-create.md") },
+        "gauntlet": { agent: "pipeline-orchestrator", description: "Run multi-stage quality pipeline (scope → security → review → quality → report)", subtask: true, template: ct("gauntlet.md") },
       }
 
       config.experimental ??= {}
@@ -490,6 +493,12 @@ export const BootstrapPlugin = async ({ client, directory }) => {
           prompt: p("build-rust.md"),
           permission: { read: "allow", edit: "allow", bash: "allow" },
         },
+        "pipeline-orchestrator": {
+          description: "Multi-agent pipeline orchestrator — runs sequential quality stages (scope → security → review → quality → report)",
+          mode: "subagent",
+          prompt: p("pipeline-orchestrator.txt"),
+          permission: { read: "allow", edit: "allow", bash: "allow", task: { "*": "allow" } },
+        },
       }
 
       config.default_agent = "OpenHermes"
@@ -505,7 +514,7 @@ export const BootstrapPlugin = async ({ client, directory }) => {
         const ref = firstUser.parts[0]
         firstUser.parts.unshift({ ...ref, type: "text", text: bootstrap })
       } catch (err) {
-        console.error("[openhermes-bootstrap] transform error:", err.message)
+        log.error("transform error:", err.message)
       }
     }
   }

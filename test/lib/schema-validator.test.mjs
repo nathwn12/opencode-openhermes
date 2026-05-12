@@ -79,6 +79,94 @@ describe("validateSchema", () => {
     assert.equal(validateSchema(schema, { meta: { version: 2 } }).length, 0)
     assert.ok(validateSchema(schema, { meta: {} }).length > 0)
   })
+
+  it("oneOf — exactly one match passes", () => {
+    const schema = { oneOf: [{ type: "string" }, { type: "number" }] }
+    assert.equal(validateSchema(schema, "hello").length, 0)
+    assert.equal(validateSchema(schema, 42).length, 0)
+    assert.ok(validateSchema(schema, true).length > 0)
+  })
+  it("oneOf — exactly one match fails when multiple match", () => {
+    const schema = { oneOf: [{ type: "string" }, { const: "hello" }] }
+    assert.ok(validateSchema(schema, "hello").length > 0)
+  })
+  it("anyOf — at least one matches", () => {
+    const schema = { anyOf: [{ type: "string" }, { type: "number" }] }
+    assert.equal(validateSchema(schema, "hello").length, 0)
+    assert.ok(validateSchema(schema, true).length > 0)
+  })
+  it("allOf — all must match", () => {
+    const schema = { allOf: [{ type: "number" }, { minimum: 0 }] }
+    assert.equal(validateSchema(schema, 5).length, 0)
+    assert.ok(validateSchema(schema, -5).length > 0)
+    assert.ok(validateSchema(schema, "hello").length > 0)
+  })
+  it("not — must NOT match", () => {
+    const schema = { not: { type: "string" } }
+    assert.equal(validateSchema(schema, 42).length, 0)
+    assert.ok(validateSchema(schema, "hello").length > 0)
+  })
+  it("if/then/else — conditional", () => {
+    const schema = {
+      if: { properties: { x: { const: true } } },
+      then: { required: ["y"] },
+      else: { properties: { z: { type: "string" } } }
+    }
+    assert.equal(validateSchema(schema, { x: true, y: 1 }).length, 0)
+    assert.ok(validateSchema(schema, { x: true }).length > 0)
+    assert.equal(validateSchema(schema, { x: false, z: "a" }).length, 0)
+    assert.ok(validateSchema(schema, { x: false, z: 42 }).length > 0)
+  })
+  it("pattern — regex on strings", () => {
+    const schema = { pattern: "^[a-z]+$" }
+    assert.equal(validateSchema(schema, "hello").length, 0)
+    assert.ok(validateSchema(schema, "Hello").length > 0)
+    assert.equal(validateSchema(schema, 42).length, 0)
+  })
+  it("minLength/maxLength", () => {
+    const schema = { type: "string", minLength: 1, maxLength: 5 }
+    assert.equal(validateSchema(schema, "hi").length, 0)
+    assert.ok(validateSchema(schema, "").length > 0)
+    assert.ok(validateSchema(schema, "hello!!").length > 0)
+  })
+  it("minItems/maxItems", () => {
+    const schema = { type: "array", items: { type: "number" }, minItems: 1, maxItems: 3 }
+    assert.equal(validateSchema(schema, [1]).length, 0)
+    assert.ok(validateSchema(schema, []).length > 0)
+    assert.ok(validateSchema(schema, [1, 2, 3, 4]).length > 0)
+  })
+  it("uniqueItems", () => {
+    const schema = { type: "array", items: { type: "number" }, uniqueItems: true }
+    assert.equal(validateSchema(schema, [1, 2, 3]).length, 0)
+    assert.ok(validateSchema(schema, [1, 1, 2]).length > 0)
+  })
+  it("contains", () => {
+    const schema = { type: "array", contains: { type: "number" } }
+    assert.equal(validateSchema(schema, [1, "a"]).length, 0)
+    assert.ok(validateSchema(schema, ["a", "b"]).length > 0)
+  })
+  it("dependentRequired", () => {
+    const schema = {
+      type: "object",
+      properties: { a: {}, b: {} },
+      dependentRequired: { a: ["b"] }
+    }
+    assert.equal(validateSchema(schema, { a: 1, b: 2 }).length, 0)
+    assert.ok(validateSchema(schema, { a: 1 }).length > 0)
+  })
+  it("propertyNames", () => {
+    const schema = { type: "object", propertyNames: { pattern: "^[a-z]+$" } }
+    assert.equal(validateSchema(schema, { hello: 1 }).length, 0)
+    assert.ok(validateSchema(schema, { HELLO: 1 }).length > 0)
+  })
+  it("depth limit prevents stack overflow", () => {
+    function nest(s) { return { allOf: [s] } }
+    let deepSchema = { type: "string" }
+    for (let i = 0; i < 21; i++) deepSchema = nest(deepSchema)
+    const errors = validateSchema(deepSchema, "hello")
+    assert.ok(errors.length > 0)
+    assert.ok(errors[0].includes("max recursion depth"))
+  })
 })
 
 describe("findUnsupportedSchemaKeywords", () => {
@@ -96,10 +184,21 @@ describe("findUnsupportedSchemaKeywords", () => {
     const schema = {
       type: "object",
       properties: {
-        items: { type: "array", items: { type: "string", pattern: "^x" } }
+        items: { type: "string", patternProperties: { "^x": { type: "number" } } }
       }
     }
     const result = findUnsupportedSchemaKeywords(schema)
     assert.ok(result.length > 0)
+  })
+  it("does not flag new keywords", () => {
+    const schema = {
+      oneOf: [], anyOf: [], allOf: [], not: {},
+      if: {}, then: {}, else: {},
+      pattern: "^x", minLength: 0, maxLength: 10,
+      minItems: 0, maxItems: 10, uniqueItems: false, contains: {},
+      dependentRequired: {}, dependentSchemas: {}, propertyNames: {}
+    }
+    const result = findUnsupportedSchemaKeywords(schema)
+    assert.equal(result.length, 0)
   })
 })

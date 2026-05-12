@@ -5,28 +5,43 @@ import { atomicWriteJson, buildEnvironmentFingerprint, fingerprintFile, readJson
 import { fileURLToPath } from "node:url"
 import { dirname } from "node:path"
 import { getDataRoot, getMemoryRoot } from "./lib/paths.mjs"
+import { getStore, migrateFromJson } from "./lib/memory-store.mjs"
+import { createLogger } from "./lib/logger.mjs"
 
+const log = createLogger("curator")
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
 const CHECKPOINT_DEBOUNCE_MS = 300000
 const COMPACTION_CONTEXT_LIMIT = 12000
-const lastCheckpoint = { ts: 0 }
-const writtenThisSession = []
-const CURATOR_LOGS = /^(1|true|yes)$/i.test(process.env.OPENCODE_CURATOR_LOGS || "")
+const sessionState = new Map()
+const STALE_SESSION_MS = 3600000
+
+function getSessionState(sessionId) {
+  if (!sessionState.has(sessionId)) {
+    sessionState.set(sessionId, { lastCheckpointTs: 0, writtenThisSession: [] })
+  }
+  return sessionState.get(sessionId)
+}
+
+function cleanupStaleSessions() {
+  const cutoff = Date.now() - STALE_SESSION_MS
+  for (const [sid, state] of sessionState) {
+    if (state.lastCheckpointTs > 0 && state.lastCheckpointTs < cutoff) {
+      sessionState.delete(sid)
+    }
+  }
+}
+setInterval(cleanupStaleSessions, 300000).unref()
 
 const MEMORY_CLASSES = ["checkpoints", "mistakes", "audits", "verification_receipts", "constraints", "decisions", "instincts", "backlog"]
 
-function ensureConsistency(root) {
+async function ensureConsistency(root) {
   const memoryRoot = path.join(root, "memory")
   const runtimeRoot = path.join(root, "runtime")
 
   for (const cls of MEMORY_CLASSES) {
     const dir = path.join(memoryRoot, cls)
     fs.mkdirSync(dir, { recursive: true })
-    const indexPath = path.join(dir, "index.json")
-    if (!fs.existsSync(indexPath)) {
-      atomicWriteJson(indexPath, [])
-    }
   }
 
   fs.mkdirSync(runtimeRoot, { recursive: true })
@@ -34,11 +49,8 @@ function ensureConsistency(root) {
   if (!fs.existsSync(loopStatePath)) {
     atomicWriteJson(loopStatePath, { status: "idle", phase: "session.created" })
   }
-}
 
-function curatorLog(message) {
-  if (!CURATOR_LOGS) return
-  process.stderr.write(`${message}\n`)
+  await migrateFromJson(getStore())
 }
 
 function isMeaningfulText(value) {
@@ -47,23 +59,6 @@ function isMeaningfulText(value) {
 
 function safeLogMessage(message, limit = 160) {
   return truncateText(redactSensitiveText(message || ""), limit)
-}
-
-function indexEntry(root, plural, record) {
-  const indexPath = path.join(root, "memory", plural, "index.json")
-  let index = readJson(indexPath, [])
-  if (!Array.isArray(index)) index = []
-  const entry = {
-    id: record.id,
-    summary: record.summary,
-    status: record.status,
-    updated_at: record.updated_at || record.created_at,
-    path: `openhermes/memory/${plural}/${record.id}.json`
-  }
-  const existing = index.findIndex(e => e.id === record.id)
-  if (existing >= 0) index[existing] = entry
-  else index.push(entry)
-  atomicWriteJson(indexPath, index)
 }
 
 function updateLoopState(root, patch) {
@@ -92,29 +87,29 @@ function loadSchema(classId) {
 function validateRecordAgainstSchema(record) {
   const schema = loadSchema(record.class)
   if (!schema) {
-    curatorLog(`[curator] validation fallback: no schema for "${record.class}"`)
+    log.warn(`validation fallback: no schema for "${record.class}"`)
     const required = record.class === "checkpoint"
       ? ["id", "class", "summary", "mission", "current_state", "next_actions", "blockers", "risk_notes", "provenance", "created_at", "status"]
       : ["id", "class", "summary", "provenance", "created_at", "status"]
     const missing = required.filter(r => !record[r] && record[r] !== null)
     if (missing.length) {
-      curatorLog(`[curator] validation failed: missing ${missing.join(", ")}`)
+      log.warn(`validation failed: missing ${missing.join(", ")}`)
       return false
     }
     if (record.class === "checkpoint" && record.provenance && !record.provenance.session_id) {
-      curatorLog(`[curator] validation failed: missing session_id`)
+      log.warn(`validation failed: missing session_id`)
       return false
     }
     return true
   }
   const unsupported = findUnsupportedSchemaKeywords(schema)
   if (unsupported.length) {
-    curatorLog(`[curator] validation failed: unsupported fields ${unsupported.join(", ")}`)
+    log.warn(`validation failed: unsupported fields ${unsupported.join(", ")}`)
     return false
   }
   const errors = validateSchema(schema, record, "$")
   if (errors.length) {
-    curatorLog(`[curator] validation failed: ${errors.join("; ")}`)
+    log.warn(`validation failed: ${errors.join("; ")}`)
     return false
   }
   if (record.class === "checkpoint") {
@@ -128,9 +123,11 @@ function validateRecordAgainstSchema(record) {
 }
 
 async function writeCheckpoint(root, project, directory, trigger, summary, options = {}) {
+  const sessionId = project?.session_id || `session-${Date.now()}`
+  const ss = getSessionState(sessionId)
   const now = Date.now()
-  if (!options.force && now - lastCheckpoint.ts < CHECKPOINT_DEBOUNCE_MS) return null
-  lastCheckpoint.ts = now
+  if (!options.force && now - ss.lastCheckpointTs < CHECKPOINT_DEBOUNCE_MS) return null
+  ss.lastCheckpointTs = now
 
   const ts = new Date().toISOString()
   const id = `chk_${ts.replace(/[:.]/g, "-")}`
@@ -171,7 +168,7 @@ async function writeCheckpoint(root, project, directory, trigger, summary, optio
           "Sensitive text must be redacted before memory persistence.",
         ],
     provenance: {
-      session_id: project?.session_id || `session-${Date.now()}`,
+      session_id: sessionId,
       harness_root: root,
       project_root: directory,
     },
@@ -185,9 +182,7 @@ async function writeCheckpoint(root, project, directory, trigger, summary, optio
   }
   const safeRecord = sanitizeRecord(record, { maxStringLength: 4000 })
   if (!validateRecordAgainstSchema(safeRecord)) return null
-  const dir = path.join(root, "memory", "checkpoints")
-  atomicWriteJson(path.join(dir, `${id}.json`), safeRecord)
-  indexEntry(root, "checkpoints", safeRecord)
+  getStore().save("checkpoint", id, safeRecord)
   updateLoopState(root, {
     last_checkpoint_id: id,
     phase: trigger,
@@ -195,9 +190,9 @@ async function writeCheckpoint(root, project, directory, trigger, summary, optio
     updated_at: ts,
     status: trigger === "experimental.session.compacting" ? "active" : "idle",
   })
-  if (writtenThisSession.length >= 100) writtenThisSession.shift()
-  writtenThisSession.push(id)
-  curatorLog(`[curator] checkpoint written: ${id} (trigger: ${trigger})`)
+  if (ss.writtenThisSession.length >= 100) ss.writtenThisSession.shift()
+  ss.writtenThisSession.push(id)
+  log.info(`checkpoint written: ${id} (trigger: ${trigger})`)
   return id
 }
 
@@ -232,17 +227,9 @@ function writeMistakeRecord(root, project, directory, error) {
     project: project?.name || path.basename(directory),
     environment_fingerprint: environmentFingerprint,
   }
-  const dir = path.join(getMemoryRoot(), "mistakes")
-  fs.mkdirSync(dir, { recursive: true })
-  const fp = path.join(dir, "mistakes.jsonl")
   const safeRecord = sanitizeRecord(record, { maxStringLength: 4000 })
-  let entries = []
-  try { entries = fs.readFileSync(fp, "utf8").trim().split("\n").filter(Boolean).map(l => JSON.parse(l)) } catch {}
-  const idx = entries.findIndex(e => e.id === safeRecord.id)
-  if (idx >= 0) entries[idx] = safeRecord; else entries.push(safeRecord)
-  const text = entries.map(e => JSON.stringify(e)).join("\n")
-  fs.writeFileSync(fp, text ? text + "\n" : "", "utf8")
-  curatorLog(`[curator] mistake logged: ${id} - ${safeLogMessage(errorMsg, 80)}`)
+  getStore().save("mistake", id, safeRecord)
+  log.info(`mistake logged: ${id} - ${safeLogMessage(errorMsg, 80)}`)
   return id
 }
 
@@ -282,11 +269,9 @@ function writeVerificationReceipt(root, project, directory, checkpointId) {
     project: project?.name || path.basename(directory),
     environment_fingerprint: environmentFingerprint,
   }
-  const dir = path.join(root, "memory", "verification_receipts")
   const safeRecord = sanitizeRecord(record, { maxStringLength: 4000 })
-  atomicWriteJson(path.join(dir, `${id}.json`), safeRecord)
-  indexEntry(root, "verification_receipts", safeRecord)
-  curatorLog(`[curator] verification_receipt written: ${id}`)
+  getStore().save("verification_receipt", id, safeRecord)
+  log.info(`verification_receipt written: ${id}`)
   return id
 }
 
@@ -298,7 +283,7 @@ async function handleSessionIdle(directory, project) {
       writeVerificationReceipt(root, project, directory, checkpointId)
     }
   } catch (err) {
-    curatorLog(`[curator] handleSessionIdle error: ${safeLogMessage(err.message)}`)
+    log.error(`handleSessionIdle error: ${safeLogMessage(err.message)}`)
   }
 }
 
@@ -314,7 +299,7 @@ async function handleSessionCompacted(directory, project) {
       updated_at: ts,
     })
   } catch (err) {
-    curatorLog(`[curator] handleSessionCompacted error: ${safeLogMessage(err.message)}`)
+    log.error(`handleSessionCompacted error: ${safeLogMessage(err.message)}`)
   }
 }
 
@@ -335,7 +320,7 @@ async function handleSessionError(directory, project, event) {
     })
     writeMistakeRecord(root, project, directory, event.error || event)
   } catch (err) {
-    curatorLog(`[curator] handleSessionError error: ${safeLogMessage(err.message)}`)
+    log.error(`handleSessionError error: ${safeLogMessage(err.message)}`)
   }
 }
 
@@ -389,48 +374,48 @@ async function handlePermissionReplied(directory, project, event) {
         if (errors.length) return
       }
     }
-    const dir = path.join(root, "memory", "audits")
-    atomicWriteJson(path.join(dir, `${id}.json`), safeRecord)
-    indexEntry(root, "audits", safeRecord)
-    curatorLog(`[curator] permission audit logged: ${event.tool} -> ${event.action}`)
+    getStore().save("audit", id, safeRecord)
+    log.info(`permission audit logged: ${event.tool} -> ${event.action}`)
   } catch (err) {
-    curatorLog(`[curator] handlePermissionReplied error: ${safeLogMessage(err.message)}`)
+    log.error(`handlePermissionReplied error: ${safeLogMessage(err.message)}`)
   }
 }
 
 export const CuratorPlugin = async ({ project, directory }) => {
   return {
     event: async ({ event }) => {
-      // A1: v1 migration owned by autorecall.mjs — removed to avoid race
-      if (event.type === "session.created") {
-        lastCheckpoint.ts = 0
-        writtenThisSession.length = 0
-        try {
-          const root = getDataRoot()
-          ensureConsistency(root)
-          curatorLog("[curator] consistency repair: all memory/runtime dirs verified")
-        } catch (err) {
-          curatorLog(`[curator] consistency repair failure: ${safeLogMessage(err.message)}`)
+      try {
+        if (event.type === "session.created") {
+          try {
+            const root = getDataRoot()
+            await ensureConsistency(root)
+            log.info("consistency repair: all memory/runtime dirs verified")
+          } catch (err) {
+            log.error(`consistency repair failure: ${safeLogMessage(err.message)}`)
+          }
         }
+        if (event.type === "session.idle") {
+          await handleSessionIdle(directory, project)
+        } else if (event.type === "session.compacted") {
+          await handleSessionCompacted(directory, project)
+        } else if (event.type === "session.error") {
+          await handleSessionError(directory, project, event)
+        } else if (event.type === "permission.replied") {
+          await handlePermissionReplied(directory, project, event)
+        } else if (event.type === "command.executed") {
+          log.debug(`command executed: ${event.command || "?"}`)
+        }
+      } catch (err) {
+        log.error(`event handler error: ${safeLogMessage(err.message)}`)
       }
-      if (event.type === "session.idle") {
-        await handleSessionIdle(directory, project)
-      } else if (event.type === "session.compacted") {
-        await handleSessionCompacted(directory, project)
-      } else if (event.type === "session.error") {
-        await handleSessionError(directory, project, event)
-      } else if (event.type === "permission.replied") {
-        await handlePermissionReplied(directory, project, event)
-    } else if (event.type === "command.executed") {
-      curatorLog(`[curator] command executed: ${event.command || "?"}`)
-    }
-  },
+    },
   "experimental.session.compacting": async (input, output) => {
     try {
       const root = getDataRoot()
       const projectKey = project?.name || path.basename(directory)
-      const checkpointIndex = readJson(path.join(root, "memory", "checkpoints", "index.json"), [])
-      const constraintsIndex = readJson(path.join(root, "memory", "constraints", "index.json"), [])
+      const ss = getSessionState(project?.session_id || `session-${Date.now()}`)
+      const checkpointIndex = getStore().list("checkpoint", 10)
+      const constraintsIndex = getStore().all("constraint")
       const environmentFingerprint = buildEnvironmentFingerprint(root, directory, project)
       const preCompactionCheckpointId = await writeCheckpoint(root, project, directory, "experimental.session.compacting", `Pre-compaction checkpoint for ${projectKey}`, { force: true })
 
@@ -448,8 +433,8 @@ export const CuratorPlugin = async ({ project, directory }) => {
         `- Latest checkpoint: ${latestCheckpoint ? latestCheckpoint.summary : "none"}`,
         preCompactionCheckpointId ? `- Pre-compaction checkpoint: ${preCompactionCheckpointId}` : null,
         `- Active constraints: ${activeConstraints.length}`,
-        `- Memory writes this session: ${writtenThisSession.length}`,
-        writtenThisSession.length > 0 ? `- Recent writes: ${writtenThisSession.slice(-3).join(", ")}` : null,
+        `- Memory writes this session: ${ss.writtenThisSession.length}`,
+        ss.writtenThisSession.length > 0 ? `- Recent writes: ${ss.writtenThisSession.slice(-3).join(", ")}` : null,
         `- Session hook: experimental.session.compacting`,
       ].filter(Boolean).join("\n")
 
@@ -462,10 +447,10 @@ export const CuratorPlugin = async ({ project, directory }) => {
       if (recallCache && recallCache.context && cacheFresh) {
         const merged = truncateText(`${inject}\n\n${recallCache.context}`, COMPACTION_CONTEXT_LIMIT)
         contextSink.push(merged)
-        curatorLog(`[curator] compaction injected harness state + autorecall (${merged.length} chars)`)
+        log.info(`compaction injected harness state + autorecall (${merged.length} chars)`)
       } else {
         contextSink.push(truncateText(inject, COMPACTION_CONTEXT_LIMIT))
-        curatorLog(`[curator] compaction injected harness state (stale or missing autorecall cache)`)
+        log.info(`compaction injected harness state (stale or missing autorecall cache)`)
       }
       updateLoopState(root, {
         phase: "compress",
@@ -473,7 +458,7 @@ export const CuratorPlugin = async ({ project, directory }) => {
         status: "active",
       })
     } catch (err) {
-      curatorLog(`[curator] compaction error: ${safeLogMessage(err.message)}`)
+      log.error(`compaction error: ${safeLogMessage(err.message)}`)
       const contextSink = Array.isArray(output.context) ? output.context : (output.context = [])
       contextSink.push(truncateText(`## OpenHermes State\n- Project: ${project?.name || path.basename(directory)}\n- Hook: experimental.session.compacting (error state)\n`, COMPACTION_CONTEXT_LIMIT))
     }

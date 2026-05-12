@@ -41,7 +41,7 @@ describe("Fix 2: msgTokens exported from reaper.mjs", () => {
       ],
     }
     const tokens = msgTokens(msg)
-    assert.equal(tokens, Math.ceil("hello world".length / 4))
+    assert.ok(tokens > 0)
   })
 
   it("msgTokens handles tool parts", async () => {
@@ -179,6 +179,90 @@ describe("Fix 4: notification derives counters from ss object", () => {
 
     assert.ok(capturedMessage.includes("1K saved"), `got: ${JSON.stringify(capturedMessage)}`)
     assert.ok(capturedMessage.includes("5 msgs removed"), `got: ${JSON.stringify(capturedMessage)}`)
+  })
+})
+
+describe("Tokenizer: BPE tokenizer replaces heuristic", () => {
+  it("countTokens returns positive number for normal text", async () => {
+    const { countTokens } = await import("../../../lib/ohc/tokenizer.mjs")
+    const result = countTokens("hello world")
+    assert.ok(result > 0)
+    assert.equal(typeof result, "number")
+  })
+
+  it("countTokens returns 0 for empty string", async () => {
+    const { countTokens } = await import("../../../lib/ohc/tokenizer.mjs")
+    assert.equal(countTokens(""), 0)
+  })
+
+  it("countTokens returns 0 for null", async () => {
+    const { countTokens } = await import("../../../lib/ohc/tokenizer.mjs")
+    assert.equal(countTokens(null), 0)
+  })
+
+  it("countTokens returns 0 for undefined", async () => {
+    const { countTokens } = await import("../../../lib/ohc/tokenizer.mjs")
+    assert.equal(countTokens(undefined), 0)
+  })
+
+  it("countTokens returns 0 for non-string", async () => {
+    const { countTokens } = await import("../../../lib/ohc/tokenizer.mjs")
+    assert.equal(countTokens(42), 0)
+  })
+
+  it("truncateToTokens returns shorter string when over limit", async () => {
+    const { truncateToTokens } = await import("../../../lib/ohc/tokenizer.mjs")
+    const result = truncateToTokens("hello world test", 2)
+    assert.ok(result.length < "hello world test".length)
+  })
+
+  it("truncateToTokens returns full string when within limit", async () => {
+    const { truncateToTokens } = await import("../../../lib/ohc/tokenizer.mjs")
+    const result = truncateToTokens("hello", 10)
+    assert.equal(result, "hello")
+  })
+
+  it("truncateToTokens returns empty for maxTokens <= 0", async () => {
+    const { truncateToTokens } = await import("../../../lib/ohc/tokenizer.mjs")
+    assert.equal(truncateToTokens("hello", 0), "")
+    assert.equal(truncateToTokens("hello", -1), "")
+  })
+
+  it("truncateToTokens returns empty for null input", async () => {
+    const { truncateToTokens } = await import("../../../lib/ohc/tokenizer.mjs")
+    assert.equal(truncateToTokens(null, 10), "")
+  })
+
+  it("isWithinLimit returns true for short text", async () => {
+    const { isWithinLimit } = await import("../../../lib/ohc/tokenizer.mjs")
+    assert.ok(isWithinLimit("hello", 10))
+  })
+
+  it("isWithinLimit returns false for long text with small limit", async () => {
+    const { isWithinLimit } = await import("../../../lib/ohc/tokenizer.mjs")
+    assert.equal(isWithinLimit("hello world test", 1), false)
+  })
+
+  it("countTokens from token-utils delegates to real tokenizer", async () => {
+    const { countTokens } = await import("../../../lib/ohc/token-utils.mjs")
+    const result = countTokens("hello world")
+    assert.ok(result > 0)
+  })
+
+  it("countTokens from reaper uses real tokenizer via msgTokens", async () => {
+    const { msgTokens } = await import("../../../lib/ohc/reaper.mjs")
+    const msg = { parts: [{ type: "text", text: "hello world" }] }
+    const tokens = msgTokens(msg)
+    assert.ok(tokens > 0)
+  })
+
+  it("partTokens in reaper handles tool parts with real tokenizer", async () => {
+    const { msgTokens } = await import("../../../lib/ohc/reaper.mjs")
+    const msg = {
+      parts: [{ type: "tool", state: { input: { a: 1 }, output: "ok" } }],
+    }
+    const tokens = msgTokens(msg)
+    assert.ok(tokens > 0)
   })
 })
 

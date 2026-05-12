@@ -1,14 +1,14 @@
 import path from "node:path"
 import os from "node:os"
 import fs from "node:fs"
-import { atomicWriteJson, buildEnvironmentFingerprint, fingerprintEnvironment, isTruthy, readJson, readJsonl, sanitizeRecord, truncateText } from "./lib/hardening.mjs"
+import { atomicWriteJson, buildEnvironmentFingerprint, fingerprintEnvironment, isTruthy, sanitizeRecord, truncateText } from "./lib/hardening.mjs"
 import { getDataRoot, getCacheRoot, getMemoryRoot, getRecallRoot, getRuntimeRoot } from "./lib/paths.mjs"
+import { getStore } from "./lib/memory-store.mjs"
+import { createLogger } from "./lib/logger.mjs"
 
+const log = createLogger("autorecall")
 const OLD_BASE = path.join(os.homedir(), ".config", "opencode", "openhermes")
 const BOILERPLATE_SUMMARY = /^(Idle checkpoint for|Pre-compaction checkpoint for|Placeholder checkpoint|Session in progress|No active checkpoint)/i
-const PLURALS = { audit: "audits", checkpoint: "checkpoints", mistake: "mistakes", instinct: "instincts", decision: "decisions", constraint: "constraints", backlog: "backlog", verification_receipt: "verification_receipts" }
-
-function classDir(cls) { return path.join(getMemoryRoot(), PLURALS[cls]) }
 
 function hasExpired(r) {
   if (r?.status === "expired" || r?.status === "decayed") return true
@@ -18,28 +18,16 @@ function hasExpired(r) {
 }
 
 function sweepStaleRecords() {
-  const classes = ["checkpoints", "constraints", "decisions", "instincts", "audits", "backlog", "verification_receipts"]
+  const classes = ["checkpoint", "constraint", "decision", "instinct", "audit", "backlog", "verification_receipt"]
   let swept = 0
-  for (const plural of classes) {
-    const dir = path.join(getMemoryRoot(), plural)
-    let files = []
-    try { files = fs.readdirSync(dir).filter(f => f.endsWith(".json") && f !== "index.json") } catch { continue }
-    for (const f of files) {
-      const fp = path.join(dir, f)
-      const record = readJson(fp, null)
+  for (const cls of classes) {
+    const records = getStore().all(cls)
+    for (const record of records) {
       if (!record || !hasExpired(record)) continue
       if (record.status === "expired" || record.status === "decayed") continue
       record.status = "expired"
       record.updated_at = new Date().toISOString()
-      atomicWriteJson(fp, record)
-
-      const indexPath = path.join(dir, "index.json")
-      let index = readJson(indexPath, [])
-      if (Array.isArray(index)) {
-        const idx = index.findIndex(e => e?.id === record.id)
-        if (idx >= 0) { index[idx].status = "expired"; index[idx].updated_at = record.updated_at }
-        atomicWriteJson(indexPath, index)
-      }
+      getStore().save(cls, record.id, record)
       swept++
     }
   }
@@ -47,44 +35,21 @@ function sweepStaleRecords() {
 }
 
 function sweepBoilerplateCheckpoints() {
-  const dir = path.join(getMemoryRoot(), "checkpoints")
-  let files = []
-  try { files = fs.readdirSync(dir).filter(f => f.endsWith(".json") && f !== "index.json") } catch { return 0 }
   const cutoff = Date.now() - 86400000
   let archived = 0
-  for (const f of files) {
-    const fp = path.join(dir, f)
-    const record = readJson(fp, null)
-    if (!record || record.status === "expired" || record.status === "archived") continue
+  const records = getStore().all("checkpoint")
+  for (const record of records) {
+    if (record.status === "expired" || record.status === "archived") continue
     if (!BOILERPLATE_SUMMARY.test(record.summary || "")) continue
     const ts = Date.parse(record.updated_at || record.created_at || 0)
     if (Number.isNaN(ts) || ts > cutoff) continue
     record.status = "archived"
     record.archived_at = new Date().toISOString()
     record.updated_at = record.archived_at
-    atomicWriteJson(fp, record)
-
-    const indexPath = path.join(dir, "index.json")
-    let index = readJson(indexPath, [])
-    if (Array.isArray(index)) {
-      const idx = index.findIndex(e => e?.id === record.id)
-      if (idx >= 0) { index[idx].status = "archived"; index[idx].updated_at = record.updated_at }
-      atomicWriteJson(indexPath, index)
-    }
+    getStore().save("checkpoint", record.id, record)
     archived++
   }
   return archived
-}
-
-function loadMemoryRecord(root, className, entry) {
-  const recordPath = path.join(root, "memory", className, `${entry.id}.json`)
-  const record = readJson(recordPath, null)
-  if (record && typeof record === "object") return record
-  return {
-    ...entry,
-    class: className,
-    scope: entry.scope || "harness",
-  }
 }
 
 function formatContext(memory) {
@@ -163,32 +128,24 @@ async function loadMemoryAndWriteCache(projectKey, directory) {
   const memory = { constraints: [], decisions: [], mistakes: [], checkpoint: null, pendingSkillCandidates: [] }
   const fingerprint = buildEnvironmentFingerprint(getDataRoot(), directory, { name: projectKey })
 
-  const constraintsIndex = readJson(path.join(getMemoryRoot(), "constraints", "index.json"), [])
-  if (Array.isArray(constraintsIndex)) memory.constraints = constraintsIndex.filter(e => e.status === "active")
+  const allConstraints = getStore().all("constraint")
+  memory.constraints = allConstraints.filter(e => e.status === "active")
 
-  const decisionsIndex = readJson(path.join(getMemoryRoot(), "decisions", "index.json"), [])
-  if (Array.isArray(decisionsIndex)) {
-    memory.decisions = decisionsIndex
-      .filter(e => e.status === "active")
-      .map(entry => loadMemoryRecord(getDataRoot(), "decisions", entry))
-      .filter(validateMemoryRecord)
-  }
+  const allDecisions = getStore().all("decision")
+  memory.decisions = allDecisions
+    .filter(e => e.status === "active")
+    .filter(validateMemoryRecord)
 
-  const allMistakes = readJsonl(path.join(getMemoryRoot(), "mistakes", "mistakes.jsonl"))
-  if (allMistakes.length) memory.mistakes = allMistakes.filter(e => e.status === "active").slice(0, 5)
+  const allMistakes = getStore().all("mistake")
+  memory.mistakes = allMistakes.filter(e => e.status === "active").slice(0, 5)
 
-  const checkpointIndex = readJson(path.join(getMemoryRoot(), "checkpoints", "index.json"), [])
-  if (Array.isArray(checkpointIndex) && checkpointIndex.length > 0) {
-    const latest = checkpointIndex.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))[0]
-    memory.checkpoint = readJson(path.join(getMemoryRoot(), "checkpoints", `${latest.id}.json`), null)
-  }
+  const latestCheckpoint = getStore().latest("checkpoint")
+  if (latestCheckpoint) memory.checkpoint = latestCheckpoint
 
-  const backlogIndex = readJson(path.join(getMemoryRoot(), "backlog", "index.json"), [])
-  if (Array.isArray(backlogIndex)) {
-    memory.pendingSkillCandidates = backlogIndex.filter(e =>
-      e.status === "open" && Array.isArray(e.tags) && e.tags.includes("skill-candidate")
-    )
-  }
+  const allBacklog = getStore().all("backlog")
+  memory.pendingSkillCandidates = allBacklog.filter(e =>
+    e.status === "open" && Array.isArray(e.tags) && e.tags.includes("skill-candidate")
+  )
 
   const contextParts = []
   const baseContext = formatContext(memory)
@@ -228,9 +185,13 @@ async function loadMemoryAndWriteCache(projectKey, directory) {
 export const AutorecallPlugin = async ({ project, directory }) => {
   return {
     event: async ({ event }) => {
-      if (event.type === "session.created") {
-        const projectKey = project?.name || path.basename(directory)
-        await loadMemoryAndWriteCache(projectKey, directory)
+      try {
+        if (event.type === "session.created") {
+          const projectKey = project?.name || path.basename(directory)
+          await loadMemoryAndWriteCache(projectKey, directory)
+        }
+      } catch (err) {
+        log.error("event handler error:", err?.message)
       }
     },
   }
