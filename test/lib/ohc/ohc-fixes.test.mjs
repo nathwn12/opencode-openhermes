@@ -4,8 +4,6 @@ import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
 
-// ── Fix 1: totalMessagesRemoved in state lifecycle ──────────────────
-
 describe("Fix 1: totalMessagesRemoved persisted in state lifecycle", () => {
   it("createSessionState includes totalMessagesRemoved: 0", async () => {
     const { createSessionState } = await import("../../../lib/ohc/state.mjs")
@@ -34,8 +32,6 @@ describe("Fix 1: totalMessagesRemoved persisted in state lifecycle", () => {
   })
 })
 
-// ── Fix 2: msgTokens exported ──────────────────────────────────────
-
 describe("Fix 2: msgTokens exported from reaper.mjs", () => {
   it("msgTokens is exported and computes message token count", async () => {
     const { msgTokens } = await import("../../../lib/ohc/reaper.mjs")
@@ -59,8 +55,6 @@ describe("Fix 2: msgTokens exported from reaper.mjs", () => {
     assert.ok(tokens > 0)
   })
 })
-
-// ── Fix 3a: applyCompress save ordering ────────────────────────────
 
 describe("Fix 3a: counters persisted to disk after increments", { concurrency: false }, () => {
   it("saveOhcState round-trips totalMessagesRemoved, blockCount, totalTokensSaved", async () => {
@@ -93,8 +87,6 @@ describe("Fix 3a: counters persisted to disk after increments", { concurrency: f
     }
   })
 })
-
-// ── Fix 3b: executeRangeCompress token computation ─────────────────
 
 describe("Fix 3b: range mode stores compressedTokens in block record", () => {
   it("applyCompressionState with compressedTokens stores non-zero value", async () => {
@@ -145,8 +137,6 @@ describe("Fix 3b: range mode stores compressedTokens in block record", () => {
   })
 })
 
-// ── Fix 4: notification uses cumulative state ──────────────────────
-
 describe("Fix 4: notification derives counters from ss object", () => {
   it("sendCompressNotification detailed mode works", async () => {
     const { sendCompressNotification } = await import("../../../lib/ohc/notify.mjs")
@@ -191,8 +181,6 @@ describe("Fix 4: notification derives counters from ss object", () => {
     assert.ok(capturedMessage.includes("5 msgs removed"), `got: ${JSON.stringify(capturedMessage)}`)
   })
 })
-
-// ── Fix 5: OhcPlugin exports required hooks ────────────────────────
 
 describe("Fix 5: OhcPlugin exports required hooks", () => {
   it("OhcPlugin is a function and returns hooks", async () => {

@@ -44,7 +44,7 @@ A conflict exists when two active items at the same precedence level prescribe i
 
 ## Constitution Immutability
 
-The 14 principles in `openhermes\codex\CONSTITUTION.md` are immutable without:
+The principles in `openhermes\codex\CONSTITUTION.md` are immutable without:
 1. Explicit user approval
 2. A full architecture handoff document
 3. Verification that the change does not break openhermes integrity
