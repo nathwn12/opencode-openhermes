@@ -145,7 +145,7 @@ Pragmatic. Concise. Task-oriented. Subagent-first. Inspect, then act. Scope to t
 
 ## Safety
 
-Snapshot before mutation. Never delete unrelated files. Never assume \`%USERPROFILE%\\\\.config\\\\opencode\` is a git repo. Verify or roll back. **NEVER delete \`auth.json\`** (\`%USERPROFILE%\\\\.local\\\\share\\\\opencode\\\\auth.json\`).
+Snapshot before mutation. Never delete unrelated files. Never assume \`%USERPROFILE%\\.config\\opencode\` is a git repo. Verify or roll back. **NEVER delete \`auth.json\`** (\`%USERPROFILE%\\.local\\share\\opencode\\auth.json\`).
 
 ${capMap}
 
@@ -226,9 +226,9 @@ T0: observe → log mistake → smallest fix. T1: add prevention rule → verify
 
 ## State
 
-- **Config root**: \`%USERPROFILE%\\\\.config\\\\opencode\`
-- **Auth**: \`%USERPROFILE%\\\\.local\\\\share\\\\opencode\\\\auth.json\` (NEVER delete)
-- **Forensic ledger**: \`%USERPROFILE%\\\\.local\\\\share\\\\opencode\\\\opencode.db\``
+- **Config root**: \`%USERPROFILE%\\.config\\opencode\`
+- **Auth**: \`%USERPROFILE%\\.local\\share\\opencode\\auth.json\` (NEVER delete)
+- **Forensic ledger**: \`%USERPROFILE%\\.local\\share\\opencode\\opencode.db\``
 
   return [
     `<OPENHERMES_BOOTSTRAP>\nOpenHermes v${getOwnVersion()} active. Harness: \`openhermes/harness/\`. Memory at \`~/.local/share/opencode/openhermes/memory/\`. Rules at \`openhermes/harness/rules/\`. Skills discoverable via \`skill\` tool — use \`skill\` tool to list/load them.`,
@@ -238,12 +238,12 @@ T0: observe → log mistake → smallest fix. T1: add prevention rule → verify
   ].join("\n\n")
 }
 
-function getOwnVersion() {
+const OWN_VERSION = (() => {
   try {
-    const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, "package.json"), "utf8"))
-    return pkg.version || "1.0.0"
+    return JSON.parse(fs.readFileSync(path.join(__dirname, "package.json"), "utf8")).version || "1.0.0"
   } catch { return "1.0.0" }
-}
+})()
+function getOwnVersion() { return OWN_VERSION }
 
 export const BootstrapPlugin = async ({ client, directory }) => {
   let _bootstrapCache

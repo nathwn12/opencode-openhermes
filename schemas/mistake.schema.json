@@ -8,7 +8,7 @@
     "id": { "type": "string", "description": "Unique identifier, recommended pattern: mistake-YYYYMMDD-short-slug" },
     "class": { "type": "string", "const": "mistake" },
     "project": { "type": ["string", "null"], "description": "Project identifier; null for global/openhermes scope" },
-    "scope": { "type": "string", "enum": ["project", "global", "harness"], "description": "Scope of applicability" },
+    "scope": { "type": "string", "enum": ["project", "global", "session", "harness"], "description": "Scope of applicability" },
     "summary": { "type": "string", "description": "One-line description of the mistake" },
     "tags": { "type": "array", "items": { "type": "string" }, "description": "Searchable tags" },
     "source": { "type": "string", "enum": ["user", "agent", "audit", "migration", "repair"], "description": "Origin of this record" },

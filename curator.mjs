@@ -164,7 +164,6 @@ async function writeCheckpoint(root, project, directory, trigger, summary, optio
   const safeRecord = sanitizeRecord(record, { maxStringLength: 4000 })
   if (!validateRecordAgainstSchema(safeRecord)) return null
   const dir = path.join(root, "memory", "checkpoints")
-  fs.mkdirSync(dir, { recursive: true })
   atomicWriteJson(path.join(dir, `${id}.json`), safeRecord)
   indexEntry(root, "checkpoints", safeRecord)
   updateLoopState(root, {
@@ -174,6 +173,7 @@ async function writeCheckpoint(root, project, directory, trigger, summary, optio
     updated_at: ts,
     status: trigger === "experimental.session.compacting" ? "active" : "idle",
   })
+  if (writtenThisSession.length >= 100) writtenThisSession.shift()
   writtenThisSession.push(id)
   curatorLog(`[curator] checkpoint written: ${id} (trigger: ${trigger})`)
   return id
@@ -261,7 +261,6 @@ function writeVerificationReceipt(root, project, directory, checkpointId) {
     environment_fingerprint: environmentFingerprint,
   }
   const dir = path.join(root, "memory", "verification_receipts")
-  fs.mkdirSync(dir, { recursive: true })
   const safeRecord = sanitizeRecord(record, { maxStringLength: 4000 })
   atomicWriteJson(path.join(dir, `${id}.json`), safeRecord)
   indexEntry(root, "verification_receipts", safeRecord)
@@ -369,7 +368,6 @@ async function handlePermissionReplied(directory, project, event) {
       }
     }
     const dir = path.join(root, "memory", "audits")
-    fs.mkdirSync(dir, { recursive: true })
     atomicWriteJson(path.join(dir, `${id}.json`), safeRecord)
     indexEntry(root, "audits", safeRecord)
     curatorLog(`[curator] permission audit logged: ${event.tool} -> ${event.action}`)

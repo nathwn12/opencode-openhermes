@@ -25,7 +25,9 @@ export default async (input) => {
     OhcPlugin(input),
     UpdaterPlugin(input),
   ])
-  const [bootstrap, autorecall, curator, skillBuilder, memoryTools, ambient, ohc, updater] = results.map(r => r.status === 'fulfilled' ? r.value : {})
+  const pluginNames = ["Bootstrap", "Autorecall", "Curator", "SkillBuilder", "MemoryTools", "AmbientMemory", "Ohc", "Updater"]
+  results.forEach((r, i) => { if (r.status === "rejected") console.error(`[openhermes] ${pluginNames[i]} plugin failed:`, r.reason) })
+  const [bootstrap, autorecall, curator, skillBuilder, memoryTools, ambient, ohc, updater] = results.map(r => r.status === "fulfilled" ? r.value : {})
 
   const merged = {}
 

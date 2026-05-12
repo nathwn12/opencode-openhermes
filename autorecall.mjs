@@ -186,7 +186,7 @@ async function loadMemoryAndWriteCache(projectKey, directory) {
   const backlogIndex = readJson(path.join(getMemoryRoot(), "backlog", "index.json"), [])
   if (Array.isArray(backlogIndex)) {
     memory.pendingSkillCandidates = backlogIndex.filter(e =>
-      e.status === "open" && (e.summary || "").includes("skill-candidate")
+      e.status === "open" && Array.isArray(e.tags) && e.tags.includes("skill-candidate")
     )
   }
 

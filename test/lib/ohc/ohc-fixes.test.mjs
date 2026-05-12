@@ -62,7 +62,7 @@ describe("Fix 2: msgTokens exported from reaper.mjs", () => {
 
 // ── Fix 3a: applyCompress save ordering ────────────────────────────
 
-describe("Fix 3a: counters persisted to disk after increments", () => {
+describe("Fix 3a: counters persisted to disk after increments", { concurrency: false }, () => {
   it("saveOhcState round-trips totalMessagesRemoved, blockCount, totalTokensSaved", async () => {
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "ohc-test-"))
     const origHome = process.env.HOME
@@ -191,9 +191,9 @@ describe("Fix 4: notification derives counters from ss object", () => {
   })
 })
 
-// ── Fix 5: /ohc status uses effectiveMax ───────────────────────────
+// ── Fix 5: OhcPlugin exports required hooks ────────────────────────
 
-describe("Fix 5: OhcPlugin exports as function", () => {
+describe("Fix 5: OhcPlugin exports required hooks", () => {
   it("OhcPlugin is a function and returns hooks", async () => {
     const { OhcPlugin } = await import("../../../lib/ohc/pruner.mjs")
     const plugin = await OhcPlugin({})
