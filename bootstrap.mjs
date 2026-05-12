@@ -137,7 +137,7 @@ function buildBootstrapContent() {
 
   const router = `## AGENTS.md
 
-OpenHermes thin constitutional router. Full harness → \`${HARNESS_DIR}\\\`.
+OpenHermes thin constitutional router. Full harness → \`openhermes/harness/\`.
 
 ## Constitution
 
@@ -179,11 +179,11 @@ Main context = coordination + verification only. Substantive work → subagent.
 | Rust build fix | \`build-rust\` |
 | Any non-trivial multi-step | appropriate specialist |
 
-Never delegate trivial single-step ops. Subagent returns diff + summary + verification; inspect return only. Full ref: \`${RULES_DIR}\\\delegation.md\`.
+Never delegate trivial single-step ops. Subagent returns diff + summary + verification; inspect return only. Full ref: \`openhermes/harness/rules/delegation.md\`.
 
 ## Handoff Protocol
 
-Every agent knows its role, permissions, and when to delegate. Before delegating, assess task complexity (easy → direct, medium → single subagent, hard → sequential multi-agent, very-large → fan-out). Use structured handoff format documented in \`${RULES_DIR}\\\handoff.md\`.
+Every agent knows its role, permissions, and when to delegate. Before delegating, assess task complexity (easy → direct, medium → single subagent, hard → sequential multi-agent, very-large → fan-out). Use structured handoff format documented in \`openhermes/harness/rules/handoff.md\`.
 
 - **Act**: Task matches your role and permissions → do it directly
 - **Delegate**: Task outside your role → pass to correct agent via \`task\` tool
@@ -198,7 +198,7 @@ Every agent knows its role, permissions, and when to delegate. Before delegating
 - **Before close**: Query same-type mistakes (7 days). Match → \`code-reviewer\` or \`security-reviewer\`.
 - **On failure**: \`ohc_search\` for similar incidents. Search memory before asking user.
 - **Precision ladder**: \`ohc_latest\` → \`ohc_search\` → \`ohc_get\` → \`ohc_list\` (last resort). Full index reads only for explicit audit/repair tasks.
-- **Anti-spam**: No obvious facts, no one-off prefs, no temp state, no low-risk mistakes. Supersede, don't duplicate. Full rules: \`${RULES_DIR}\\\\retrieval.md\`, \`${RULES_DIR}\\\\memory-management.md\`.
+- **Anti-spam**: No obvious facts, no one-off prefs, no temp state, no low-risk mistakes. Supersede, don't duplicate. Full rules: \`openhermes/harness/rules/retrieval.md\`, \`openhermes/harness/rules/memory-management.md\`.
 
 ## Self-Edit Authority
 
@@ -206,23 +206,23 @@ Every agent knows its role, permissions, and when to delegate. Before delegating
 |------|-------------|----------------|
 | Memory entries, mistakes, checkpoints, receipts | openhermes docs/schemas/templates/non-core rules patches | AGENTS.md core, model routing, permissions, config, protected settings |
 
-Full tiers: \`${RULES_DIR}\\\\self-heal.md\`.
+Full tiers: \`openhermes/harness/rules/self-heal.md\`.
 
 ## Precedence
 
-1. User instruction. 2. Safety/legal/destructive guard. 3. Constitution (\`${HARNESS_DIR}\\\\codex\\\`). 4. Project constraints. 5. Project decisions. 6. Verified guards. 7. Checkpoints. 8. Instincts. 9. Freeform notes. Full: \`${RULES_DIR}\\\\precedence.md\`.
+1. User instruction. 2. Safety/legal/destructive guard. 3. Constitution (\`openhermes/harness/codex/\`). 4. Project constraints. 5. Project decisions. 6. Verified guards. 7. Checkpoints. 8. Instincts. 9. Freeform notes. Full: \`openhermes/harness/rules/precedence.md\`.
 
 ## Hygiene
 
 - Checkpoint on meaningful boundaries. Compress closed segments immediately.
 - After subagent return: verify → compress that block.
 - Compress proactively.
-- Skill candidates → \`/learn\` only if repeated pattern + \`ohc_search\` confirms no dup. See \`${RULES_DIR}\\\\skills-management.md\`.
-- Audit triggers: openhermes/config change, repeated failures, session start when last audit >7 days. See \`${RULES_DIR}\\\\audit.md\`.
+- Skill candidates → \`/learn\` only if repeated pattern + \`ohc_search\` confirms no dup. See \`openhermes/harness/rules/skills-management.md\`.
+- Audit triggers: openhermes/config change, repeated failures, session start when last audit >7 days. See \`openhermes/harness/rules/audit.md\`.
 
 ## Escalation
 
-T0: observe → log mistake → smallest fix. T1: add prevention rule → verify. T2: diagnosis/specialist → backlog. T3: constrained safe mode. Full: \`${RULES_DIR}\\\\self-heal.md\`.
+T0: observe → log mistake → smallest fix. T1: add prevention rule → verify. T2: diagnosis/specialist → backlog. T3: constrained safe mode. Full: \`openhermes/harness/rules/self-heal.md\`.
 
 ## State
 
@@ -231,7 +231,7 @@ T0: observe → log mistake → smallest fix. T1: add prevention rule → verify
 - **Forensic ledger**: \`%USERPROFILE%\\\\.local\\\\share\\\\opencode\\\\opencode.db\``
 
   return [
-    `<OPENHERMES_BOOTSTRAP>\nOpenHermes v${getOwnVersion()} active. Harness: \`${HARNESS_DIR}\\\`. Memory at \`~/.local/share/opencode/openhermes/memory/\`. Rules at \`${RULES_DIR}\\\`. Skills discoverable via \`skill\` tool — use \`skill\` tool to list/load them.`,
+    `<OPENHERMES_BOOTSTRAP>\nOpenHermes v${getOwnVersion()} active. Harness: \`openhermes/harness/\`. Memory at \`~/.local/share/opencode/openhermes/memory/\`. Rules at \`openhermes/harness/rules/\`. Skills discoverable via \`skill\` tool — use \`skill\` tool to list/load them.`,
     `<OPENHERMES_CONSTITUTION>\n${constitution}\n</OPENHERMES_CONSTITUTION>`,
     `<OPENHERMES_RUNTIME>\n${runtime}\n</OPENHERMES_RUNTIME>`,
     `<OPENHERMES_ROUTER>\n${router}\n</OPENHERMES_ROUTER>`
@@ -268,9 +268,17 @@ export const BootstrapPlugin = async ({ client, directory }) => {
       }
 
       const PROMPTS_DIR = path.join(HARNESS_DIR, "prompts")
-      const p = (name) => `{file:${path.join(PROMPTS_DIR, name)}}`
       const COMMANDS_DIR = path.join(HARNESS_DIR, "commands")
-      const ct = (file) => `{file:${path.join(COMMANDS_DIR, file)}}\n\n$ARGUMENTS`
+      const ct = (file) => {
+        const fp = path.join(COMMANDS_DIR, file)
+        try { return fs.readFileSync(fp, "utf8").trimEnd() + "\n\n$ARGUMENTS" }
+        catch { return "$ARGUMENTS" }
+      }
+      const p = (name) => {
+        const fp = path.join(PROMPTS_DIR, name)
+        try { return fs.readFileSync(fp, "utf8").trimEnd() }
+        catch { return "" }
+      }
 
       const existingCommands = config.command ?? {}
       const existingAgents = { ...(config.agent ?? {}) }

@@ -6,7 +6,7 @@ import os from "node:os"
 
 const {
   atomicWriteJson, fingerprintEnvironment, fingerprintFile,
-  redactSensitiveText, sanitizeRecord, truncateText
+  redactSensitiveText, sanitizeRecord, toDisplayPath, truncateText
 } = await import("../../lib/hardening.mjs")
 
 describe("truncateText", () => {
@@ -117,6 +117,25 @@ describe("fingerprintFile", () => {
   it("returns null for missing file", () => {
     const result = fingerprintFile(path.join(tmpDir, "nonexistent.txt"))
     assert.equal(result, null)
+  })
+})
+
+describe("toDisplayPath", () => {
+  it("extracts openhermes/ prefix from long absolute path", () => {
+    const long = `C:\\Users\\someone\\.cache\\opencode\\packages\\openhermes@git+https_\\github.com\\user\\openhermes.git\\node_modules\\openhermes\\harness\\rules\\delegation.md`
+    assert.equal(toDisplayPath(long), "openhermes/harness/rules/delegation.md")
+  })
+  it("extracts openhermes/ from posix path", () => {
+    const posix = "/home/user/.cache/opencode/packages/openhermes/node_modules/openhermes/harness/"
+    assert.equal(toDisplayPath(posix), "openhermes/harness/")
+  })
+  it("returns last 2 parts for path without openhermes/", () => {
+    assert.equal(toDisplayPath("/some/other/path/file.txt"), "path/file.txt")
+  })
+  it("handles empty input", () => {
+    assert.equal(toDisplayPath(""), "")
+    assert.equal(toDisplayPath(null), "")
+    assert.equal(toDisplayPath(undefined), "")
   })
 })
 

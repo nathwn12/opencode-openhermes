@@ -15,7 +15,7 @@ This creates "phantom" compressed data that references stale environments.
 {
   "fingerprint": {
     "cwd": "C:/path/to/project",
-    "harness_root": "C:/Users/nathan/.config/opencode",
+    "harness_root": "%USERPROFILE%\\.config\\opencode",
     "project_root": "C:/path/to/project",
     "project": "my-project",
     "session_id": "session-123",

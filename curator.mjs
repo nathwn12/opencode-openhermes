@@ -70,7 +70,7 @@ function loadSchema(classId) {
 function validateRecordAgainstSchema(record) {
   const schema = loadSchema(record.class)
   if (!schema) {
-    curatorLog(`[curator] no schema found for class "${record.class}", fallback check`)
+    curatorLog(`[curator] validation fallback: no schema for "${record.class}"`)
     const required = record.class === "checkpoint"
       ? ["id", "class", "summary", "mission", "current_state", "next_actions", "blockers", "risk_notes", "provenance", "created_at", "status"]
       : ["id", "class", "summary", "provenance", "created_at", "status"]
@@ -80,19 +80,19 @@ function validateRecordAgainstSchema(record) {
       return false
     }
     if (record.class === "checkpoint" && record.provenance && !record.provenance.session_id) {
-      curatorLog(`[curator] validation failed: provenance.session_id required`)
+      curatorLog(`[curator] validation failed: missing session_id`)
       return false
     }
     return true
   }
   const unsupported = findUnsupportedSchemaKeywords(schema)
   if (unsupported.length) {
-    curatorLog(`[curator] schema validation failed: unsupported keywords ${unsupported.join(", ")}`)
+    curatorLog(`[curator] validation failed: unsupported fields ${unsupported.join(", ")}`)
     return false
   }
   const errors = validateSchema(schema, record, "$")
   if (errors.length) {
-    curatorLog(`[curator] schema validation failed: ${errors.join("; ")}`)
+    curatorLog(`[curator] validation failed: ${errors.join("; ")}`)
     return false
   }
   if (record.class === "checkpoint") {

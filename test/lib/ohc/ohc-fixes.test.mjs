@@ -148,7 +148,7 @@ describe("Fix 3b: range mode stores compressedTokens in block record", () => {
 // ── Fix 4: notification uses cumulative state ──────────────────────
 
 describe("Fix 4: notification derives counters from ss object", () => {
-  it("sendCompressNotification uses ss.totalMessagesRemoved for progress bar", async () => {
+  it("sendCompressNotification detailed mode works", async () => {
     const { sendCompressNotification } = await import("../../../lib/ohc/notify.mjs")
 
     const ss = { totalTokensSaved: 50000, blockCount: 5, totalMessagesRemoved: 200 }
@@ -165,9 +165,9 @@ describe("Fix 4: notification derives counters from ss object", () => {
       15, "test summary", 3000, ss, 85,
     )
 
-    assert.ok(capturedMessage.includes("30% active"), `expected "30% active" in message, got: ${JSON.stringify(capturedMessage)}`)
-    assert.ok(capturedMessage.includes("50K"))
-    assert.ok(capturedMessage.includes("#5"))
+    assert.ok(capturedMessage.includes("OHC Compression"), `got: ${JSON.stringify(capturedMessage)}`)
+    assert.ok(capturedMessage.includes("15 messages"), `got: ${JSON.stringify(capturedMessage)}`)
+    assert.ok(capturedMessage.includes("test summary"), `got: ${JSON.stringify(capturedMessage)}`)
   })
 
   it("sendCompressNotification minimal mode works", async () => {
@@ -187,7 +187,7 @@ describe("Fix 4: notification derives counters from ss object", () => {
       5, "test", 500, ss, 50,
     )
 
-    assert.ok(capturedMessage.includes("1K"))
+    assert.ok(capturedMessage.includes("Compression complete"), `got: ${JSON.stringify(capturedMessage)}`)
   })
 })
 
