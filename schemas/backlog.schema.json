@@ -37,7 +37,7 @@
     "archived_at": { "type": ["string", "null"], "format": "date-time", "description": "ISO-8601 or null" },
     "title": { "type": "string", "description": "Human-readable title for this backlog item" },
     "priority": { "type": "string", "enum": ["low", "medium", "high", "critical", "P0", "P1", "P2", "P3", "P4"], "description": "Priority level (low/medium/high/critical or P0-P4)" },
-    "trigger": { "type": "string", "enum": ["audit", "mistake", "drift", "user", "manual"], "description": "What triggered creation of this item" },
+    "trigger": { "type": "string", "enum": ["audit", "mistake", "drift", "user", "manual"], "default": "manual", "description": "What triggered creation of this item" },
     "evidence_refs": { "type": "array", "items": { "type": "string" }, "description": "References to evidence (audit IDs, mistake IDs, file paths)" },
     "done_when": { "type": "array", "items": { "type": "string" }, "description": "Acceptance criteria — concrete conditions for closure" },
     "description": { "type": "string", "description": "Optional description" },

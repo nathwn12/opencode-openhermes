@@ -165,8 +165,8 @@ describe("Fix 4: notification derives counters from ss object", () => {
       15, "test summary", 3000, ss, 85,
     )
 
-    assert.ok(capturedMessage.includes("OHC Compression"), `got: ${JSON.stringify(capturedMessage)}`)
-    assert.ok(capturedMessage.includes("15 messages"), `got: ${JSON.stringify(capturedMessage)}`)
+    assert.ok(capturedMessage.includes("50K saved"), `got: ${JSON.stringify(capturedMessage)}`)
+    assert.ok(capturedMessage.includes("15 msgs removed"), `got: ${JSON.stringify(capturedMessage)}`)
     assert.ok(capturedMessage.includes("test summary"), `got: ${JSON.stringify(capturedMessage)}`)
   })
 
@@ -187,7 +187,8 @@ describe("Fix 4: notification derives counters from ss object", () => {
       5, "test", 500, ss, 50,
     )
 
-    assert.ok(capturedMessage.includes("Compression complete"), `got: ${JSON.stringify(capturedMessage)}`)
+    assert.ok(capturedMessage.includes("1K saved"), `got: ${JSON.stringify(capturedMessage)}`)
+    assert.ok(capturedMessage.includes("5 msgs removed"), `got: ${JSON.stringify(capturedMessage)}`)
   })
 })
 

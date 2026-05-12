@@ -114,6 +114,13 @@ describe("plugin structure", () => {
     assert.equal(resolved, goodRoot)
   })
 
+  it("setHarnessRootForTest overrides harness resolution", async () => {
+    const { setHarnessRootForTest, getHarnessDir } = await import("../bootstrap.mjs")
+    setHarnessRootForTest("/custom/harness")
+    assert.equal(getHarnessDir(), "/custom/harness")
+    setHarnessRootForTest(undefined)
+  })
+
   it("findCacheDirs scans packages and node_modules caches", async () => {
     const { findCacheDirs } = await import("../lib/ohc/updater.mjs")
     const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), "openhermes-cache-"))

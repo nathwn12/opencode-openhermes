@@ -35,11 +35,11 @@
     "review_at": { "type": ["string", "null"], "format": "date-time", "description": "ISO-8601 or null" },
     "decay_at": { "type": ["string", "null"], "format": "date-time", "description": "ISO-8601 or null" },
     "archived_at": { "type": ["string", "null"], "format": "date-time", "description": "ISO-8601 or null" },
-    "trigger": { "type": "string", "description": "Condition or pattern that triggers this instinct" },
+    "trigger": { "type": "string", "default": "manual", "description": "Condition or pattern that triggers this instinct" },
     "action": { "type": "string", "description": "Recommended action when triggered" },
     "success_count": { "type": "integer", "minimum": 0, "default": 0, "description": "Number of successful applications" },
     "failure_count": { "type": "integer", "minimum": 0, "default": 0, "description": "Number of failed applications" },
-    "promotion_state": { "type": "string", "enum": ["project", "candidate_global", "global"], "description": "Current promotion level" },
+    "promotion_state": { "type": "string", "enum": ["project", "candidate_global", "global"], "default": "project", "description": "Current promotion level" },
     "description": { "type": "string", "description": "Optional description" },
     "environment_fingerprint": {
       "type": "object",

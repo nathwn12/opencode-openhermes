@@ -14,6 +14,28 @@ const lastCheckpoint = { ts: 0 }
 const writtenThisSession = []
 const CURATOR_LOGS = /^(1|true|yes)$/i.test(process.env.OPENCODE_CURATOR_LOGS || "")
 
+const MEMORY_CLASSES = ["checkpoints", "mistakes", "audits", "verification_receipts", "constraints", "decisions", "instincts", "backlog"]
+
+function ensureConsistency(root) {
+  const memoryRoot = path.join(root, "memory")
+  const runtimeRoot = path.join(root, "runtime")
+
+  for (const cls of MEMORY_CLASSES) {
+    const dir = path.join(memoryRoot, cls)
+    fs.mkdirSync(dir, { recursive: true })
+    const indexPath = path.join(dir, "index.json")
+    if (!fs.existsSync(indexPath)) {
+      atomicWriteJson(indexPath, [])
+    }
+  }
+
+  fs.mkdirSync(runtimeRoot, { recursive: true })
+  const loopStatePath = path.join(runtimeRoot, "loop-state.json")
+  if (!fs.existsSync(loopStatePath)) {
+    atomicWriteJson(loopStatePath, { status: "idle", phase: "session.created" })
+  }
+}
+
 function curatorLog(message) {
   if (!CURATOR_LOGS) return
   process.stderr.write(`${message}\n`)
@@ -383,6 +405,13 @@ export const CuratorPlugin = async ({ project, directory }) => {
       if (event.type === "session.created") {
         lastCheckpoint.ts = 0
         writtenThisSession.length = 0
+        try {
+          const root = getDataRoot()
+          ensureConsistency(root)
+          curatorLog("[curator] consistency repair: all memory/runtime dirs verified")
+        } catch (err) {
+          curatorLog(`[curator] consistency repair failure: ${safeLogMessage(err.message)}`)
+        }
       }
       if (event.type === "session.idle") {
         await handleSessionIdle(directory, project)

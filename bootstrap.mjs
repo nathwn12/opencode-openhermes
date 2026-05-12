@@ -67,11 +67,16 @@ export function resolveHarnessRoot({
   return path.resolve(currentDir, "harness")
 }
 
-const HARNESS_DIR = resolveHarnessRoot()
-const RULES_DIR = path.join(HARNESS_DIR, "rules")
-const SKILLS_DIR = path.join(HARNESS_DIR, "skills")
-const CONSTITUTION_FILE = path.join(HARNESS_DIR, "codex", "CONSTITUTION.md")
-const RUNTIME_FILE = path.join(HARNESS_DIR, "instructions", "RUNTIME.md")
+let _harnessDir
+export function setHarnessRootForTest(dir) { _harnessDir = dir }
+export function getHarnessDir() {
+  if (!_harnessDir) _harnessDir = resolveHarnessRoot()
+  return _harnessDir
+}
+function getRulesDir() { return path.join(getHarnessDir(), "rules") }
+function getSkillsDir() { return path.join(getHarnessDir(), "skills") }
+function getConstitutionFile() { return path.join(getHarnessDir(), "codex", "CONSTITUTION.md") }
+function getRuntimeFile() { return path.join(getHarnessDir(), "instructions", "RUNTIME.md") }
 
 
 function scanDirNames(dir) {
@@ -127,13 +132,13 @@ export function loadLocalSoulOverride(overridePath) {
 }
 
 function buildBootstrapContent() {
-  let constitution = fs.readFileSync(CONSTITUTION_FILE, "utf8")
+  let constitution = fs.readFileSync(getConstitutionFile(), "utf8")
   const localOverride = loadLocalSoulOverride()
   if (localOverride) {
     constitution += `\n\n## Local Overrides (survives reinstalls)\n\n${localOverride}`
   }
-  const runtime = fs.readFileSync(RUNTIME_FILE, "utf8")
-  const capMap = buildCapabilityMap(HARNESS_DIR)
+  const runtime = fs.readFileSync(getRuntimeFile(), "utf8")
+  const capMap = buildCapabilityMap(getHarnessDir())
 
   const router = `## AGENTS.md
 
@@ -263,12 +268,12 @@ export const BootstrapPlugin = async ({ client, directory }) => {
     config: async (config) => {
       config.skills = config.skills || {}
       config.skills.paths = config.skills.paths || []
-      if (!config.skills.paths.includes(SKILLS_DIR)) {
-        config.skills.paths.push(SKILLS_DIR)
+      if (!config.skills.paths.includes(getSkillsDir())) {
+        config.skills.paths.push(getSkillsDir())
       }
 
-      const PROMPTS_DIR = path.join(HARNESS_DIR, "prompts")
-      const COMMANDS_DIR = path.join(HARNESS_DIR, "commands")
+      const PROMPTS_DIR = path.join(getHarnessDir(), "prompts")
+      const COMMANDS_DIR = path.join(getHarnessDir(), "commands")
       const ct = (file) => {
         const fp = path.join(COMMANDS_DIR, file)
         try { return fs.readFileSync(fp, "utf8").trimEnd() + "\n\n$ARGUMENTS" }
