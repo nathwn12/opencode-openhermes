@@ -49,13 +49,13 @@
         "harness_root": { "type": "string" },
         "project_root": { "type": "string" },
         "project": { "type": "string" },
-        "session_id": { "type": "string" },
+        "session_id": { "type": ["string", "null"] },
         "os": { "type": "string" },
         "release": { "type": "string" },
         "arch": { "type": "string" },
         "shell": { "type": "string" },
         "provider": { "type": "string" },
-        "model": { "type": "string" },
+        "model": { "type": ["string", "null"] },
         "sha256": { "type": "string" }
       }
     }
