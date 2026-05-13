@@ -13,6 +13,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 
 const CHECKPOINT_DEBOUNCE_MS = 300000
 const COMPACTION_CONTEXT_LIMIT = 12000
+let _handlingIdle = false
 const sessionState = new Map()
 const STALE_SESSION_MS = 3600000
 
@@ -276,6 +277,11 @@ function writeVerificationReceipt(root, project, directory, checkpointId) {
 }
 
 async function handleSessionIdle(directory, project) {
+  if (_handlingIdle) {
+    log.warn("handleSessionIdle already in progress, skipping re-entry")
+    return
+  }
+  _handlingIdle = true
   try {
     const root = getDataRoot()
     const checkpointId = await writeCheckpoint(root, project, directory, "session.idle", null)
@@ -283,7 +289,9 @@ async function handleSessionIdle(directory, project) {
       writeVerificationReceipt(root, project, directory, checkpointId)
     }
   } catch (err) {
-    log.error(`handleSessionIdle error: ${safeLogMessage(err.message)}`)
+    log.error(`handleSessionIdle error: ${err?.stack || err?.message || err}`)
+  } finally {
+    _handlingIdle = false
   }
 }
 
@@ -299,7 +307,7 @@ async function handleSessionCompacted(directory, project) {
       updated_at: ts,
     })
   } catch (err) {
-    log.error(`handleSessionCompacted error: ${safeLogMessage(err.message)}`)
+        log.error(`handleSessionCompacted error: ${err?.stack || err?.message || err}`)
   }
 }
 
@@ -320,7 +328,7 @@ async function handleSessionError(directory, project, event) {
     })
     writeMistakeRecord(root, project, directory, event.error || event)
   } catch (err) {
-    log.error(`handleSessionError error: ${safeLogMessage(err.message)}`)
+      log.error(`handleSessionError error: ${err?.stack || err?.message || err}`)
   }
 }
 
@@ -377,7 +385,7 @@ async function handlePermissionReplied(directory, project, event) {
     getStore().save("audit", id, safeRecord)
     log.info(`permission audit logged: ${event.tool} -> ${event.action}`)
   } catch (err) {
-    log.error(`handlePermissionReplied error: ${safeLogMessage(err.message)}`)
+      log.error(`handlePermissionReplied error: ${err?.stack || err?.message || err}`)
   }
 }
 
@@ -391,7 +399,7 @@ export const CuratorPlugin = async ({ project, directory }) => {
             await ensureConsistency(root)
             log.info("consistency repair: all memory/runtime dirs verified")
           } catch (err) {
-            log.error(`consistency repair failure: ${safeLogMessage(err.message)}`)
+            log.error(`consistency repair failure: ${err?.stack || err?.message || err}`)
           }
         }
         if (event.type === "session.idle") {
@@ -406,7 +414,7 @@ export const CuratorPlugin = async ({ project, directory }) => {
           log.debug(`command executed: ${event.command || "?"}`)
         }
       } catch (err) {
-        log.error(`event handler error: ${safeLogMessage(err.message)}`)
+        log.error(`event handler error: ${err?.stack || err?.message || err}`)
       }
     },
   "experimental.session.compacting": async (input, output) => {
@@ -458,7 +466,7 @@ export const CuratorPlugin = async ({ project, directory }) => {
         status: "active",
       })
     } catch (err) {
-      log.error(`compaction error: ${safeLogMessage(err.message)}`)
+      log.error(`compaction error: ${err?.stack || err?.message || err}`)
       const contextSink = Array.isArray(output.context) ? output.context : (output.context = [])
       contextSink.push(truncateText(`## OpenHermes State\n- Project: ${project?.name || path.basename(directory)}\n- Hook: experimental.session.compacting (error state)\n`, COMPACTION_CONTEXT_LIMIT))
     }
