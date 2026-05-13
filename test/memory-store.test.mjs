@@ -102,6 +102,39 @@ describe("MemoryStore", () => {
   })
 })
 
+describe("Bun SQLite adapter", () => {
+  it("uses Bun's native Database without overriding prepare", async () => {
+    const { createBunDatabaseCtor } = await import("../lib/memory-store.mjs")
+    let instance
+    class FakeBunDatabase {
+      constructor(file) {
+        this.file = file
+        this.prepareCalls = 0
+        this.queryCalls = 0
+        instance = this
+      }
+      exec() {}
+      prepare() {
+        this.prepareCalls++
+        return { run() {}, get() {}, all() { return [] } }
+      }
+      query() {
+        this.queryCalls++
+        return this.prepare()
+      }
+      close() {}
+    }
+
+    const DatabaseCtor = createBunDatabaseCtor({ Database: FakeBunDatabase })
+    const db = new DatabaseCtor(":memory:")
+    db.prepare("select 1")
+
+    assert.equal(instance.prepareCalls, 1)
+    assert.equal(instance.queryCalls, 0)
+    assert.equal(Object.hasOwn(db, "prepare"), false)
+  })
+})
+
 describe("migrateFromJson", () => {
   let migrateFromJson, MemoryStore
   let store, dbPath
