@@ -54,8 +54,8 @@
         "cwd": { "type": "string" },
         "os": { "type": "string" },
         "shell": { "type": "string", "default": "cmd.exe" },
-        "provider": { "type": "string" },
-        "model": { "type": "string" }
+        "provider": { "type": ["string", "null"] },
+        "model": { "type": ["string", "null"] }
       }
     },
     "method": { "type": "string", "enum": ["command", "read", "test", "schema-validate", "manual-inspection", "bash", "grep", "live-hook-run", "permission-regression", "end-to-end-run", "external-test", "runtime-proof"], "description": "Verification method used. runtime-proof = linked to runtime_proof record for executable evidence." },
@@ -79,7 +79,7 @@
         "release": { "type": "string" },
         "arch": { "type": "string" },
         "shell": { "type": "string" },
-        "provider": { "type": "string" },
+        "provider": { "type": ["string", "null"] },
         "model": { "type": ["string", "null"] },
         "sha256": { "type": "string" }
       }

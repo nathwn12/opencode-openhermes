@@ -25,11 +25,15 @@ function getSessionState(sessionId) {
 }
 
 function cleanupStaleSessions() {
-  const cutoff = Date.now() - STALE_SESSION_MS
-  for (const [sid, state] of sessionState) {
-    if (state.lastCheckpointTs > 0 && state.lastCheckpointTs < cutoff) {
-      sessionState.delete(sid)
+  try {
+    const cutoff = Date.now() - STALE_SESSION_MS
+    for (const [sid, state] of sessionState) {
+      if (state.lastCheckpointTs > 0 && state.lastCheckpointTs < cutoff) {
+        sessionState.delete(sid)
+      }
     }
+  } catch (err) {
+    log.error("cleanupStaleSessions error:", err?.message)
   }
 }
 setInterval(cleanupStaleSessions, 300000).unref()

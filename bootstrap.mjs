@@ -6,6 +6,7 @@ import { createLogger } from "./lib/logger.mjs"
 import { getHarnessDir, setHarnessRootForTest, resolveHarnessRoot } from "./lib/harness-resolver.mjs"
 
 const log = createLogger("bootstrap")
+let _bootstrapping = false
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const CONFIG_DIR = path.join(os.homedir(), ".config", "opencode")
 const OVERRIDE_SOUL = path.join(CONFIG_DIR, "SOUL.md")
@@ -470,8 +471,14 @@ export const BootstrapPlugin = async ({ client, directory }) => {
         const firstUser = output.messages.find(m => m && m.info && m.info.role === "user")
         if (!firstUser || !firstUser.parts || !firstUser.parts.length) return
         if (firstUser.parts.some(p => p.type === "text" && p.text.includes("OPENHERMES_BOOTSTRAP"))) return
-        const ref = firstUser.parts[0]
-        firstUser.parts.unshift({ ...ref, type: "text", text: bootstrap })
+        if (_bootstrapping) return
+        _bootstrapping = true
+        try {
+          const ref = firstUser.parts[0]
+          firstUser.parts.unshift({ ...ref, type: "text", text: bootstrap })
+        } finally {
+          _bootstrapping = false
+        }
       } catch (err) {
         log.error("transform error:", err.message)
       }

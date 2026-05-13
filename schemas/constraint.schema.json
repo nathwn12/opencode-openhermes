@@ -53,7 +53,7 @@
         "release": { "type": "string" },
         "arch": { "type": "string" },
         "shell": { "type": "string" },
-        "provider": { "type": "string" },
+        "provider": { "type": ["string", "null"] },
         "model": { "type": ["string", "null"] },
         "sha256": { "type": "string" }
       }

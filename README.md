@@ -9,6 +9,7 @@
   <a href="https://opencode.ai"><img src="https://img.shields.io/badge/runs%20on-OpenCode-6366f1?style=for-the-badge" alt="Runs on OpenCode"></a>
   <a href="https://github.com/nathwn12/openhermes/issues"><img src="https://img.shields.io/badge/issues-welcome-orange?style=for-the-badge" alt="Issues welcome"></a>
   <a href="#"><img src="https://img.shields.io/badge/tests-219%20passing-22c55e?style=for-the-badge" alt="219 tests passing"></a>
+  <a href="#"><img src="https://img.shields.io/badge/coverage-36%20suites-6366f1?style=for-the-badge" alt="36 test suites"></a>
 </p>
 
 ---
@@ -33,7 +34,7 @@ Zero infrastructure. Two npm packages (one is the OpenCode SDK). Your machine al
 <tr><td><b>&#128260; Closed Learning Loop</b></td><td>Mistakes are logged with root cause + prevention rule. Complex sessions auto-generate skill-candidate backlogs. Strike tracking escalates repeat failures into structural fixes. The agent gets better — you don't teach it twice.</td></tr>
 <tr><td><b>&#128736; 10 Bundled Procedural Skills</b></td><td>Pre-built skills for API design, backend patterns, coding standards, E2E testing, frontend patterns, frontend slides, security reviews, strategic compaction, TDD workflow, and verification loops. Auto-discovered — use <code>skill</code> to list and load.</td></tr>
 <tr><td><b>&#128270; Accurate Context Pruner</b></td><td>BPE tokenizer (cl100k_base via <code>gpt-tokenizer</code>) drives all compression decisions — accurate within ~1%, not the old 30-50% heuristic. Configurable via <code>ohc.json</code> + <code>compress</code> tool. Progressive nudges at 70/85/95%.</td></tr>
-<tr><td><b>&#128308; Error Circuit Breakers</b></td><td>Every plugin hook wrapped in try/catch. Non-critical errors logged and swallowed (session events, compaction). Critical errors (message transforms) re-thrown. A <code>_degraded</code> tool surfaces which plugins failed and why. One bad plugin never takes down the system silently.</td></tr>
+<tr><td><b>&#128308; Error Circuit Breakers</b></td><td>Every plugin hook wrapped in try/catch. MemoryStore 8 methods individually guarded — DB corruption won't cascade. Proxy re-entry guards prevent stack overflow (3 flags with try/finally). Unhandled setInterval caught. Notification failures suppressed when client.session unavailable. Non-critical errors logged and swallowed (session events, compaction). A <code>_degraded</code> tool surfaces which plugins failed and why. One bad plugin never takes down the system silently.</td></tr>
 <tr><td><b>&#129513; Zero Infrastructure</b></td><td>No Python. No uv. No Docker. No PostgreSQL. No gateway. No cron daemon. No MCP server. No separate database. Just Node.js 22+ and your existing OpenCode runtime.</td></tr>
 </table>
 

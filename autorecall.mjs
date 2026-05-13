@@ -1,7 +1,7 @@
 import path from "node:path"
 import os from "node:os"
 import fs from "node:fs"
-import { atomicWriteJson, buildEnvironmentFingerprint, isTruthy, sanitizeRecord, truncateText } from "./lib/hardening.mjs"
+import { atomicWriteJson, buildEnvironmentFingerprint, hasExpired, isTruthy, sanitizeRecord, truncateText } from "./lib/hardening.mjs"
 import { getDataRoot, getMemoryRoot, getRecallRoot, getRuntimeRoot } from "./lib/paths.mjs"
 import { getStore } from "./lib/memory-store.mjs"
 import { createLogger } from "./lib/logger.mjs"
@@ -9,13 +9,6 @@ import { createLogger } from "./lib/logger.mjs"
 const log = createLogger("autorecall")
 const OLD_BASE = path.join(os.homedir(), ".config", "opencode", "openhermes")
 const BOILERPLATE_SUMMARY = /^(Idle checkpoint for|Pre-compaction checkpoint for|Placeholder checkpoint|Session in progress|No active checkpoint)/i
-
-function hasExpired(r) {
-  if (r?.status === "expired" || r?.status === "decayed") return true
-  if (r?.decay_at && Date.parse(r.decay_at) < Date.now()) return true
-  if (r?.expires_at && Date.parse(r.expires_at) < Date.now()) return true
-  return false
-}
 
 function sweepStaleRecords() {
   const classes = ["checkpoint", "constraint", "decision", "instinct", "audit", "backlog", "verification_receipt"]
