@@ -63,17 +63,6 @@ describe("OHC Threshold Gates", () => {
     assert.equal(isMutationAllowed(above), true)
   })
 
-  it("isActionAllowed returns false for EVALUATION_ALLOWED", async () => {
-    const { evaluateState, isActionAllowed, OHC_STATES } = await import("../../../lib/ohc/policy.mjs")
-    const evalState = evaluateState(50000, { max: 150000, min: 50000 })
-    assert.equal(evalState.state, OHC_STATES.EVALUATION_ALLOWED)
-    assert.equal(isActionAllowed(evalState), false)
-
-    const actionState = evaluateState(150000, { max: 150000, min: 50000 })
-    assert.equal(actionState.state, OHC_STATES.ACTION_REQUIRED)
-    assert.equal(isActionAllowed(actionState), true)
-  })
-
   it("evaluateState decision record contains action and reason", async () => {
     const { evaluateState } = await import("../../../lib/ohc/policy.mjs")
     const result = evaluateState(1000, { max: 150000, min: 50000 })

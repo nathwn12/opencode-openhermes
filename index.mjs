@@ -3,6 +3,7 @@ import { CuratorPlugin } from "./curator.mjs"
 import { SkillBuilderPlugin } from "./skill-builder.mjs"
 import { BootstrapPlugin } from "./bootstrap.mjs"
 import { MemoryToolsPlugin } from "./lib/memory-tools-plugin.mjs"
+import { PipelineToolsPlugin } from "./lib/pipeline-tools.mjs"
 import { AmbientMemoryPlugin } from "./lib/ambient-memory.mjs"
 import { OhcPlugin } from "./lib/ohc/pruner.mjs"
 import { UpdaterPlugin } from "./lib/ohc/updater.mjs"
@@ -16,6 +17,7 @@ const PLUGINS = [
   { name: "Curator", factory: CuratorPlugin },
   { name: "SkillBuilder", factory: SkillBuilderPlugin },
   { name: "MemoryTools", factory: MemoryToolsPlugin },
+  { name: "PipelineTools", factory: PipelineToolsPlugin },
   { name: "AmbientMemory", factory: AmbientMemoryPlugin },
   { name: "Ohc", factory: OhcPlugin },
   { name: "Updater", factory: UpdaterPlugin },
@@ -46,13 +48,24 @@ export default async (input) => {
     return {}
   }
 
-  const [bootstrap, autorecall, curator, skillBuilder, memoryTools, ambient, ohc, updater] = PLUGINS.map((_, i) => resolve(i))
+  const [bootstrap, autorecall, curator, skillBuilder, memoryTools, pipelineTools, ambient, ohc, updater] = PLUGINS.map((_, i) => resolve(i))
 
   const merged = {}
 
-  if (bootstrap.config) merged.config = bootstrap.config
+  if (bootstrap.config) {
+    merged.config = async (config) => {
+      await bootstrap.config(config)
+      config.experimental ??= {}
+      config.experimental.primary_tools ??= []
+      for (const name of ["pipeline_run", "handoff_request", "goal_tracker", "guard_state"]) {
+        if (!config.experimental.primary_tools.includes(name)) {
+          config.experimental.primary_tools.push(name)
+        }
+      }
+    }
+  }
 
-  const toolHandlers = { ...memoryTools.tool, ...ohc.tool }
+  const toolHandlers = { ...memoryTools.tool, ...pipelineTools.tool, ...ohc.tool }
   if (_degraded.length > 0) {
     toolHandlers._degraded = {
       description: "List degraded/errored plugins",

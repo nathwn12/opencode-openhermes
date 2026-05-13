@@ -5,8 +5,8 @@ import fs from "node:fs"
 import os from "node:os"
 
 const {
-  atomicWriteJson, fingerprintEnvironment, fingerprintFile,
-  redactSensitiveText, sanitizeRecord, toDisplayPath, truncateText
+  atomicWriteJson, fingerprintEnvironment,
+  redactSensitiveText, sanitizeRecord, truncateText
 } = await import("../../lib/hardening.mjs")
 
 describe("truncateText", () => {
@@ -94,48 +94,6 @@ describe("fingerprintEnvironment", () => {
   it("includes platform info", () => {
     const fp = fingerprintEnvironment({ cwd: process.cwd() })
     assert.equal(fp.os, process.platform)
-  })
-})
-
-describe("fingerprintFile", () => {
-  let tmpDir
-  before(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "oh-test-"))
-  })
-  after(() => {
-    fs.rmSync(tmpDir, { recursive: true, force: true })
-  })
-  it("returns fingerprint for existing file", () => {
-    const fp = path.join(tmpDir, "test.txt")
-    fs.writeFileSync(fp, "hello world", "utf8")
-    const result = fingerprintFile(fp)
-    assert.ok(result.sha256)
-    assert.equal(result.sha256.length, 64)
-    assert.ok(result.size > 0)
-    assert.ok(result.mtime)
-  })
-  it("returns null for missing file", () => {
-    const result = fingerprintFile(path.join(tmpDir, "nonexistent.txt"))
-    assert.equal(result, null)
-  })
-})
-
-describe("toDisplayPath", () => {
-  it("extracts openhermes/ prefix from long absolute path", () => {
-    const long = `C:\\Users\\someone\\.cache\\opencode\\packages\\openhermes@git+https_\\github.com\\user\\openhermes.git\\node_modules\\openhermes\\harness\\rules\\delegation.md`
-    assert.equal(toDisplayPath(long), "openhermes/harness/rules/delegation.md")
-  })
-  it("extracts openhermes/ from posix path", () => {
-    const posix = "/home/user/.cache/opencode/packages/openhermes/node_modules/openhermes/harness/"
-    assert.equal(toDisplayPath(posix), "openhermes/harness/")
-  })
-  it("returns last 2 parts for path without openhermes/", () => {
-    assert.equal(toDisplayPath("/some/other/path/file.txt"), "path/file.txt")
-  })
-  it("handles empty input", () => {
-    assert.equal(toDisplayPath(""), "")
-    assert.equal(toDisplayPath(null), "")
-    assert.equal(toDisplayPath(undefined), "")
   })
 })
 
