@@ -8,8 +8,8 @@
   <a href="https://github.com/nathwn12/openhermes/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="License: MIT"></a>
   <a href="https://opencode.ai"><img src="https://img.shields.io/badge/runs%20on-OpenCode-6366f1?style=for-the-badge" alt="Runs on OpenCode"></a>
   <a href="https://github.com/nathwn12/openhermes/issues"><img src="https://img.shields.io/badge/issues-welcome-orange?style=for-the-badge" alt="Issues welcome"></a>
-  <a href="#"><img src="https://img.shields.io/badge/tests-219%20passing-22c55e?style=for-the-badge" alt="219 tests passing"></a>
-  <a href="#"><img src="https://img.shields.io/badge/coverage-36%20suites-6366f1?style=for-the-badge" alt="36 test suites"></a>
+  <a href="#"><img src="https://img.shields.io/badge/tests-202%20passing-22c55e?style=for-the-badge" alt="202 tests passing"></a>
+  <a href="#"><img src="https://img.shields.io/badge/coverage-35%20suites-6366f1?style=for-the-badge" alt="35 test suites"></a>
 </p>
 
 ---
@@ -18,7 +18,7 @@
 { "plugin": ["openhermes"] }
 ```
 
-**One line. Your agent gains a personality, constitution, durable memory, 31 specialist subagents, 22 commands, structured handoff protocol, a multi-stage quality pipeline, and a self-healing escalation system.**
+**One line. Your agent gains a personality, constitution, durable memory, 31 specialist subagents, 21 commands, structured handoff protocol, a multi-stage quality pipeline, and a self-healing escalation system.**
 
 Zero infrastructure. Two npm packages (one is the OpenCode SDK). Your machine already has everything else.
 
@@ -32,7 +32,7 @@ Zero infrastructure. Two npm packages (one is the OpenCode SDK). Your machine al
 <tr><td><b>&#128190; SQLite-Backed Durable Memory</b></td><td>9 classes — checkpoints, decisions, constraints, instincts, mistakes, backlog, audits, verification receipts, recall — all schema-validated, fingerprint-aware, and persisted to SQLite via Node.js's built-in <code>node:sqlite</code>. O(log n) queries, concurrent session safe, atomic writes. No separate database process. No Docker. No Python.</td></tr>
 <tr><td><b>&#127959; Multi-Stage Quality Pipeline</b></td><td><code>/gauntlet</code> command routes work through sequential specialist reviews: scope check → security audit → code review → quality gate → ship recommendation. Each stage delegates to the right subagent. Mechanical fixes auto-applied. Critical findings block shipment.</td></tr>
 <tr><td><b>&#128260; Closed Learning Loop</b></td><td>Mistakes are logged with root cause + prevention rule. Complex sessions auto-generate skill-candidate backlogs. Strike tracking escalates repeat failures into structural fixes. The agent gets better — you don't teach it twice.</td></tr>
-<tr><td><b>&#128736; 10 Bundled Procedural Skills</b></td><td>Pre-built skills for API design, backend patterns, coding standards, E2E testing, frontend patterns, frontend slides, security reviews, strategic compaction, TDD workflow, and verification loops. Auto-discovered — use <code>skill</code> to list and load.</td></tr>
+<tr><td><b>&#128736; 15 Bundled Procedural Skills</b></td><td>Pre-built skills for API design, backend patterns, coding standards, E2E testing, frontend patterns, frontend slides, security reviews, strategic compaction, TDD workflow, verification loops, browser workflow, PR workflow, safety workflow, session workflow, and ship workflow. Auto-discovered — use <code>skill</code> to list and load.</td></tr>
 <tr><td><b>&#128270; Accurate Context Pruner</b></td><td>BPE tokenizer (cl100k_base via <code>gpt-tokenizer</code>) drives all compression decisions — accurate within ~1%, not the old 30-50% heuristic. Configurable via <code>ohc.json</code> + <code>compress</code> tool. Progressive nudges at 70/85/95%.</td></tr>
 <tr><td><b>&#128308; Error Circuit Breakers</b></td><td>Every plugin hook wrapped in try/catch. MemoryStore 8 methods individually guarded — DB corruption won't cascade. Proxy re-entry guards prevent stack overflow (3 flags with try/finally). Unhandled setInterval caught. Notification failures suppressed when client.session unavailable. Non-critical errors logged and swallowed (session events, compaction). A <code>_degraded</code> tool surfaces which plugins failed and why. One bad plugin never takes down the system silently.</td></tr>
 <tr><td><b>&#129513; Zero Infrastructure</b></td><td>No Python. No uv. No Docker. No PostgreSQL. No gateway. No cron daemon. No MCP server. No separate database. Just Node.js 22+ and your existing OpenCode runtime.</td></tr>
@@ -86,10 +86,10 @@ Either way, **no other config needed.** The plugin auto-registers:
 | What | Details |
 |------|---------|
 | **31 subagents** | 7 core (oh-architect, oh-blueprinter, oh-mender, oh-auditor, oh-warden, oh-e2e, oh-explorer) + 24 specialist (oh-gater, oh-prover, oh-scout, oh-scribe, oh-sweeper, oh-pilot, oh-tuner, oh-chronicler, oh-merger, oh-scraper, oh-publisher, oh-sentinel, 9 language-specific build/review pairs, oh-review-db, oh-review-py, oh-build-cpp, oh-build-java, oh-build-go) |
-| **22 slash commands** | `/oh-audit`, `/oh-blueprint`, `/oh-browse`, `/oh-doctor`, `/oh-forge`, `/oh-gauntlet`, `/oh-guard`, `/oh-inspect`, `/oh-learn`, `/oh-manifest`, `/oh-mend`, `/oh-pr`, `/oh-recall`, `/oh-scribe`, `/oh-session`, `/oh-ship`, `/oh-sweep`, `/oh-update-me`, `/oh-voyage`, `/oh-weave`, `/ohc` |
+| **21 slash commands** | |
 | **6 native memory tools** | `ohc_save`, `ohc_get`, `ohc_list`, `ohc_latest`, `ohc_search`, `ohc_archive` — in-process, no MCP server |
 | **15 procedural skills** | API design, backend, browser workflow, compact, E2E testing, frontend, PR workflow, prove workflow, safety workflow, session workflow, shield workflow, ship workflow, slides, standards, verify workflow |
-| **8 lifecycle plugins** | bootstrap, curator, autorecall, skill-builder, memory-tools, ambient-memory, ohc, updater |
+| **9 lifecycle plugins** | bootstrap, curator, autorecall, skill-builder, memory-tools, pipeline-tools, ambient-memory, ohc, updater |
 
 > **&#128260; Force update:** Run `/oh-update-me` anytime to clear stale cache and reload from source. Works with both git-backed and npm installs.
 
@@ -105,7 +105,7 @@ Either way, **no other config needed.** The plugin auto-registers:
 7. **Compaction** — CuratorPlugin force-writes pre-compaction checkpoint and injects state into compaction buffer
 8. **Quality gate** — Run `/oh-gauntlet` to route work through scope → security → review → quality → report stages
 
-No polling. No cron. 8 plugins, 20+ hooks, one runtime.
+No polling. No cron. 9 plugins, 20+ hooks, one runtime.
 </details>
 
 ---
@@ -309,7 +309,7 @@ OpenHermes is not a runtime shim. The doctrine ships with the package — every 
 
 ---
 
-## The 8 Plugins
+## The 9 Plugins
 
 | Plugin | Hook Points | Job |
 |--------|-------------|-----|
@@ -320,6 +320,7 @@ OpenHermes is not a runtime shim. The doctrine ships with the package — every 
 | **Curator** | `session.idle`, `.error`, `.compacted`, `.compacting`, `permission.replied` | Snapshots pre-compaction state, logs mistakes with root cause, records decisions, injects harness state into compaction buffer |
 | **Autorecall** | `session.created` | Loads prior session memory into recall cache at session start for compaction buffer injection |
 | **SkillBuilder** | `session.created`, `.idle`, `tool.execute.after` | Measures session complexity metrics, generates backlog candidates for complex sessions |
+| **PipelineTools** | (tool registration) | Provides 4 native tools: `pipeline_run`, `handoff_request`, `goal_tracker`, `guard_state` — pipeline orchestration, handoff protocol, goal tracking, safety state management |
 | **AmbientMemory** | `chat.messages.transform` | Injects `<OPENHERMES_MEMORY>` context block into first user message |
 | **OhcPlugin** | `config`, `chat.messages.transform`, `.system.transform`, `command.execute.before`, (tool) | BPE-accurate context pruner (cl100k_base via gpt-tokenizer). Progressive nudges at 70/85/95%. Configurable via `ohc.json`. |
 | **Updater** | `command.execute.before` | Intercepts `/oh-update-me` to force reinstall from latest source |
@@ -331,7 +332,7 @@ OpenHermes is not a runtime shim. The doctrine ships with the package — every 
 ```
 openhermes/
 │
-├── ⚡ index.mjs               # Entry point — merges 8 plugins with circuit breakers
+├── ⚡ index.mjs               # Entry point — merges 9 plugins with circuit breakers
 ├── ⚡ bootstrap.mjs           # Config hook + chat.transform + harness resolution
 ├── ⚡ autorecall.mjs          # Memory → recall cache
 ├── ⚡ curator.mjs             # Lifecycle hooks engine (concurrent-session safe)
@@ -340,16 +341,25 @@ openhermes/
 ├── ⚡ lib/
 │   ├── memory-store.mjs           # SQLite-backed store (node:sqlite)
 │   ├── memory-tools-plugin.mjs    # 6 ohc_* tools on SQLite
+│   ├── pipeline-tools.mjs         # 4 native tools: pipeline_run, handoff_request, goal_tracker, guard_state
 │   ├── pipeline.mjs               # /gauntlet pipeline engine
+│   ├── handoff.mjs                # Delegation protocol (5 exports)
+│   ├── goal-tracker.mjs           # PLAN/GOAL/HANDOVER workflow
+│   ├── guard-state.mjs            # Safety state machine
 │   ├── logger.mjs                 # Structured logging (levels, colors)
-│   ├── handoff.mjs                # Delegation protocol
 │   ├── hardening.mjs              # sanitize, redact, atomic write
 │   ├── paths.mjs                  # storage root resolver + memory.db path
+│   ├── sqlite-adapter.mjs         # Node/Bun driver adapter
+│   ├── search.mjs                 # Memory search with relevance ranking
+│   ├── harness-resolver.mjs       # Harness root resolution
 │   ├── schema-validator.mjs       # Full Draft-07 (23 keywords, recursion guard)
 │   └── ohc/                       # BPE-accurate context pruner
 │       ├── tokenizer.mjs          # cl100k_base BPE wrapper
-│       ├── pruner.mjs             # Main pruner with circuit breakers
+│       ├── pruner.mjs             # Main pruner + OhcPlugin
 │       └── ...                    # config, state, reaper, strategies, compress
+│
+├── ⚡ scripts/
+│   └── smoke-memory-store.mjs # Bun runtime smoke test
 │
 ├── ⚡ schemas/                # 9 Draft-07 memory schemas
 │
@@ -516,7 +526,7 @@ SQLite-backed at `~/.local/share/opencode/openhermes/memory.db`. All records sch
 </details>
 
 <details>
-<summary><b>🔌 Plugins — 8 lifecycle plugins</b></summary>
+<summary><b>🔌 Plugins — 9 lifecycle plugins</b></summary>
 
 <br>
 
@@ -527,6 +537,7 @@ SQLite-backed at `~/.local/share/opencode/openhermes/memory.db`. All records sch
 | **Curator** | `session.idle`, `.error`, `.compacted`, `.compacting`, `permission.replied` | Snapshots state, logs mistakes, records decisions |
 | **Autorecall** | `session.created` | Loads prior session memory into recall cache |
 | **SkillBuilder** | `session.created`, `.idle`, `tool.execute.after` | Complexity detection → backlog candidates |
+| **PipelineTools** | (tool registration) | 4 native tools: `pipeline_run`, `handoff_request`, `goal_tracker`, `guard_state` |
 | **AmbientMemory** | `chat.messages.transform` | Injects `<OPENHERMES_MEMORY>` context block |
 | **OhcPlugin** | `config`, all transform/command hooks, (tool) | BPE-accurate context pruner (cl100k_base) |
 | **Updater** | `command.execute.before` | Intercepts `/oh-update-me` for force reinstall |
@@ -543,7 +554,7 @@ Each individually wrapped in `index.mjs` — one failure degrades only that plug
 ```
 openhermes/
 │
-├── ⚡ index.mjs               # Entry — merges 8 plugins with circuit breakers
+├── ⚡ index.mjs               # Entry — merges 9 plugins with circuit breakers
 ├── ⚡ bootstrap.mjs           # Config hook + chat.transform + harness resolution
 ├── ⚡ autorecall.mjs          # Memory → recall cache
 ├── ⚡ curator.mjs             # Lifecycle hooks engine
@@ -552,15 +563,19 @@ openhermes/
 ├── ⚡ lib/
 │   ├── memory-store.mjs           # SQLite-backed store (node:sqlite)
 │   ├── memory-tools-plugin.mjs    # 6 ohc_* tools
+│   ├── pipeline-tools.mjs         # 4 native tools: pipeline_run, handoff_request, goal_tracker, guard_state
 │   ├── pipeline.mjs               # /gauntlet pipeline engine
-│   ├── logger.mjs                 # Structured logging
 │   ├── handoff.mjs                # Delegation protocol (5 exports)
-│   ├── hardening.mjs              # Sanitize, redact, atomic write
-│   ├── paths.mjs                  # Storage root resolver
-│   ├── schema-validator.mjs       # Full Draft-07 (23 keywords)
-│   ├── sqlite-adapter.mjs         # Node/Bun driver adapter
 │   ├── goal-tracker.mjs           # PLAN/GOAL/HANDOVER workflow
 │   ├── guard-state.mjs            # Safety state machine
+│   ├── ambient-memory.mjs         # <OPENHERMES_MEMORY> context injector
+│   ├── logger.mjs                 # Structured logging
+│   ├── hardening.mjs              # Sanitize, redact, atomic write
+│   ├── paths.mjs                  # Storage root resolver
+│   ├── search.mjs                 # Memory search with relevance ranking
+│   ├── harness-resolver.mjs       # Harness root resolution
+│   ├── sqlite-adapter.mjs         # Node/Bun driver adapter
+│   ├── schema-validator.mjs       # Full Draft-07 (23 keywords)
 │   └── ohc/                       # BPE-accurate context pruner
 │       ├── tokenizer.mjs          # cl100k_base BPE wrapper
 │       ├── pruner.mjs             # Main pruner + OhcPlugin
@@ -577,8 +592,7 @@ openhermes/
 │   └── commands/              # 20 command templates
 │
 ├── ⚡ scripts/
-│   ├── smoke-memory-store.mjs # Bun runtime smoke test
-│   └── mirror-opencode-config.ps1
+│   └── smoke-memory-store.mjs # Bun runtime smoke test
 │
 └── 📦 package.json            # 2 deps: @opencode-ai/plugin + gpt-tokenizer
 ```
@@ -626,7 +640,7 @@ T3 ── Cascade → constrained safe mode → handoff
 | Bun smoke | `bun scripts/smoke-memory-store.mjs` |
 | Command audit | `npm run commands:audit` |
 
-**219 tests, 31 suites, all pass.** `node:test` + `node:assert/strict`.
+**202 tests, 35 suites, all pass.** `node:test` + `node:assert/strict`.
 
 ### Config reference
 

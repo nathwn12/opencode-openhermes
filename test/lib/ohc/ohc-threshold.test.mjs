@@ -108,9 +108,8 @@ describe("OHC Threshold Gates", () => {
 
 describe("OHC Presets", () => {
   it("DEFAULTS includes preset: default", async () => {
-    const { loadConfig } = await import("../../../lib/ohc/config.mjs")
-    const cfg = loadConfig()
-    assert.equal(cfg.preset, "default")
+    const { DEFAULTS } = await import("../../../lib/ohc/config.mjs")
+    assert.equal(DEFAULTS.preset, "default")
   })
 
   it("preset soft sets behavior ratios", async () => {
