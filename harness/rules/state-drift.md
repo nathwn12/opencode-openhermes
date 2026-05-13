@@ -23,8 +23,8 @@ This creates "phantom" compressed data that references stale environments.
     "release": "10.0.26100",
     "arch": "x64",
     "shell": "cmd.exe",
-    "provider": "lmstudio",
-    "model": "openhermes-1.x",
+    "provider": "deepseek-v4-flash",
+    "model": "openhermes-3.1",
     "sha256": "..."
   }
 }
@@ -34,7 +34,7 @@ This creates "phantom" compressed data that references stale environments.
 ```javascript
 function generateEnvironmentFingerprint() {
   const cwd = process.cwd()
-  const provider = process.env.OPENCODE_PROVIDER || 'lmstudio'
+  const provider = process.env.OPENCODE_PROVIDER || null
   const model = process.env.OPENCODE_MODEL || null
 
   return hash(

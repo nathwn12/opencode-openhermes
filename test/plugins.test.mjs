@@ -98,10 +98,10 @@ describe("plugin structure", () => {
     const requiredFiles = [
       ["codex", "CONSTITUTION.md"],
       ["instructions", "RUNTIME.md"],
-      ["commands", "doctor.md"],
-      ["prompts", "architect.txt"],
+      ["commands", "oh-doctor.md"],
+      ["prompts", "oh-architect.txt"],
       ["rules", "precedence.md"],
-      ["skills", "coding-standards", "SKILL.md"],
+      ["skills", "oh-standards", "SKILL.md"],
     ]
 
     for (const parts of requiredFiles) {

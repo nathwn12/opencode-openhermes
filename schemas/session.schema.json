@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Session",
+  "description": "OpenHermes session state record — saves and resumes agent session context, decisions, and active files.",
+  "type": "object",
+  "required": ["id", "summary", "timestamp", "status"],
+  "properties": {
+    "id": { "type": "string", "description": "Unique session identifier, pattern: session_<base36-timestamp>" },
+    "summary": { "type": "string", "description": "One-line summary of the session purpose or current state" },
+    "timestamp": { "type": "string", "format": "date-time", "description": "ISO-8601 timestamp of last update" },
+    "status": { "type": "string", "enum": ["active", "completed", "abandoned"], "description": "Session lifecycle status" },
+    "gitBranch": { "type": "string", "description": "Git branch name at save time" },
+    "gitHash": { "type": "string", "description": "Git commit hash at save time" },
+    "decisions": { "type": "array", "items": { "type": "object" }, "description": "Decisions made during this session" },
+    "context": { "type": "string", "description": "Compressed context summary for resumption" },
+    "activeFiles": { "type": "array", "items": { "type": "string" }, "description": "File paths relevant to current session work" }
+  }
+}

@@ -7,3 +7,7 @@ PLAN.d
 AGENTS.md
 PLAN.md
 coverage/
+.config/
+docs/
+vendor/
+README-DRAFT.md

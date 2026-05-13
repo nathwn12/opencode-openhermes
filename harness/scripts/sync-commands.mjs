@@ -12,7 +12,7 @@ const README_FILE = path.join(REPO_ROOT, "README.md")
 const COMMANDS_START = "<!-- COMMANDS:START -->"
 const COMMANDS_END = "<!-- COMMANDS:END -->"
 
-const HOOK_ONLY = new Set(["update-me"])
+const HOOK_ONLY = new Set(["oh-update-me"])
 
 function parseRegistry(src) {
   const commands = {}

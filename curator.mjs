@@ -240,7 +240,7 @@ function writeVerificationReceipt(root, project, directory, checkpointId) {
       cwd: directory,
       os: "win32",
       shell: "cmd.exe",
-      provider: "lmstudio"
+      provider: process.env.OPENCODE_PROVIDER || null
     },
     method: "manual-inspection",
     command: "curator.js auto-verification on session.idle",

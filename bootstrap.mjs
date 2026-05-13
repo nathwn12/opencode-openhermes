@@ -3,78 +3,15 @@ import fs from "node:fs"
 import os from "node:os"
 import { fileURLToPath } from "node:url"
 import { createLogger } from "./lib/logger.mjs"
+import { getHarnessDir, setHarnessRootForTest, resolveHarnessRoot } from "./lib/harness-resolver.mjs"
 
 const log = createLogger("bootstrap")
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const CONFIG_DIR = path.join(os.homedir(), ".config", "opencode")
 const OVERRIDE_SOUL = path.join(CONFIG_DIR, "SOUL.md")
-const REQUIRED_HARNESS_FILES = [
-  ["codex", "CONSTITUTION.md"],
-  ["instructions", "RUNTIME.md"],
-  ["commands", "doctor.md"],
-  ["prompts", "architect.txt"],
-  ["rules", "precedence.md"],
-  ["skills", "coding-standards", "SKILL.md"],
-]
 
-function ancestorDirs(start, limit = 6) {
-  const dirs = []
-  let current = path.resolve(start)
-  for (let i = 0; i < limit; i++) {
-    dirs.push(current)
-    const parent = path.dirname(current)
-    if (parent === current) break
-    current = parent
-  }
-  return dirs
-}
-
-function buildHarnessCandidates(currentDir, execPath, cwd) {
-  const roots = [path.resolve(currentDir, "harness")]
-  const seen = new Set(roots)
-
-  const anchors = [path.dirname(execPath), path.dirname(path.dirname(execPath)), cwd]
-  for (const anchor of anchors) {
-    for (const dir of ancestorDirs(anchor)) {
-      for (const root of [
-        path.join(dir, "harness"),
-        path.join(dir, "node_modules", "openhermes", "harness"),
-        path.join(dir, "bin", "node_modules", "openhermes", "harness"),
-      ]) {
-        const normalized = path.normalize(root)
-        if (seen.has(normalized)) continue
-        seen.add(normalized)
-        roots.push(normalized)
-      }
-    }
-  }
-
-  return roots
-}
-
-function hasRequiredHarnessFiles(root) {
-  return REQUIRED_HARNESS_FILES.every(parts => fs.existsSync(path.join(root, ...parts)))
-}
-
-export function resolveHarnessRoot({
-  currentDir = __dirname,
-  execPath = process.execPath,
-  cwd = process.cwd(),
-  candidateRoots,
-} = {}) {
-  const roots = candidateRoots ?? buildHarnessCandidates(currentDir, execPath, cwd)
-  for (const root of roots) {
-    if (hasRequiredHarnessFiles(root)) return root
-  }
-  return path.resolve(currentDir, "harness")
-}
-
-let _harnessDir
-export function setHarnessRootForTest(dir) { _harnessDir = dir }
-export function getHarnessDir() {
-  if (!_harnessDir) _harnessDir = resolveHarnessRoot()
-  return _harnessDir
-}
+// Re-export for backward compatibility (tests import from bootstrap.mjs)
+export { resolveHarnessRoot, setHarnessRootForTest, getHarnessDir }
 function getRulesDir() { return path.join(getHarnessDir(), "rules") }
 function getSkillsDir() { return path.join(getHarnessDir(), "skills") }
 function getConstitutionFile() { return path.join(getHarnessDir(), "codex", "CONSTITUTION.md") }
@@ -103,7 +40,7 @@ function scanSchemaNames(dir) {
 
 export function buildCapabilityMap(hDir) {
   const cmds = scanDirNames(path.join(hDir, "commands"))
-  if (!cmds.includes("update-me")) cmds.push("update-me")
+  if (!cmds.includes("oh-update-me")) cmds.push("oh-update-me")
   cmds.sort()
 
   const agents = scanPromptNames(path.join(hDir, "prompts"))
@@ -162,28 +99,28 @@ Main context = coordination + verification only. Substantive work → subagent.
 
 | Trigger | Subagent |
 |---------|----------|
-| Multi-file implementation | \`architect\` or \`planner\` |
-| Build/TS error | \`build-error-resolver\` |
-| Code review | \`code-reviewer\` |
-| Security audit | \`security-reviewer\` |
-| E2E testing | \`e2e-runner\` |
-| Multi-file search/exploration | \`explore\` or \`general\` |
-| Documentation lookup | \`docs-lookup\` |
-| Doc/codemap update | \`doc-updater\` |
-| Dead code cleanup | \`refactor-cleaner\` |
-| TDD workflow | \`tdd-guide\` |
-| Autonomous loop | \`loop-operator\` |
-| Go review | \`review-go\` |
-| Go build fix | \`build-go\` |
-| Database review | \`review-database\` |
-| C++ review | \`review-cpp\` |
-| Java review | \`review-java\` |
-| Java build fix | \`build-java\` |
-| Kotlin review | \`review-kotlin\` |
-| Kotlin build fix | \`build-kotlin\` |
-| Python review | \`review-python\` |
-| Rust review | \`review-rust\` |
-| Rust build fix | \`build-rust\` |
+| Multi-file implementation | \`oh-architect\` or \`oh-blueprinter\` |
+| Build/TS error | \`oh-mender\` |
+| Code review | \`oh-auditor\` |
+| Security audit | \`oh-warden\` |
+| E2E testing | \`oh-e2e\` |
+| Multi-file search/exploration | \`oh-explorer\` or \`general\` |
+| Documentation lookup | \`oh-scout\` |
+| Doc/codemap update | \`oh-scribe\` |
+| Dead code cleanup | \`oh-sweeper\` |
+| TDD workflow | \`oh-prover\` |
+| Autonomous loop | \`oh-pilot\` |
+| Go review | \`oh-review-go\` |
+| Go build fix | \`oh-build-go\` |
+| Database review | \`oh-review-db\` |
+| C++ review | \`oh-review-cpp\` |
+| Java review | \`oh-review-java\` |
+| Java build fix | \`oh-build-java\` |
+| Kotlin review | \`oh-review-kotlin\` |
+| Kotlin build fix | \`oh-build-kotlin\` |
+| Python review | \`oh-review-py\` |
+| Rust review | \`oh-review-rust\` |
+| Rust build fix | \`oh-build-rust\` |
 | Any non-trivial multi-step | appropriate specialist |
 
 Never delegate trivial single-step ops. Subagent returns diff + summary + verification; inspect return only. Full ref: \`openhermes/harness/rules/delegation.md\`.
@@ -202,7 +139,7 @@ Every agent knows its role, permissions, and when to delegate. Before delegating
 
 - **Start**: Read recall cache first. If stale/missing → \`ohc_latest\` for relevant classes.
 - **Before work**: Narrow \`ohc_search\` by class, scope, keywords. Never read full indexes.
-- **Before close**: Query same-type mistakes (7 days). Match → \`code-reviewer\` or \`security-reviewer\`.
+- **Before close**: Query same-type mistakes (7 days). Match → \`oh-auditor\` or \`oh-warden\`.
 - **On failure**: \`ohc_search\` for similar incidents. Search memory before asking user.
 - **Precision ladder**: \`ohc_latest\` → \`ohc_search\` → \`ohc_get\` → \`ohc_list\` (last resort). Full index reads only for explicit audit/repair tasks.
 - **Anti-spam**: No obvious facts, no one-off prefs, no temp state, no low-risk mistakes. Supersede, don't duplicate. Full rules: \`openhermes/harness/rules/retrieval.md\`, \`openhermes/harness/rules/memory-management.md\`.
@@ -224,7 +161,7 @@ Full tiers: \`openhermes/harness/rules/self-heal.md\`.
 - Checkpoint on meaningful boundaries. Compress closed segments immediately.
 - After subagent return: verify → compress that block.
 - Compress proactively.
-- Skill candidates → \`/learn\` only if repeated pattern + \`ohc_search\` confirms no dup. See \`openhermes/harness/rules/skills-management.md\`.
+- Skill candidates → \`/oh-learn\` only if repeated pattern + \`ohc_search\` confirms no dup. See \`openhermes/harness/rules/skills-management.md\`.
 - Audit triggers: openhermes/config change, repeated failures, session start when last audit >7 days. See \`openhermes/harness/rules/audit.md\`.
 
 ## Escalation
@@ -292,35 +229,27 @@ export const BootstrapPlugin = async ({ client, directory }) => {
 
       config.command = {
         ...existingCommands,
-        "build-fix": { agent: "build-error-resolver", description: "Fix build and TypeScript errors", subtask: true, template: ct("build-fix.md") },
-        "code-review": { agent: "code-reviewer", description: "Review code for quality, security, and maintainability", subtask: true, template: ct("code-review.md") },
-        "plan": { agent: "planner", description: "Create a detailed implementation plan", subtask: true, template: ct("plan.md") },
-        "security": { agent: "security-reviewer", description: "Run comprehensive security review", subtask: true, template: ct("security.md") },
-        "doctor": { agent: "OpenHermes", description: "Run OpenCode OpenHermes health diagnostics", subtask: true, template: ct("doctor.md") },
-        "memory-search": { agent: "OpenHermes", description: "Search OpenHermes memory with LLM summarization", subtask: true, template: ct("memory-search.md") },
-        "learn": { agent: "OpenHermes", description: "Create a new skill from recent work patterns", subtask: true, template: ct("learn.md") },
+        "oh-audit": { agent: "oh-auditor", description: "Unified quality gate (--security, --quality, --test, --verify, --lang=rust|go)", subtask: true, template: ct("oh-audit.md") },
+        "oh-blueprint": { agent: "oh-blueprinter", description: "Create a detailed implementation plan", subtask: true, template: ct("oh-blueprint.md") },
+        "oh-browse": { agent: "oh-scraper", description: "Browser daemon — persistent Chromium automation", subtask: true, template: ct("oh-browse.md") },
+        "oh-doctor": { agent: "OpenHermes", description: "Health diagnostics, --setup-pm, --model", subtask: true, template: ct("oh-doctor.md") },
+        "oh-forge": { agent: "OpenHermes", description: "Generate a new skill from git history analysis", subtask: true, template: ct("oh-forge.md") },
+        "oh-gauntlet": { agent: "oh-gater", description: "Run multi-stage quality pipeline (scope → security → review → quality → report)", subtask: true, template: ct("oh-gauntlet.md") },
+        "oh-guard": { agent: "OpenHermes", description: "Safety modes — careful, freeze, guard", subtask: true, template: ct("oh-guard.md") },
+        "oh-inspect": { agent: "oh-tuner", description: "Run harness self-audit across 7 categories", subtask: true, template: ct("oh-inspect.md") },
+        "oh-learn": { agent: "OpenHermes", description: "Create a new skill from recent work patterns", subtask: true, template: ct("oh-learn.md") },
+        "oh-manifest": { agent: "oh-gater", description: "Run 7-stage manifest pipeline (clarify → blueprint → build → audit → shield → prove → report)", subtask: true, template: ct("oh-manifest.md") },
+        "oh-mend": { agent: "oh-mender", description: "Fix build errors (--lang=rust|go|cpp|java|kotlin)", subtask: true, template: ct("oh-mend.md") },
+        "oh-pr": { agent: "oh-merger", description: "PR workflow — create, review, merge", subtask: true, template: ct("oh-pr.md") },
+        "oh-recall": { agent: "OpenHermes", description: "Search OpenHermes memory with LLM summarization", subtask: true, template: ct("oh-recall.md") },
+        "oh-scribe": { agent: "oh-scribe", description: "Update docs (--codemap for architecture maps)", subtask: true, template: ct("oh-scribe.md") },
+        "oh-session": { agent: "oh-chronicler", description: "Session management — save, resume, list, prune", subtask: true, template: ct("oh-session.md") },
+        "oh-ship": { agent: "oh-publisher", description: "Release pipeline — test, bump, changelog, PR, deploy, verify", subtask: true, template: ct("oh-ship.md") },
+        "oh-sweep": { agent: "oh-sweeper", description: "Remove dead code and consolidate duplicates", subtask: true, template: ct("oh-sweep.md") },
+        "oh-update-me": { template: "", description: "Force reinstall OpenHermes plugin from latest source" },
+        "oh-voyage": { agent: "oh-pilot", description: "Managed loop (--status for status check)", subtask: true, template: ct("oh-voyage.md") },
+        "oh-weave": { agent: "oh-blueprinter", description: "Orchestrate agents or eval (--eval)", subtask: true, template: ct("oh-weave.md") },
         "ohc": { template: "", description: "OHC context management: /ohc status, /ohc compress [focus]" },
-        "update-me": { template: "", description: "Force reinstall OpenHermes plugin from latest source" },
-        "orchestrate": { agent: "planner", description: "Orchestrate multiple agents for complex tasks", subtask: true, template: ct("orchestrate.md") },
-        "eval": { agent: "planner", description: "Evaluate implementation against acceptance criteria", subtask: true, template: ct("eval.md") },
-        "model-route": { agent: "OpenHermes", description: "Recommend model tier by task complexity and budget", subtask: true, template: ct("model-route.md") },
-        "quality-gate": { agent: "OpenHermes", description: "Run quality pipeline (format, lint, type check)", subtask: true, template: ct("quality-gate.md") },
-        "test-coverage": { agent: "tdd-guide", description: "Analyze coverage reports and identify gaps", subtask: true, template: ct("test-coverage.md") },
-        "update-docs": { agent: "doc-updater", description: "Update documentation for recent code changes", subtask: true, template: ct("update-docs.md") },
-        "update-codemaps": { agent: "doc-updater", description: "Generate/update architecture codemaps", subtask: true, template: ct("update-codemaps.md") },
-        "refactor-clean": { agent: "refactor-cleaner", description: "Remove dead code and consolidate duplicates", subtask: true, template: ct("refactor-clean.md") },
-        "verify": { agent: "OpenHermes", description: "Run comprehensive verification loop (typecheck, lint, test, build)", subtask: true, template: ct("verify.md") },
-        "checkpoint": { agent: "OpenHermes", description: "Save verification state and progress checkpoint", subtask: true, template: ct("checkpoint.md") },
-        "loop-start": { agent: "loop-operator", description: "Start managed autonomous loop with safety defaults", subtask: true, template: ct("loop-start.md") },
-        "loop-status": { agent: "OpenHermes", description: "Inspect active loop state, progress, and failure signals", subtask: true, template: ct("loop-status.md") },
-        "harness-audit": { agent: "harness-optimizer", description: "Run harness self-audit across 7 categories", subtask: true, template: ct("harness-audit.md") },
-        "setup-pm": { agent: "OpenHermes", description: "Configure package manager preference for the project", subtask: true, template: ct("setup-pm.md") },
-        "go-build": { agent: "build-go", description: "Fix Go build, vet, and compilation errors", subtask: true, template: ct("go-build.md") },
-        "go-review": { agent: "review-go", description: "Review Go code for idiomatic patterns and best practices", subtask: true, template: ct("go-review.md") },
-        "rust-build": { agent: "build-rust", description: "Fix Rust build, clippy, and dependency errors", subtask: true, template: ct("rust-build.md") },
-        "rust-review": { agent: "review-rust", description: "Review Rust code for safety, ownership, and idioms", subtask: true, template: ct("rust-review.md") },
-        "skill-create": { agent: "OpenHermes", description: "Generate a new skill from git history analysis", subtask: true, template: ct("skill-create.md") },
-        "gauntlet": { agent: "pipeline-orchestrator", description: "Run multi-stage quality pipeline (scope → security → review → quality → report)", subtask: true, template: ct("gauntlet.md") },
       }
 
       config.experimental ??= {}
@@ -342,161 +271,191 @@ export const BootstrapPlugin = async ({ client, directory }) => {
             task: { "*": "allow" },
           },
         },
-        "architect": {
+        "oh-architect": {
           description: "Software architecture specialist for system design",
           mode: "subagent",
-          prompt: p("architect.txt"),
+          prompt: p("oh-architect.txt"),
           permission: { read: "allow", edit: "deny", bash: "deny" },
         },
-        "build-error-resolver": {
+        "oh-mender": {
           description: "Build and TypeScript error resolution specialist",
           mode: "subagent",
-          prompt: p("build-error-resolver.md"),
+          prompt: p("oh-mender.md"),
           permission: { read: "allow", edit: "allow" },
         },
-        "code-reviewer": {
+        "oh-auditor": {
           description: "Expert code review specialist",
           mode: "subagent",
-          prompt: p("code-reviewer.md"),
-          permission: { read: "allow", edit: "deny", bash: "deny", task: { explore: "allow", "*": "deny" } },
+          prompt: p("oh-auditor.md"),
+          permission: { read: "allow", edit: "deny", bash: "deny", task: { "oh-explorer": "allow", "*": "deny" } },
         },
-        "e2e-runner": {
+        "oh-e2e": {
           description: "End-to-end testing specialist using Playwright",
           mode: "subagent",
-          prompt: p("e2e-runner.txt"),
+          prompt: p("oh-e2e.txt"),
           permission: { read: "allow", edit: "allow" },
         },
-        "explore": {
+        "oh-explorer": {
           description: "Fast read-only codebase exploration agent",
           mode: "subagent",
-          prompt: p("explore.md"),
+          prompt: p("oh-explorer.md"),
           permission: { read: "allow", grep: "allow", glob: "allow", list: "allow", edit: "deny", bash: "deny" },
         },
-        "planner": {
+        "oh-blueprinter": {
           description: "Expert planning specialist for complex features and refactoring",
           mode: "subagent",
           color: "#3B82F6",
-          prompt: p("planner.md"),
+          prompt: p("oh-blueprinter.md"),
           permission: { read: "allow", edit: "deny", bash: "deny" },
         },
-        "security-reviewer": {
+        "oh-warden": {
           description: "Security vulnerability detection and remediation specialist",
           mode: "subagent",
-          prompt: p("security-reviewer.md"),
+          prompt: p("oh-warden.md"),
           permission: { read: "allow", edit: "deny", bash: "deny", task: { "*": "allow" } },
         },
-        "docs-lookup": {
+        "oh-scout": {
           description: "Documentation lookup via MCP — query any library docs in real-time",
           mode: "subagent",
-          prompt: p("docs-lookup.md"),
+          prompt: p("oh-scout.md"),
           permission: { read: "allow", bash: "allow", edit: "deny" },
         },
-        "doc-updater": {
+        "oh-scribe": {
           description: "Documentation and codemap generation/update specialist",
           mode: "subagent",
-          prompt: p("doc-updater.md"),
+          prompt: p("oh-scribe.md"),
           permission: { read: "allow", edit: "allow", bash: "allow" },
         },
-        "refactor-cleaner": {
+        "oh-sweeper": {
           description: "Dead code detection and safe removal specialist",
           mode: "subagent",
-          prompt: p("refactor-cleaner.md"),
+          prompt: p("oh-sweeper.md"),
           permission: { read: "allow", edit: "allow" },
         },
-        "loop-operator": {
+        "oh-pilot": {
           description: "Autonomous agent loop operator — safe iteration with stop conditions",
           mode: "subagent",
-          prompt: p("loop-operator.md"),
+          prompt: p("oh-pilot.md"),
           permission: { read: "allow", edit: "allow", bash: "allow", task: { "*": "allow" } },
         },
-        "harness-optimizer": {
+        "oh-tuner": {
           description: "OpenHermes harness configuration optimizer — audit, tune, measure",
           mode: "subagent",
-          prompt: p("harness-optimizer.md"),
+          prompt: p("oh-tuner.md"),
           permission: { read: "allow", bash: "allow", edit: "deny" },
         },
-        "tdd-guide": {
+        "oh-prover": {
           description: "Test-Driven Development coach — red-green-refactor cycle enforcement",
           mode: "subagent",
-          prompt: p("tdd-guide.md"),
+          prompt: p("oh-prover.md"),
           permission: { read: "allow", edit: "allow", bash: "allow" },
         },
-        "review-go": {
-          description: "Go code review specialist — idiomatic Go, concurrency, error handling",
+        "oh-chronicler": {
+          description: "Session management specialist — save, resume, list, prune",
           mode: "subagent",
-          prompt: p("review-go.md"),
-          permission: { read: "allow", bash: "allow", edit: "deny" },
-        },
-        "build-go": {
-          description: "Go build error resolution specialist — go build, vet, staticcheck fixes",
-          mode: "subagent",
-          prompt: p("build-go.md"),
+          prompt: p("oh-chronicler.md"),
           permission: { read: "allow", edit: "allow", bash: "allow" },
         },
-        "review-database": {
+        "oh-merger": {
+          description: "PR workflow specialist — create, review, merge pull requests",
+          mode: "subagent",
+          prompt: p("oh-merger.md"),
+          permission: { read: "allow", edit: "allow", bash: "allow", task: { "*": "allow" } },
+        },
+        "oh-scraper": {
+          description: "Browser automation specialist — persistent Chromium daemon",
+          mode: "subagent",
+          prompt: p("oh-scraper.md"),
+          permission: { read: "allow", edit: "allow", bash: "allow" },
+        },
+        "oh-publisher": {
+          description: "Release pipeline specialist — test, bump, changelog, PR, deploy, verify",
+          mode: "subagent",
+          prompt: p("oh-publisher.md"),
+          permission: { read: "allow", edit: "allow", bash: "allow", task: { "*": "allow" } },
+        },
+        "oh-sentinel": {
+          description: "Safety guard specialist — careful, freeze, guard modes",
+          mode: "subagent",
+          prompt: p("oh-sentinel.md"),
+          permission: { read: "allow", edit: "deny", bash: "deny" },
+        },
+        "oh-review-db": {
           description: "PostgreSQL database specialist — query optimization, schema, RLS, indexes",
           mode: "subagent",
-          prompt: p("review-database.md"),
+          prompt: p("oh-review-db.md"),
           permission: { read: "allow", bash: "allow", edit: "deny" },
         },
-        "review-cpp": {
+        "oh-review-cpp": {
           description: "C++ code review specialist — memory safety, modern C++, RAII",
           mode: "subagent",
-          prompt: p("review-cpp.md"),
+          prompt: p("oh-review-cpp.md"),
           permission: { read: "allow", bash: "allow", edit: "deny" },
         },
-        "build-cpp": {
+        "oh-build-cpp": {
           description: "C++ build error resolution specialist — CMake, linker, template errors",
           mode: "subagent",
-          prompt: p("build-cpp.md"),
+          prompt: p("oh-build-cpp.md"),
           permission: { read: "allow", edit: "allow", bash: "allow" },
         },
-        "review-java": {
+        "oh-review-java": {
           description: "Java/Spring Boot review specialist — JPA, architecture, security",
           mode: "subagent",
-          prompt: p("review-java.md"),
+          prompt: p("oh-review-java.md"),
           permission: { read: "allow", bash: "allow", edit: "deny" },
         },
-        "build-java": {
+        "oh-build-java": {
           description: "Java/Maven/Gradle build error resolution specialist",
           mode: "subagent",
-          prompt: p("build-java.md"),
+          prompt: p("oh-build-java.md"),
           permission: { read: "allow", edit: "allow", bash: "allow" },
         },
-        "review-kotlin": {
+        "oh-review-kotlin": {
           description: "Kotlin/Android review specialist — coroutines, Compose, architecture",
           mode: "subagent",
-          prompt: p("review-kotlin.md"),
+          prompt: p("oh-review-kotlin.md"),
           permission: { read: "allow", bash: "allow", edit: "deny" },
         },
-        "build-kotlin": {
+        "oh-build-kotlin": {
           description: "Kotlin/Gradle build error resolution specialist",
           mode: "subagent",
-          prompt: p("build-kotlin.md"),
+          prompt: p("oh-build-kotlin.md"),
           permission: { read: "allow", edit: "allow", bash: "allow" },
         },
-        "review-python": {
+        "oh-review-py": {
           description: "Python code review specialist — PEP 8, type hints, security",
           mode: "subagent",
-          prompt: p("review-python.md"),
+          prompt: p("oh-review-py.md"),
           permission: { read: "allow", bash: "allow", edit: "deny" },
         },
-        "review-rust": {
-          description: "Rust code review specialist — ownership, lifetimes, safety",
+        "oh-review-go": {
+          description: "Go code review specialist — idiomatic Go, concurrency, error handling",
           mode: "subagent",
-          prompt: p("review-rust.md"),
+          prompt: p("oh-review-go.md"),
           permission: { read: "allow", bash: "allow", edit: "deny" },
         },
-        "build-rust": {
-          description: "Rust build error resolution specialist — cargo, borrow checker, clippy",
+        "oh-build-go": {
+          description: "Go build error resolution specialist — go build, vet, staticcheck fixes",
           mode: "subagent",
-          prompt: p("build-rust.md"),
+          prompt: p("oh-build-go.md"),
           permission: { read: "allow", edit: "allow", bash: "allow" },
         },
-        "pipeline-orchestrator": {
+        "oh-review-rust": {
+          description: "Rust code review specialist — ownership, lifetimes, safety",
+          mode: "subagent",
+          prompt: p("oh-review-rust.md"),
+          permission: { read: "allow", bash: "allow", edit: "deny" },
+        },
+        "oh-build-rust": {
+          description: "Rust build error resolution specialist — cargo, borrow checker, clippy",
+          mode: "subagent",
+          prompt: p("oh-build-rust.md"),
+          permission: { read: "allow", edit: "allow", bash: "allow" },
+        },
+        "oh-gater": {
           description: "Multi-agent pipeline orchestrator — runs sequential quality stages (scope → security → review → quality → report)",
           mode: "subagent",
-          prompt: p("pipeline-orchestrator.txt"),
+          prompt: p("oh-gater.txt"),
           permission: { read: "allow", edit: "allow", bash: "allow", task: { "*": "allow" } },
         },
       }
