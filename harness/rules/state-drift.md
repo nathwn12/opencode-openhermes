@@ -138,7 +138,7 @@ const fingerprint = sha256(
 **What if two different environments produce same fingerprint?**
 - Use full SHA-256 for audit logging, truncated value for quick comparison
 - Log collision event with both hashes and manual review required
-- Store in `memory/audits/collision-events.json`
+- Store in SQLite via `getStore().save("audit", id, record)`. Legacy file at `memory/audits/collision-events.json` is migration residue.
 
 ### 2. Fingerprint Computation Failure  
 **What if filesystem stat fails (permission denied)?**
@@ -182,7 +182,7 @@ This allows:
 
 - `rules/verification.md`: Fingerprint must be attached to all verification receipts  
 - `rules/runtime-guards.md`: Hash-based drift detection prevents credential exposure  
-- `commands/doctor.md`: Include fingerprint checks in the doctor workflow
+- `commands/doctor.md`: Include fingerprint checks and SQLite memory DB health in the doctor workflow
 
 ---
 

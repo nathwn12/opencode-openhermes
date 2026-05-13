@@ -62,9 +62,10 @@ After compaction or resume:
 
 ## Storage
 
-- File path: `memory\checkpoints\<id>.json`
-- Index entry in: `memory\checkpoints\index.json`
-- Archive old/consumed checkpoints to `archive\checkpoints\`
+Checkpoints are stored in SQLite via `getStore().save("checkpoint", id, record)`. Use `ohc_*` tools for normal reads and writes.
+
+- Legacy file-per-record at `memory\checkpoints\<id>.json` and `memory\checkpoints\index.json` is migration residue, not the primary store.
+- Archive old/consumed checkpoints by setting `status: "archived"` rather than moving files.
 
 ## Validation
 

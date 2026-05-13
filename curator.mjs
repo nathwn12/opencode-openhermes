@@ -1,11 +1,11 @@
 import path from "node:path"
 import fs from "node:fs"
 import { findUnsupportedSchemaKeywords, validateSchema } from "./lib/schema-validator.mjs"
-import { atomicWriteJson, buildEnvironmentFingerprint, fingerprintFile, readJson, redactSensitiveText, sanitizeRecord, truncateText } from "./lib/hardening.mjs"
+import { atomicWriteJson, buildEnvironmentFingerprint, readJson, redactSensitiveText, sanitizeRecord, truncateText } from "./lib/hardening.mjs"
 import { fileURLToPath } from "node:url"
 import { dirname } from "node:path"
-import { getDataRoot, getMemoryRoot } from "./lib/paths.mjs"
-import { getStore, migrateFromJson } from "./lib/memory-store.mjs"
+import { getDataRoot } from "./lib/paths.mjs"
+import { getStore } from "./lib/memory-store.mjs"
 import { createLogger } from "./lib/logger.mjs"
 
 const log = createLogger("curator")
@@ -34,24 +34,14 @@ function cleanupStaleSessions() {
 }
 setInterval(cleanupStaleSessions, 300000).unref()
 
-const MEMORY_CLASSES = ["checkpoints", "mistakes", "audits", "verification_receipts", "constraints", "decisions", "instincts", "backlog"]
-
 async function ensureConsistency(root) {
-  const memoryRoot = path.join(root, "memory")
   const runtimeRoot = path.join(root, "runtime")
-
-  for (const cls of MEMORY_CLASSES) {
-    const dir = path.join(memoryRoot, cls)
-    fs.mkdirSync(dir, { recursive: true })
-  }
-
   fs.mkdirSync(runtimeRoot, { recursive: true })
   const loopStatePath = path.join(runtimeRoot, "loop-state.json")
   if (!fs.existsSync(loopStatePath)) {
     atomicWriteJson(loopStatePath, { status: "idle", phase: "session.created" })
   }
 
-  await migrateFromJson(getStore())
 }
 
 function isMeaningfulText(value) {
@@ -237,16 +227,15 @@ function writeMistakeRecord(root, project, directory, error) {
 function writeVerificationReceipt(root, project, directory, checkpointId) {
   const ts = new Date().toISOString()
   const id = `vr_${ts.replace(/[:.]/g, "-")}`
-  const artifactPath = path.join(root, "memory", "checkpoints", `${checkpointId}.json`)
   const environmentFingerprint = buildEnvironmentFingerprint(root, directory, project)
   const record = {
     id,
     class: "verification_receipt",
     scope: "session",
     summary: `Auto-verification receipt for checkpoint ${checkpointId}`,
-    artifact: `openhermes/memory/checkpoints/${checkpointId}.json`,
-    artifact_type: "file",
-    fingerprint: fingerprintFile(artifactPath) || { path: `openhermes/memory/checkpoints/${checkpointId}.json` },
+    artifact: `checkpoint/${checkpointId}`,
+    artifact_type: "sqlite-record",
+    fingerprint: { path: `checkpoint/${checkpointId}` },
     environment: {
       cwd: directory,
       os: "win32",
@@ -254,9 +243,9 @@ function writeVerificationReceipt(root, project, directory, checkpointId) {
       provider: "lmstudio"
     },
     method: "manual-inspection",
-    command: `curator.js auto-verification on session.idle`,
+    command: "curator.js auto-verification on session.idle",
     result: "pass",
-    result_detail: `Checkpoint ${checkpointId} written and indexed. Session completed successfully.`,
+    result_detail: `Checkpoint ${checkpointId} written to SQLite. Session completed successfully.`,
     provenance: {
       session_id: project?.session_id || `session-${Date.now()}`,
       harness_root: root,

@@ -14,7 +14,7 @@ Run full OpenCode openhermes diagnostics. $ARGUMENTS
 2. Follow its instructions to validate:
    - Config syntax (opencode.json valid JSON)
    - Provider connectivity (LM Studio at http://127.0.0.1:1234/v1)
-   - Cache state (memory records, recall cache)
+   - Cache state (SQLite memory DB health, recall cache)
     - Auth file integrity
 3. Report results with any fix suggestions
 
@@ -32,9 +32,33 @@ Run these commands and report results:
 |-------|--------|-------|
 | Config JSON | PASS/FAIL | |
 | Provider | PASS/FAIL | |
-| Memory MCP | PASS/FAIL | |
+| Memory DB (SQLite) | PASS/FAIL | |
 | Plugins | PASS/FAIL | |
 | Skills | PASS/FAIL | |
+
+## SQLite Memory DB Checks
+
+When checking memory health, perform these SQLite-specific checks:
+
+### DB Path & Existence
+- Resolve expected DB path: `%USERPROFILE%\.local\share\opencode\openhermes\memory.db` (or `$OPENHERMES_MEMORY_DB` if set)
+- Report first-run/no-memory state as WARN (not FAIL) if DB does not exist yet
+
+### Schema Validation
+- Verify `memory_records` table exists
+- Verify expected columns: id, class, data, summary, status, scope, project, created_at, updated_at, session_id
+- Verify expected indexes: idx_mr_class_status, idx_mr_updated, idx_mr_summary
+
+### Record Health
+- Report row counts grouped by `class` and `status`
+- Count rows where `data` is missing, blank, or invalid JSON
+- Optionally validate a bounded sample against matching schemas
+
+### WAL & Journal
+- Report WAL/SHM files presence and size (if SQLite is in WAL mode)
+
+### Legacy State
+- Report old JSON memory directories (`memory/audits/`, `memory/checkpoints/`, etc.) as migration residue, not primary backend failures
 
 ## After Diagnosis
 

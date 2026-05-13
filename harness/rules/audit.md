@@ -29,11 +29,10 @@ Each audit targets one or more of:
 6. No broken internal links in openhermes docs.
 
 ### Memory Health
-1. All memory index entries point to existing files.
-2. All memory files match their index entries (ID, status, updated_at).
-3. No duplicate object IDs exist in any class.
-4. All active mistakes in `mistakes.jsonl` have valid JSON structure.
-5. Mistake register is at canonical path (`openhermes\memory\mistakes\mistakes.jsonl`).
+1. All SQLite memory records have valid JSON in their `data` column.
+2. No duplicate object IDs exist in any class.
+3. All active mistakes have valid JSON structure in SQLite.
+4. Mistake register is the SQLite-backed memory store. Legacy JSONL files at `openhermes\memory\mistakes\mistakes.jsonl` are migration residue, not the primary register.
 
 ### Provenance Quality
 1. All active objects have structured provenance.
@@ -42,12 +41,11 @@ Each audit targets one or more of:
 4. Non-audit objects with weak evidence provenance are flagged.
 
 ### Migration State
-1. Legacy mistake path (`.opencode\mistakes.jsonl`) either empty or redirected to canonical.
-2. No duplicate content between legacy and canonical locations.
-3. AGENTS.md does not reference deprecated paths.
+1. Legacy mistake JSONL paths (`.opencode\mistakes.jsonl`, `openhermes\memory\mistakes\mistakes.jsonl`) contain migration residue only.
+2. AGENTS.md does not reference deprecated file paths.
 
 ### Structural Integrity
-1. All 8 memory class directories exist.
+1. SQLite `memory_records` table exists with expected schema.
 2. All 9 schema files exist and are valid JSON.
 3. All required rule files referenced by `AGENTS.md` exist.
 4. Constitution file exists.
@@ -67,7 +65,7 @@ Each check receives:
 
 Audit objects follow the schema at `openhermes\schemas\audit.schema.json`.
 
-Store audit reports at `memory\audits\<id>.json` with index entry.
+Store audit reports via `getStore().save("audit", id, record)`. File-per-record paths are migration residue only.
 
 ## Top Actions
 

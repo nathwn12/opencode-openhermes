@@ -31,7 +31,7 @@ Each verification receipt is keyed by:
 
 ### Receipt Storage
 
-Use `ohc_save` with class `verification_receipt` — a dedicated memory class (schema: `schemas\verification_receipt.schema.json`). Receipts are stored as file-per-object in `memory\verification_receipts\<id>.json`.
+Use `ohc_save` with class `verification_receipt` — a dedicated memory class (schema: `schemas\verification_receipt.schema.json`). Receipts are stored in SQLite via `getStore().save("verification_receipt", id, record)`. Legacy file-per-record at `memory\verification_receipts\<id>.json` is migration residue, not the primary store.
 
 Required fields:
 - **artifact**: path or logical identity of the verified artifact

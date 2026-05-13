@@ -1,8 +1,8 @@
 import path from "node:path"
 import os from "node:os"
 import fs from "node:fs"
-import { atomicWriteJson, buildEnvironmentFingerprint, fingerprintEnvironment, isTruthy, sanitizeRecord, truncateText } from "./lib/hardening.mjs"
-import { getDataRoot, getCacheRoot, getMemoryRoot, getRecallRoot, getRuntimeRoot } from "./lib/paths.mjs"
+import { atomicWriteJson, buildEnvironmentFingerprint, isTruthy, sanitizeRecord, truncateText } from "./lib/hardening.mjs"
+import { getDataRoot, getMemoryRoot, getRecallRoot, getRuntimeRoot } from "./lib/paths.mjs"
 import { getStore } from "./lib/memory-store.mjs"
 import { createLogger } from "./lib/logger.mjs"
 

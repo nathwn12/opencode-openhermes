@@ -1,8 +1,7 @@
 import path from "node:path"
-import fs from "node:fs"
-import os from "node:os"
-import { atomicWriteJson, buildEnvironmentFingerprint, readJson, sanitizeRecord } from "./lib/hardening.mjs"
-import { getDataRoot, getMemoryRoot } from "./lib/paths.mjs"
+import { buildEnvironmentFingerprint, sanitizeRecord } from "./lib/hardening.mjs"
+import { getDataRoot } from "./lib/paths.mjs"
+import { getStore } from "./lib/memory-store.mjs"
 import { createLogger } from "./lib/logger.mjs"
 
 const log = createLogger("skill-builder")
@@ -40,11 +39,9 @@ export const SkillBuilderPlugin = async ({ project, directory }) => {
               const root = getDataRoot()
               const ts = new Date().toISOString()
               const id = `bl_skill_candidate_${ts.replace(/[:.]/g, "-")}`
-              const backlogIndexPath = path.join(root, "memory", "backlog", "index.json")
-              const backlogIndex = readJson(backlogIndexPath, [])
-              const hasOpenCandidate = Array.isArray(backlogIndex)
-                ? backlogIndex.some(e => e.status === "open" && String(e.summary || "").includes("[skill-candidate]"))
-                : false
+              const store = getStore()
+              const backlogItems = store.list("backlog", 50)
+              const hasOpenCandidate = backlogItems.some(e => e.status === "open" && String(e.summary || "").includes("[skill-candidate]"))
               if (hasOpenCandidate) return
               const environmentFingerprint = buildEnvironmentFingerprint(root, directory, project)
               const record = {
@@ -69,24 +66,8 @@ export const SkillBuilderPlugin = async ({ project, directory }) => {
                 project: project?.name || path.basename(directory),
                 environment_fingerprint: environmentFingerprint,
               }
-              const dir = path.join(root, "memory", "backlog")
-              fs.mkdirSync(dir, { recursive: true })
               const safeRecord = sanitizeRecord(record, { maxStringLength: 4000 })
-              atomicWriteJson(path.join(dir, `${id}.json`), safeRecord)
-
-              const index = Array.isArray(backlogIndex) ? backlogIndex : []
-              index.push({
-                id,
-                summary: safeRecord.summary,
-                title: safeRecord.title,
-                status: "open",
-                updated_at: ts,
-                path: `openhermes/memory/backlog/${id}.json`,
-                priority: "medium",
-                trigger: "drift",
-                environment_fingerprint: environmentFingerprint,
-              })
-              atomicWriteJson(path.join(dir, "index.json"), index)
+              store.save("backlog", id, safeRecord)
 
             } catch (err) { log.warn("backlog write error:", err?.message || err) }
           }

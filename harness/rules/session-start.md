@@ -6,8 +6,8 @@ Run this at the start of every new session and every resume before substantive w
 
 1. Read `%USERPROFILE%\.config\opencode\AGENTS.md` and keep it active as the router.
 2. Load openhermes status from `%USERPROFILE%\.config\opencode\ohc.json` if rule paths or memory locations are needed.
-3. **Read autorecall cache**: If `openhermes\memory\recall\cache.json` exists, load it — it contains active checkpoint, constraints, decisions, and mistakes from the prior session. The autorecall plugin writes this at session start. Use this context before probing MCP tools.
-4. Check only the smallest relevant curated memory slice in `openhermes\memory\`:
+3. **Read autorecall cache**: If the SQLite-backed autorecall cache exists, load it — it contains active checkpoint, constraints, decisions, and mistakes from the prior session. The autorecall plugin writes this at session start. Use this context before probing MCP tools.
+4. Check only the smallest relevant curated memory slice from SQLite:
    - latest checkpoint via `ohc_latest`
    - active decisions via `ohc_latest` or a narrow `ohc_search`
    - active constraints via `ohc_latest` or a narrow `ohc_search`

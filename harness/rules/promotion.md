@@ -26,13 +26,8 @@ Only high-signal durable items are promoted to curated memory. Routine output st
 
 ## Promotion Mechanics
 
-1. **File-per-object classes** (decision, constraint, instinct, checkpoint, audit, backlog):
-   - Create `<id>.json` in `memory\<class-plural>\`
-   - Upsert summary in `memory\<class-plural>\index.json`
-
-2. **Mistake class** (JSONL register):
-   - Upsert one canonical JSONL entry per `id` in `memory\mistakes\mistakes.jsonl`
-   - Do not rely on a separate index for retrieval correctness
+1. **All classes**: Store via `getStore().save(class, id, record)`. SQLite is the durable backend.
+2. **Legacy JSON paths**: Old file-per-record at `memory\<class-plural>\<id>.json` and JSONL at `memory\mistakes\mistakes.jsonl` are migration residue, not the primary store.
 
 3. **Instinct promotion path**:
    - `project` → `candidate_global` → `global`

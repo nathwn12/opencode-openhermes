@@ -8,7 +8,7 @@
   <a href="https://github.com/nathwn12/openhermes/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="License: MIT"></a>
   <a href="https://opencode.ai"><img src="https://img.shields.io/badge/runs%20on-OpenCode-6366f1?style=for-the-badge" alt="Runs on OpenCode"></a>
   <a href="https://github.com/nathwn12/openhermes/issues"><img src="https://img.shields.io/badge/issues-welcome-orange?style=for-the-badge" alt="Issues welcome"></a>
-  <a href="#"><img src="https://img.shields.io/badge/tests-176%20passing-22c55e?style=for-the-badge" alt="176 tests passing"></a>
+  <a href="#"><img src="https://img.shields.io/badge/tests-181%20passing-22c55e?style=for-the-badge" alt="181 tests passing"></a>
 </p>
 
 ---
@@ -97,7 +97,7 @@ Either way, **no other config needed.** The plugin auto-registers:
 
 1. **Config hook** — BootstrapPlugin registers 25 subagents, 29 commands, 10 skill paths
 2. **Chat transform** — Constitution + Runtime + Router injected into first user message
-3. **Session created** — AutorecallPlugin builds recall cache from prior session memory; memory migrates from JSON to SQLite automatically
+3. **Session created** — AutorecallPlugin builds recall cache from prior session memory
 4. **Tools execute** — SkillBuilderPlugin watches calls; MemoryToolsPlugin provides 6 native tools immediately — all backed by SQLite
 5. **Session idle** — CuratorPlugin snapshots checkpoint + verification receipt
 6. **Session error** — CuratorPlugin logs mistake with root cause + prevention rule
@@ -156,7 +156,7 @@ Nine schema-validated classes. All stored in a single SQLite database (`~/.local
 - O(log n) queries instead of O(n) index.json scans
 - Concurrent session safe (WAL mode)
 - Atomic transactions — no partial writes
-- Automatic migration from old JSON format on first use
+- Legacy JSON storage removed — SQLite-only memory store
 
 **Retrieval ladder:** `ohc_latest` → `ohc_search` → `ohc_get` → `ohc_list`. Anti-spam: no obvious facts, no one-off prefs, no low-risk mistakes.
 
@@ -348,7 +348,7 @@ Same messenger emoji. Entirely different mediums.
 | Memory | MEMORY.md + USER.md files + optional Honcho | 9-class SQLite-backed, schema-validated, fingerprint-aware, concurrent-safe |
 | Skills | agentskills.io standard, auto-creation + self-improvement | SKILL.md progressive disclosure, auto-detected |
 | Subagents | N/A | 25 specialists + pipeline orchestrator with handoff protocol, permission tiers, phase management |
-| Testing | 85 tests | **176 tests** — 2x coverage |
+| Testing | 85 tests | **181 tests** — 2x coverage |
 | Philosophy | "The self-improving agent" — feature-rich, platform-expansive | **"The constitutional router"** — discipline-first, precision-only |
 
 Both are &#9764; messengers. Different mediums.

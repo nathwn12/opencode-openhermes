@@ -8,7 +8,7 @@ Self-correction escalates through structured tiers. There is no self-termination
 
 **Actions**:
 1. Observe the issue — note what happened vs. what was expected.
-2. Log a structured mistake record to `memory\mistakes\mistakes.jsonl` with root cause, fix, and prevention.
+2. Log a structured mistake record to the SQLite-backed store via `getStore().save("mistake", id, record)` with root cause, fix, and prevention.
 3. Attempt the smallest safe correction (one-line fix preferred, one-function max).
 4. Verify the correction resolved the issue.
 

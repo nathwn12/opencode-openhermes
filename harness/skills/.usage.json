@@ -1,6 +1,0 @@
-{
-  "version": 1,
-  "description": "Skill usage telemetry. Bundled skills are excluded from curator mutation but tracked for load/use counts.",
-  "skills": {},
-  "updated_at": "2026-05-08T00:00:00Z"
-}

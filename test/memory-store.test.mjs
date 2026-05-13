@@ -7,13 +7,15 @@ import fs from "node:fs"
 const TMP_DB = path.join(os.tmpdir(), `openhermes-test-memory-${Date.now()}.db`)
 
 describe("MemoryStore", () => {
-  let MemoryStore, getStore, resetStore, store
+  let MemoryStore, getStore, resetStore, isStoreDegraded, getStoreDegradedInfo, store
 
   before(async () => {
     const mod = await import("../lib/memory-store.mjs")
     MemoryStore = mod.MemoryStore
     getStore = mod.getStore
     resetStore = mod.resetStore
+    isStoreDegraded = mod.isStoreDegraded
+    getStoreDegradedInfo = mod.getStoreDegradedInfo
     resetStore()
     store = new MemoryStore(TMP_DB)
   })
@@ -100,11 +102,32 @@ describe("MemoryStore", () => {
     resetStore()
     assert.equal(typeof getStore, "function")
   })
+
+  it("isStoreDegraded returns false for healthy store", () => {
+    resetStore()
+    const gs = getStore(TMP_DB)
+    assert.equal(isStoreDegraded(), false)
+  })
+
+  it("getStoreDegradedInfo returns null for healthy store", () => {
+    assert.equal(getStoreDegradedInfo(), null)
+  })
+
+  it("resetStore clears degraded state", () => {
+    resetStore()
+    assert.equal(isStoreDegraded(), false)
+  })
+
+  it("sets user_version to non-zero on creation", () => {
+    const row = store.db.prepare("PRAGMA user_version").get()
+    const version = row?.user_version ?? (typeof row === "number" ? row : 0)
+    assert.ok(version > 0, `expected user_version > 0, got ${version}`)
+  })
 })
 
 describe("Bun SQLite adapter", () => {
   it("uses Bun's native Database without overriding prepare", async () => {
-    const { createBunDatabaseCtor } = await import("../lib/memory-store.mjs")
+    const { createBunDatabaseCtor } = await import("../lib/sqlite-adapter.mjs")
     let instance
     class FakeBunDatabase {
       constructor(file) {
@@ -133,29 +156,16 @@ describe("Bun SQLite adapter", () => {
     assert.equal(instance.queryCalls, 0)
     assert.equal(Object.hasOwn(db, "prepare"), false)
   })
-})
 
-describe("migrateFromJson", () => {
-  let migrateFromJson, MemoryStore
-  let store, dbPath
-
-  before(async () => {
-    const mod = await import("../lib/memory-store.mjs")
-    MemoryStore = mod.MemoryStore
-    migrateFromJson = mod.migrateFromJson
-    dbPath = path.join(os.tmpdir(), `test-migrate-${Date.now()}.db`)
-    store = new MemoryStore(dbPath)
-  })
-
-  it("returns { migrated: 0, message: 'already has data' } when store has records", async () => {
-    store.save("instinct", "pre-existing", { id: "pre-existing", class: "instinct", summary: "exists" })
-    const result = await migrateFromJson(store)
-    assert.equal(result.migrated, 0)
-    assert.ok(result.message.includes("already has data"))
-  })
-
-  after(() => {
-    store.close()
-    try { fs.unlinkSync(dbPath) } catch {}
+  it("describeSqliteInterface detects proper interface", async () => {
+    const { describeSqliteInterface, createBunDatabaseCtor } = await import("../lib/sqlite-adapter.mjs")
+    class FakeDb {
+      exec() {}
+      prepare() { return { run() {}, get() {}, all() { return [] } } }
+      close() {}
+    }
+    assert.equal(describeSqliteInterface(FakeDb), true)
+    assert.equal(describeSqliteInterface({}), false)
   })
 })
+
