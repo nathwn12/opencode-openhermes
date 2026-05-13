@@ -10,20 +10,14 @@ describe("plugin exports", () => {
     assert.ok(typeof pkg.default === "function")
   })
 
-  it("autorecall.mjs exports AutorecallPlugin and refreshRecallCache", async () => {
+  it("autorecall.mjs exports AutorecallPlugin", async () => {
     const mod = await import("../autorecall.mjs")
     assert.ok(typeof mod.AutorecallPlugin === "function")
-    assert.ok(typeof mod.refreshRecallCache === "function")
   })
 
   it("curator.mjs exports CuratorPlugin", async () => {
     const mod = await import("../curator.mjs")
     assert.ok(typeof mod.CuratorPlugin === "function")
-  })
-
-  it("skill-builder.mjs exports SkillBuilderPlugin", async () => {
-    const mod = await import("../skill-builder.mjs")
-    assert.ok(typeof mod.SkillBuilderPlugin === "function")
   })
 
   it("bootstrap.mjs exports BootstrapPlugin", async () => {
@@ -36,16 +30,9 @@ describe("plugin exports", () => {
     assert.ok(typeof mod.AmbientMemoryPlugin === "function")
   })
 
-  it("lib/ohc/pruner.mjs exports OhcPlugin", async () => {
-    const mod = await import("../lib/ohc/pruner.mjs")
-    assert.ok(typeof mod.OhcPlugin === "function")
-  })
-
-  it("lib/ohc/config.mjs loads config", async () => {
-    const { loadConfig } = await import("../lib/ohc/config.mjs")
-    const cfg = loadConfig()
-    assert.ok(typeof cfg.enabled === "boolean")
-    assert.ok(typeof cfg.min === "number")
+  it("lib/memory-tool.mjs exports MemoryToolPlugin", async () => {
+    const mod = await import("../lib/memory-tool.mjs")
+    assert.ok(typeof mod.MemoryToolPlugin === "function")
   })
 })
 
@@ -53,12 +40,6 @@ describe("plugin structure", () => {
   it("AutorecallPlugin returns event hook", async () => {
     const plugin = await AutorecallPlugin({ project: {}, directory: process.cwd() })
     assert.ok(typeof plugin.event === "function")
-  })
-
-  it("SkillBuilderPlugin returns event + tool.execute.after hooks", async () => {
-    const plugin = await SkillBuilderPlugin({ project: {}, directory: process.cwd() })
-    assert.ok(typeof plugin.event === "function")
-    assert.ok(typeof plugin["tool.execute.after"] === "function")
   })
 
   it("CuratorPlugin returns event + experimental.session.compacting hooks", async () => {
@@ -73,20 +54,25 @@ describe("plugin structure", () => {
     assert.ok(typeof plugin["experimental.chat.messages.transform"] === "function")
   })
 
-  it("OhcPlugin returns hooks + tool when enabled", async () => {
-    const plugin = await OhcPlugin({})
-    assert.ok(typeof plugin["experimental.chat.system.transform"] === "function")
-    assert.ok(typeof plugin["experimental.chat.messages.transform"] === "function")
-    assert.ok(typeof plugin["command.execute.before"] === "function")
-    assert.ok(typeof plugin.tool?.compress?.execute === "function")
-  })
-
   it("AmbientMemoryPlugin returns chat.transform hook", async () => {
     const plugin = await AmbientMemoryPlugin()
     assert.ok(typeof plugin["experimental.chat.messages.transform"] === "function")
   })
 
-  it("resolveHarnessRoot picks a complete fallback root", async () => {
+  it("MemoryToolPlugin returns tool.memory with execute", async () => {
+    const plugin = await MemoryToolPlugin()
+    assert.ok(plugin.tool?.memory)
+    assert.ok(typeof plugin.tool.memory.execute === "function")
+  })
+
+  it("bootstrap.mjs re-exports resolveHarnessRoot", async () => {
+    const { resolveHarnessRoot, setHarnessRootForTest, getHarnessDir } = await import("../bootstrap.mjs")
+    assert.ok(typeof resolveHarnessRoot === "function")
+    assert.ok(typeof setHarnessRootForTest === "function")
+    assert.ok(typeof getHarnessDir === "function")
+  })
+
+  it("resolveHarnessRoot picks complete harness root", async () => {
     const { resolveHarnessRoot } = await import("../bootstrap.mjs")
     const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), "openhermes-harness-"))
     const badRoot = path.join(tmpRoot, "bad")
@@ -98,10 +84,7 @@ describe("plugin structure", () => {
     const requiredFiles = [
       ["codex", "CONSTITUTION.md"],
       ["instructions", "RUNTIME.md"],
-      ["commands", "oh-doctor.md"],
-      ["prompts", "oh-architect.txt"],
-      ["rules", "precedence.md"],
-      ["skills", "oh-standards", "SKILL.md"],
+      ["skills", "oh-plan", "SKILL.md"],
     ]
 
     for (const parts of requiredFiles) {
@@ -120,69 +103,11 @@ describe("plugin structure", () => {
     assert.equal(getHarnessDir(), "/custom/harness")
     setHarnessRootForTest(undefined)
   })
-
-  it("findCacheDirs scans packages and node_modules caches", async () => {
-    const { findCacheDirs } = await import("../lib/ohc/updater.mjs")
-    const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), "openhermes-cache-"))
-    const packagesRoot = path.join(tmpRoot, "packages")
-    const nodeModulesRoot = path.join(tmpRoot, "node_modules")
-    const pkgCache = path.join(packagesRoot, "openhermes@git+https_foo")
-    const nestedCache = path.join(nodeModulesRoot, "cache", "openhermes")
-
-    fs.mkdirSync(pkgCache, { recursive: true })
-    fs.mkdirSync(nestedCache, { recursive: true })
-    fs.mkdirSync(path.join(nodeModulesRoot, "keep", "not-openhermes"), { recursive: true })
-
-    const found = findCacheDirs({ cacheRoots: [packagesRoot, nodeModulesRoot] })
-    assert.deepEqual(
-      found.map(entry => entry.path).sort(),
-      [pkgCache, nestedCache].sort(),
-    )
-  })
-
-  it("runUpdateMe falls back cleanly when config is missing and cache is absent", async () => {
-    const { runUpdateMe } = await import("../lib/ohc/updater.mjs")
-    const output = { parts: [] }
-    const result = await runUpdateMe({
-      output,
-      configPath: path.join(os.tmpdir(), "missing-opencode.json"),
-      cacheRoots: [path.join(os.tmpdir(), "missing-openhermes-cache")],
-    })
-
-    assert.equal(result.clearedCount, 0)
-    assert.match(output.parts[0].text, /redownload openhermes@git\+https:\/\/github\.com\/nathwn12\/openhermes\.git/i)
-  })
-
-  it("runUpdateMe survives cache deletion failure", async () => {
-    const { runUpdateMe } = await import("../lib/ohc/updater.mjs")
-    const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), "openhermes-update-me-"))
-    const configPath = path.join(tmpRoot, "opencode.json")
-    const cacheRoot = path.join(tmpRoot, "packages")
-    const cacheDir = path.join(cacheRoot, "openhermes@git+https_foo")
-    fs.mkdirSync(cacheDir, { recursive: true })
-    fs.writeFileSync(configPath, JSON.stringify({ plugin: ["openhermes@git+https://github.com/nathwn12/openhermes.git"] }))
-
-    const output = { parts: [] }
-    const result = await runUpdateMe({
-      output,
-      configPath,
-      cacheRoots: [cacheRoot],
-      rmSync: () => { throw new Error("locked") },
-    })
-
-    assert.equal(result.failedCount, 1)
-    assert.match(output.parts[0].text, /could not be removed/i)
-    assert.match(output.parts[0].text, /redownload openhermes@git\+https:\/\/github\.com\/nathwn12\/openhermes\.git/i)
-  })
 })
 
 async function AutorecallPlugin(ctx) {
   const mod = await import("../autorecall.mjs")
   return mod.AutorecallPlugin(ctx)
-}
-async function SkillBuilderPlugin(ctx) {
-  const mod = await import("../skill-builder.mjs")
-  return mod.SkillBuilderPlugin(ctx)
 }
 async function CuratorPlugin(ctx) {
   const mod = await import("../curator.mjs")
@@ -192,11 +117,11 @@ async function BootstrapPlugin(ctx) {
   const mod = await import("../bootstrap.mjs")
   return mod.BootstrapPlugin(ctx)
 }
-async function OhcPlugin(ctx) {
-  const mod = await import("../lib/ohc/pruner.mjs")
-  return mod.OhcPlugin(ctx)
-}
 async function AmbientMemoryPlugin() {
   const mod = await import("../lib/ambient-memory.mjs")
   return mod.AmbientMemoryPlugin()
+}
+async function MemoryToolPlugin() {
+  const mod = await import("../lib/memory-tool.mjs")
+  return mod.MemoryToolPlugin()
 }

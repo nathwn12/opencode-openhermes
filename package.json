@@ -1,46 +1,37 @@
 {
   "name": "openhermes",
-  "version": "3.3.1",
-  "description": "OpenHermes plugin suite for OpenCode — autonomous checkpointing, native memory tools, subagent routing, slash commands, and skill-candidate detection.",
+  "version": "4.0.0",
+  "description": "The Orchestrator — self-improving agent that gets smarter every session.",
   "type": "module",
   "license": "MIT",
   "main": "./index.mjs",
   "dependencies": {
-    "@opencode-ai/plugin": "1.14.46",
-    "gpt-tokenizer": "^3.4.0"
+    "@opencode-ai/plugin": "1.14.46"
   },
   "exports": {
     ".": "./index.mjs",
-    "./autorecall": "./autorecall.mjs",
-    "./curator": "./curator.mjs",
-    "./skill-builder": "./skill-builder.mjs",
     "./bootstrap": "./bootstrap.mjs"
   },
   "files": [
     "index.mjs",
+    "bootstrap.mjs",
     "autorecall.mjs",
     "curator.mjs",
-    "skill-builder.mjs",
-    "bootstrap.mjs",
+    "ETHOS.md",
+    "CONTEXT.md",
     "lib/",
-    "schemas/",
-    "harness/"
+    "test/",
+    "harness/codex/",
+    "harness/instructions/",
+    "harness/skills/"
   ],
   "scripts": {
-    "test": "node --test",
-    "smoke:bun-memory": "bun scripts/smoke-memory-store.mjs",
-    "commands:audit": "node harness/scripts/sync-commands.mjs --audit",
-    "commands:generate": "node harness/scripts/sync-commands.mjs --generate",
-    "commands:sync": "node harness/scripts/sync-commands.mjs --sync",
-    "commands:full": "node harness/scripts/sync-commands.mjs"
+    "test": "node --test test/*.test.mjs"
   },
   "keywords": [
     "opencode",
-    "opencode-plugin",
     "openhermes",
-    "checkpoint",
-    "curation",
-    "memory",
+    "orchestrator",
     "skills"
   ],
   "repository": {
