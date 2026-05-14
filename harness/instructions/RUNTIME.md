@@ -10,7 +10,10 @@ Key skills:
 - `oh-builder` — all-arounder builder. Merges prototype, TDD, implementation from plan, interface design.
 - `oh-manifest` — full build loop: plan → build → verify → loop until done or blocker.
 - `oh-gauntlet` — rigorous multi-axis testing: unit tests, dual-axis review, edge cases, QA, canary.
-- `oh-grill` — stress-test plans through Socratic questioning. Optionally updates CONTEXT.md and ADRs.
+- `oh-grill` — stress-test plans through Socratic questioning. Optionally updates CONTEXT.md, ADRs, and extracts ubiquitous language.
+- `oh-plan-review` — multi-lens plan review: Engineering, Design, DX, Strategy perspectives.
+- `oh-security` — security audit: secrets archaeology, supply chain, CI/CD, OWASP, STRIDE, LLM security.
+- `oh-health` — code quality dashboard: wraps project tools, computes composite score, tracks trends.
 - `oh-skillcraft` — create new agent skills for the harness.
 - `oh-investigate` — systematic bug diagnosis.
 - `oh-handoff` — compact session into structured handoff artifact.

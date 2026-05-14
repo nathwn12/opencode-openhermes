@@ -47,11 +47,17 @@ Output: ranked refactoring candidates.
 ### Mode C: Structured Plan (non-trivial feature)
 When requirements exist but need a plan document.
 
-1. **Strategy review** — challenge premises, identify scope decisions, consider 10x alternatives
-2. **Architecture review** — data flow, component boundaries, API surface, state model
-3. **Edge case analysis** — error states, concurrency, failure modes, security implications
-4. **Dependency mapping** — what blocks what, parallelizable work
-5. **Write plan.md** — structured artifact with phases, deps, verification steps
+1. **Scope challenge** — before reviewing anything, answer:
+   - What existing code already partially solves each sub-problem?
+   - What is the minimum set of changes that achieves the stated goal?
+   - **Complexity check:** 8+ files or 2+ new classes/services in a single phase → smell. Propose splitting or simplifying.
+   - **Search check:** for each architectural pattern or infrastructure component the plan introduces, check whether the runtime/framework has a built-in. Search for: `{framework} {pattern} built-in`. Flag custom solutions where built-ins exist.
+   - **Completeness check:** with AI-assisted coding, completeness is 10-100x cheaper than with human teams. If the plan shortcuts something to save human hours that only saves minutes with AI, recommend the complete version.
+2. **Strategy review** — challenge premises, identify scope decisions, consider 10x alternatives
+3. **Architecture review** — data flow, component boundaries, API surface, state model
+4. **Edge case analysis** — error states, concurrency, failure modes, security implications
+5. **Dependency mapping** — what blocks what, parallelizable work
+6. **Write plan.md** — structured artifact with phases, deps, verification steps
 
 ### Mode D: Autoplan (plan exists, needs full review)
 When a plan file exists and needs the full gauntlet. Auto-decides 90% of questions using decision principles. Surfaces only taste decisions at a final approval gate.

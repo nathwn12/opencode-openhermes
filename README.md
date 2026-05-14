@@ -11,7 +11,7 @@
 
 ---
 
-OpenHermes is an OpenCode plugin that gives your agent a complete skill system out of the box. Add one line to `opencode.json`, get 22 skills, a primary orchestrator, and a shared operating model.
+OpenHermes is an OpenCode plugin that gives your agent a complete skill system out of the box. Add one line to `opencode.json`, get 25 skills, a primary orchestrator, and a shared operating model.
 
 ```json
 { "plugin": ["openhermes@git+https://github.com/nathwn12/openhermes.git"] }
@@ -23,7 +23,7 @@ No setup. No file copying. No extra dependencies.
 
 ## What you get
 
-### Four core skills
+### Seven core skills
 
 | Skill | What it does |
 |---|---|
@@ -32,22 +32,25 @@ No setup. No file copying. No extra dependencies.
 | **oh-manifest** | Full build loop: planner → builder → verify → loop until done or a real blocker is surfaced. Auto-resolves intermediate questions; only interrupts you for genuine blockers. |
 | **oh-gauntlet** | Multi-axis testing gauntlet: unit tests, dual-axis review (Standards + Spec in parallel sub-agents), edge case sweep, QA tier, canary post-deploy. |
 
-These four form a pipeline: **think → plan → build → test → ship**. Each produces artifacts the next consumes.
+These seven form a pipeline: **think → plan → build → test → ship → secure → monitor**. Each produces artifacts the next consumes.
 
-### Twenty-two skills total
+### Twenty-five skills total
 
 | Skill | Purpose |
 |---|---|
 | oh-planner, oh-builder, oh-manifest, oh-gauntlet | Core pipeline (above) |
 | oh-expert | AI self-diagnosis vocabulary — sycophancy, hallucination type, attention degradation |
-| oh-grill | Stress-test plans through Socratic questioning; optionally updates CONTEXT.md and ADRs |
+| oh-grill | Stress-test plans through Socratic questioning; optionally updates CONTEXT.md, ADRs, and extracts ubiquitous language |
+| oh-plan-review | Multi-lens plan review: Engineering, Design, DX, Strategy |
+| oh-security | Security audit: secrets archaeology, supply chain, CI/CD, OWASP, STRIDE, LLM security |
+| oh-health | Code quality dashboard: wraps tools, composite score, trend tracking |
 | oh-investigate | Systematic bug diagnosis |
 | oh-handoff | Compact session into structured handoff artifact for another agent |
 | oh-skillcraft | Create new skills for the harness (meta-skill) |
-| oh-init | Initialize a project with OpenHermes |
+| oh-init | Initialize project: scaffold CONTEXT.md, AGENTS.md, ADRs, issue tracker config, triage labels |
 | oh-retro | Retrospective after shipping |
-| oh-review | Code and design review — dual-axis (Standards + Spec) |
-| oh-ship | PR, version bump, changelog |
+| oh-review | Two-axis review (Standards + Spec) in parallel sub-agents + architecture deepening |
+| oh-ship | PR, version bump, changelog, post-ship docs sync |
 | oh-triage | Issue triage state machine |
 | oh-issue | Break plans into vertical-slice issues |
 | oh-prd | Write structured PRDs |
@@ -95,7 +98,7 @@ openhermes-pkg/
 │   ├── codex/             # CONSTITUTION.md
 │   ├── commands/          # Slash command manifests (/oh-doctor)
 │   ├── instructions/      # RUNTIME.md, CONVENTIONS.md
-│   └── skills/            # 22 skill SKILL.md files
+│       └── skills/            # 25 skill SKILL.md files
 └── test/
 ```
 

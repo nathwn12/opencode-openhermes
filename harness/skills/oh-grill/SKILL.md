@@ -32,15 +32,20 @@ Challenge the plan without touching files.
 6. Output: verified, stress-tested plan with flagged ambiguities
 
 ### Mode B: Grill with Docs (thorough)
-Same as Mode A, but persists decisions to CONTEXT.md and ADRs.
+Same as Mode A, but persists decisions to CONTEXT.md and ADRs, and extracts a DDD ubiquitous-language glossary.
 
 1. Load existing CONTEXT.md and ADRs
 2. Grill through the decision tree — each resolved decision may:
    - Update CONTEXT.md domain terms (sharpen fuzzy language)
    - Create a new ADR for architectural decisions
    - Flag an ambiguity in the domain glossary
-3. Persist changes to CONTEXT.md immediately as language firms up
-4. Output: updated CONTEXT.md + new ADRs + verified plan with resolution trail
+3. **Ubiquitous Language extraction** — after the decision tree resolves, scan the conversation for domain-relevant nouns, verbs, and concepts:
+   - Identify problems: same word for different concepts (ambiguity), different words for same concept (synonyms), vague or overloaded terms
+   - Propose a canonical glossary with grouped tables (by subdomain, lifecycle, or actor)
+   - Write an example dialogue (3-5 exchanges) between dev and domain expert showing natural term usage
+   - Write flagged ambiguities section
+4. Persist changes to CONTEXT.md immediately as language firms up
+5. Output: updated CONTEXT.md + new ADRs + UBIQUITOUS_LANGUAGE.md (if significant terms emerged) + verified plan with resolution trail
 
 ## Technique
 
