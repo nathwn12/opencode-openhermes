@@ -1,20 +1,21 @@
 {
   "name": "openhermes",
-  "version": "4.0.2",
+  "version": "4.0.3",
   "description": "OpenCode-native skills, commands, and rules orchestration for OpenHermes.",
   "type": "module",
   "license": "MIT",
-  "main": "./index.mjs",
+  "main": "./index.ts",
   "dependencies": {
     "@opencode-ai/plugin": "1.14.46"
   },
   "exports": {
-    ".": "./index.mjs",
-    "./bootstrap": "./bootstrap.mjs"
+    ".": "./index.ts",
+    "./bootstrap": "./bootstrap.ts"
   },
   "files": [
-    "index.mjs",
-    "bootstrap.mjs",
+    "index.ts",
+    "bootstrap.ts",
+    "tsconfig.json",
     "ETHOS.md",
     "CONTEXT.md",
     "lib/",
@@ -26,7 +27,7 @@
     "harness/agents/"
   ],
   "scripts": {
-    "test": "node --test test/*.test.mjs"
+    "test": "bun test test/*.test.ts"
   },
   "keywords": [
     "opencode",

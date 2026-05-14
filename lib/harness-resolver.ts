@@ -9,14 +9,14 @@ import { fileURLToPath } from "node:url"
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const PKG_DIR = path.resolve(__dirname, "..")
 
-const REQUIRED_HARNESS_FILES = [
+const REQUIRED_HARNESS_FILES: ReadonlyArray<[string, string, string]> = [
   ["codex", "CONSTITUTION.md"],
   ["instructions", "RUNTIME.md"],
   ["skills", "oh-plan", "SKILL.md"],
 ]
 
-function ancestorDirs(start, limit = 6) {
-  const dirs = []
+function ancestorDirs(start: string, limit = 6): string[] {
+  const dirs: string[] = []
   let current = path.resolve(start)
   for (let i = 0; i < limit; i++) {
     dirs.push(current)
@@ -27,7 +27,7 @@ function ancestorDirs(start, limit = 6) {
   return dirs
 }
 
-function buildHarnessCandidates(currentDir, execPath, cwd) {
+function buildHarnessCandidates(currentDir: string, execPath: string, cwd: string): string[] {
   const roots = [path.resolve(currentDir, "harness")]
   const seen = new Set(roots)
 
@@ -50,7 +50,7 @@ function buildHarnessCandidates(currentDir, execPath, cwd) {
   return roots
 }
 
-function hasRequiredHarnessFiles(root) {
+function hasRequiredHarnessFiles(root: string): boolean {
   return REQUIRED_HARNESS_FILES.every(parts => fs.existsSync(path.join(root, ...parts)))
 }
 
@@ -59,7 +59,12 @@ export function resolveHarnessRoot({
   execPath = process.execPath,
   cwd = process.cwd(),
   candidateRoots,
-} = {}) {
+}: {
+  currentDir?: string
+  execPath?: string
+  cwd?: string
+  candidateRoots?: string[]
+} = {}): string {
   const roots = candidateRoots ?? buildHarnessCandidates(currentDir, execPath, cwd)
   for (const root of roots) {
     if (hasRequiredHarnessFiles(root)) return root
@@ -67,11 +72,11 @@ export function resolveHarnessRoot({
   return path.resolve(currentDir, "harness")
 }
 
-let _harnessDir
+let _harnessDir: string | undefined
 
-export function setHarnessRootForTest(dir) { _harnessDir = dir }
+export function setHarnessRootForTest(dir: string | undefined): void { _harnessDir = dir }
 
-export function getHarnessDir() {
+export function getHarnessDir(): string {
   if (!_harnessDir) _harnessDir = resolveHarnessRoot()
   return _harnessDir
 }

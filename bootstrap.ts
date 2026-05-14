@@ -1,8 +1,9 @@
 import path from "node:path"
 import fs from "node:fs"
 import { fileURLToPath } from "node:url"
-import { createLogger } from "./lib/logger.mjs"
-import { getHarnessDir, setHarnessRootForTest, resolveHarnessRoot } from "./lib/harness-resolver.mjs"
+import type { Plugin } from "@opencode-ai/plugin"
+import { createLogger } from "./lib/logger.ts"
+import { getHarnessDir, setHarnessRootForTest, resolveHarnessRoot } from "./lib/harness-resolver.ts"
 
 const log = createLogger("bootstrap")
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -11,8 +12,8 @@ const OPENHERMES_AGENT = "OpenHermes"
 
 export { resolveHarnessRoot, setHarnessRootForTest, getHarnessDir }
 
-function parseFrontmatter(raw) {
-  const frontmatter = {}
+function parseFrontmatter(raw: string | undefined): Record<string, string> {
+  const frontmatter: Record<string, string> = {}
   if (!raw) return frontmatter
   for (const line of raw.split(/\r?\n/)) {
     const idx = line.indexOf(":")
@@ -24,16 +25,25 @@ function parseFrontmatter(raw) {
   return frontmatter
 }
 
-function readMarkdownDocument(filePath) {
+interface MarkdownDocument {
+  frontmatter: Record<string, string>
+  body: string
+}
+
+function readMarkdownDocument(filePath: string): MarkdownDocument | null {
   if (!fs.existsSync(filePath)) return null
   const source = fs.readFileSync(filePath, "utf8")
-  const match = source.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/)
+  const match = source.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/)
   const frontmatter = parseFrontmatter(match?.[1] ?? "")
   const body = (match ? match[2] : source).trim()
   return { frontmatter, body }
 }
 
-function readMarkdownDirectory(dir) {
+interface DirEntry extends MarkdownDocument {
+  name: string
+}
+
+function readMarkdownDirectory(dir: string): DirEntry[] {
   if (!fs.existsSync(dir)) return []
   return fs.readdirSync(dir)
     .filter(name => name.endsWith(".md") && name.toLowerCase() !== "readme.md")
@@ -43,13 +53,21 @@ function readMarkdownDirectory(dir) {
       const document = readMarkdownDocument(filePath)
       return document ? { name: path.basename(name, ".md"), ...document } : null
     })
-    .filter(Boolean)
+    .filter((e): e is DirEntry => e !== null)
 }
 
-function commandDefinitions(dir) {
-  const commands = {}
+interface CommandDef {
+  description: string
+  template: string
+  agent?: string
+  model?: string
+  subtask?: boolean
+}
+
+function commandDefinitions(dir: string): Record<string, CommandDef> {
+  const commands: Record<string, CommandDef> = {}
   for (const doc of readMarkdownDirectory(dir)) {
-    const command = {
+    const command: CommandDef = {
       description: doc.frontmatter.description || `OpenHermes command ${doc.name}`,
       template: doc.body,
     }
@@ -61,8 +79,14 @@ function commandDefinitions(dir) {
   return commands
 }
 
-function agentDefinitions(dir) {
-  const agents = {}
+interface AgentDef {
+  description: string
+  mode: string
+  prompt: string
+}
+
+function agentDefinitions(dir: string): Record<string, AgentDef> {
+  const agents: Record<string, AgentDef> = {}
   for (const doc of readMarkdownDirectory(dir)) {
     const name = doc.name === "openhermes" ? OPENHERMES_AGENT : doc.name
     agents[name] = {
@@ -74,7 +98,7 @@ function agentDefinitions(dir) {
   return agents
 }
 
-function uniqueStrings(existing = [], additions = []) {
+function uniqueStrings(existing: string[] = [], additions: string[] = []): string[] {
   const seen = new Set(existing.filter(Boolean))
   const merged = [...existing]
   for (const item of additions) {
@@ -85,11 +109,11 @@ function uniqueStrings(existing = [], additions = []) {
   return merged
 }
 
-function readText(filePath) {
+function readText(filePath: string): string {
   return fs.existsSync(filePath) ? fs.readFileSync(filePath, "utf8") : ""
 }
 
-function buildBootstrapContent(hDir) {
+function buildBootstrapContent(hDir: string): string {
   const parts = [
     `<${BOOTSTRAP_MARKER}>`,
     `You are OpenHermes.`,
@@ -111,7 +135,15 @@ function buildBootstrapContent(hDir) {
   return parts.join("\n\n")
 }
 
-export const BootstrapPlugin = async () => {
+interface OpenHermesConfig {
+  skills?: { paths?: string[] }
+  command?: Record<string, unknown>
+  agent?: Record<string, unknown>
+  instructions?: string[]
+  default_agent?: string
+}
+
+export const BootstrapPlugin: Plugin = async () => {
   const hDir = getHarnessDir()
   const skillsDir = path.join(hDir, "skills")
   const commandsDir = path.join(hDir, "commands")
@@ -119,7 +151,7 @@ export const BootstrapPlugin = async () => {
   const bootstrapContent = buildBootstrapContent(hDir)
 
   return {
-    config: async (config) => {
+    config: async (config: OpenHermesConfig) => {
       config.skills = config.skills || {}
       config.skills.paths = uniqueStrings(config.skills.paths || [], [skillsDir])
 
@@ -158,7 +190,7 @@ export const BootstrapPlugin = async () => {
       ])
     },
 
-    "experimental.chat.messages.transform": async (_input, output) => {
+    "experimental.chat.messages.transform": async (_input: unknown, output: { messages?: Array<{ info?: { role?: string }; parts?: Array<{ text?: string }> }> }) => {
       try {
         if (!output.messages?.length) return
         const firstUser = output.messages.find(m => m?.info?.role === "user")
@@ -166,8 +198,8 @@ export const BootstrapPlugin = async () => {
         if (firstUser.parts.some(p => p.text?.includes(BOOTSTRAP_MARKER))) return
         const ref = firstUser.parts[0]
         firstUser.parts.unshift({ ...ref, type: "text", text: bootstrapContent })
-      } catch (err) {
-        log.error("transform error:", err?.message)
+      } catch (err: unknown) {
+        log.error("transform error:", (err as Error)?.message)
       }
     },
   }
