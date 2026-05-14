@@ -4,6 +4,9 @@
   "description": "OpenCode-native skills, commands, and rules orchestration for OpenHermes.",
   "type": "module",
   "license": "MIT",
+  "engines": {
+    "bun": ">=1.0"
+  },
   "main": "./index.ts",
   "dependencies": {
     "@opencode-ai/plugin": "1.14.46"
