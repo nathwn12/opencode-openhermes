@@ -80,7 +80,9 @@ Never auto-decide: premises (need human judgment) or cases where both the plan a
 
 ## Plan Artifact
 
-Output goes in `.opencode/plan.md` with this structure (matching the global AGENTS.md schema):
+Output goes in `.opencode/plan.md` with this structure (matching the global AGENTS.md schema).
+
+**Then save a copy** to `%USERPROFILE%/.config/opencode/task/<project-name>-plan-<nnn>.md` per AGENTS.md persistent plan rules.
 
 ```markdown
 # PLAN: <project-name>
