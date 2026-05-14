@@ -80,36 +80,64 @@ Never auto-decide: premises (need human judgment) or cases where both the plan a
 
 ## Plan Artifact
 
-Output goes in `.opencode/plan.md` with this structure:
+Output goes in `.opencode/plan.md` with this structure (matching the global AGENTS.md schema):
 
 ```markdown
-# Plan: <name>
+# PLAN: <project-name>
 
-## Objective
-<one sentence>
+Plan ID: <project-name>-plan-<nnn>
+Project: <project-name>
+Status: active
+Created: <local-date-time>
+Updated: <local-date-time>
+Project Path: <absolute-project-path>
+Plan Path: .opencode/plan.md
+Objective: <short objective>
 
-## Architecture Decisions
+## Current State
+
+<what exists now, what's missing>
+
+## Assumptions
+
+- <assumption 1>
+- <assumption 2>
+
+## Tasks
+
+- [ ] Task 1
+  - [ ] Subtask 1.1
+
+## Active Task
+
+<what's being worked on now>
+
+## Subagents
+
+| Agent | Purpose | Status | Findings |
+|---|---|---|---|
+
+## Completed
+
+- <what's done>
+
+## Blockers
+
+- None
+
+## Validation
+
+- [ ] Static checks
+- [ ] Unit tests
+- [ ] Manual verification
+
+## Decisions
+
 - <decision> — <rationale>
 
-## Phases
-### Phase 1: <name>
-- **Files**: <list>
-- **Dependencies**: <list>
-- **Verification**: <how to know it works>
+## Notes
 
-### Phase N: ...
-
-## Test Strategy
-- Unit: <approach>
-- Integration: <approach>
-- Manual: <approach>
-
-## Risk Register
-- <risk> → <mitigation>
-
-## Verification Criteria
-- [ ] Criteria 1
-- [ ] Criteria N
+<anything else>
 ```
 
 ## Anti-patterns
