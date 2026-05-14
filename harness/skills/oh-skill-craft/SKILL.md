@@ -1,5 +1,5 @@
 ---
-name: oh-skillcraft
+name: oh-skill-craft
 description: "Create new agent skills with proper structure, frontmatter, progressive disclosure, and bundled resources. Meta-skill for growing the harness."
 tier: 2
 benefits-from: [oh-expert]
@@ -7,12 +7,12 @@ triggers:
   - "create a skill"
   - "write a skill"
   - "new skill"
-  - "skillcraft"
+  - "skill-craft"
   - "meta-skill"
   - "add a capability"
 ---
 
-# oh-skillcraft
+# oh-skill-craft
 
 Create new agent skills for the OpenHermes harness. Skills are the unit of progressive disclosure — loaded on demand, not preloaded.
 

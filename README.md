@@ -46,7 +46,7 @@ These seven form a pipeline: **think → plan → build → test → ship → se
 | oh-health | Code quality dashboard: wraps tools, composite score, trend tracking |
 | oh-investigate | Systematic bug diagnosis |
 | oh-handoff | Compact session into structured handoff artifact for another agent |
-| oh-skillcraft | Create new skills for the harness (meta-skill) |
+| oh-skill-craft | Create new skills for the harness (meta-skill) |
 | oh-init | Initialize project: scaffold CONTEXT.md, AGENTS.md, ADRs, issue tracker config, triage labels |
 | oh-retro | Retrospective after shipping |
 | oh-review | Two-axis review (Standards + Spec) in parallel sub-agents + architecture deepening |

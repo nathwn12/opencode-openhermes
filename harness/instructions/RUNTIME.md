@@ -14,7 +14,7 @@ Key skills:
 - `oh-plan-review` — multi-lens plan review: Engineering, Design, DX, Strategy perspectives.
 - `oh-security` — security audit: secrets archaeology, supply chain, CI/CD, OWASP, STRIDE, LLM security.
 - `oh-health` — code quality dashboard: wraps project tools, computes composite score, tracks trends.
-- `oh-skillcraft` — create new agent skills for the harness.
+- `oh-skill-craft` — create new agent skills for the harness.
 - `oh-investigate` — systematic bug diagnosis.
 - `oh-handoff` — compact session into structured handoff artifact.
 - `oh-retro` — retrospective after shipping.
