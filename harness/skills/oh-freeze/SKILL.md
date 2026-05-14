@@ -18,3 +18,11 @@ When debugging a specific module and you want to prevent accidentally "fixing" u
 - Freezing too broadly (defeats the purpose)
 - Forgetting to unfreeze when task scope expands
 - Using freeze as a substitute for git discipline
+
+## Routing
+
+| Outcome | Route |
+|---------|-------|
+| pass | → [return to prior skill — scope lock active] |
+| fail | → [surface issue — freeze not applied] |
+| blocker | → surface to user |

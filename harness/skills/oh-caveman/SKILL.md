@@ -23,3 +23,11 @@ Caveman: "Check auth module — token refresh likely broken."
 - Compressing code (code is already dense)
 - Omitting critical context to save tokens
 - Being unclear to be brief (accuracy > brevity)
+
+## Routing
+
+| Outcome | Route |
+|---------|-------|
+| pass | → [return to prior skill — mode active] |
+| fail | → [fallback to normal communication mode] |
+| blocker | → surface to user |

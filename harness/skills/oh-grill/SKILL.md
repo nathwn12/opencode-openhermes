@@ -67,3 +67,11 @@ Same as Mode A, but persists decisions to CONTEXT.md and ADRs, and extracts a DD
 - Polishing CONTEXT.md prose before concepts are settled
 - Updating domain terms mid-discussion — let the conversation resolve first
 - Not distinguishing between "must resolve now" vs "figure out later"
+
+## Routing
+
+| Outcome | Route |
+|---------|-------|
+| pass | → oh-planner (revise plan based on feedback) |
+| fail | → oh-expert (resolve confusion or blind spot) |
+| blocker | → surface to user |

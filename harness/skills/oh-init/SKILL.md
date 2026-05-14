@@ -68,3 +68,11 @@ Record: "oh-init completed for project \<name\> on \<date\>."
 - Scaffolding CONTEXT.md without populating any terms
 - Creating ADR directory but never writing ADRs
 - Creating both AGENTS.md and CLAUDE.md — edit the one that exists
+
+## Routing
+
+| Outcome | Route |
+|---------|-------|
+| pass | → [done — one-time project setup] |
+| fail | → [retry with user corrections] |
+| blocker | → surface to user |

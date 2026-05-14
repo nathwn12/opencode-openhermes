@@ -18,3 +18,11 @@ To review what the agent has learned across sessions, search for specific patter
 - Hoarding every observation (most things aren't learnings)
 - Never pruning (stale knowledge is worse than no knowledge)
 - Storing what, not why (context-less facts are forgettable)
+
+## Routing
+
+| Outcome | Route |
+|---------|-------|
+| pass | → [done — read-only report] |
+| fail | → [surface gaps to user] |
+| blocker | → surface to user |

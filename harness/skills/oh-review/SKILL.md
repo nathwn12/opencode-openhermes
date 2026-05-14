@@ -100,3 +100,11 @@ Use these terms exactly:
 - Requesting changes for subjective preferences
 - Merging Standards and Spec findings (one axis masks the other)
 - Proposing interfaces in deepening mode before the user picks a candidate
+
+## Routing
+
+| Outcome | Route |
+|---------|-------|
+| pass | → oh-gauntlet (if code changes needed) or oh-ship |
+| fail | → oh-builder (fix violations found) |
+| blocker | → surface to user |

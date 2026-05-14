@@ -118,3 +118,11 @@ After each lens, the plan file (`/.opencode/plan.md`) is updated with findings a
 - **Anti-skip:** Every section must be evaluated. If zero findings, say "No issues found" and move on.
 - **Anti-shortcut:** The plan file is the OUTPUT of the interactive review, not a substitute for it. Findings go through AskUserQuestion before writing.
 - **Commit to the chosen lens.** Once scope is agreed, don't re-argue earlier decisions in later sections.
+
+## Routing
+
+| Outcome | Route |
+|---------|-------|
+| pass | → oh-grill (if concerns remain) or oh-manifest (execute plan) |
+| fail | → oh-planner (revise plan based on findings) |
+| blocker | → surface to user |

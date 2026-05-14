@@ -23,3 +23,11 @@ When touching production, running destructive commands, or working in shared env
 - Disabling guard because "I know what I'm doing" (narrator: they didn't)
 - Running prod commands outside guard mode
 - Ignoring warnings about irreversible operations
+
+## Routing
+
+| Outcome | Route |
+|---------|-------|
+| pass | → [return to prior skill — guard mode active] |
+| fail | → [surface warning — operation denied] |
+| blocker | → surface to user |

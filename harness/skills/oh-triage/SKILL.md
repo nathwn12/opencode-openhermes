@@ -26,3 +26,11 @@ When new issues come in, or when reviewing the issue backlog. Drives issues thro
 - Leaving issues in "needs triage" indefinitely
 - Triaging without reading the full issue
 - Wontfix without explanation (leaves reporter unhappy)
+
+## Routing
+
+| Outcome | Route |
+|---------|-------|
+| pass | → oh-issue (publish triaged issues) or oh-handoff (pass to agent) |
+| fail | → oh-expert (clarify ambiguous issue) |
+| blocker | → surface to user |

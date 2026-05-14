@@ -119,3 +119,11 @@ Output goes in `.opencode/plan.md` with this structure:
 - Perfect being the enemy of shipped (progress > polish)
 - Failing to flag taste decisions to the user
 - Big bang rewrites — plan increments, not overhauls
+
+## Routing
+
+| Outcome | Route |
+|---------|-------|
+| pass | → oh-grill (stress-test plan) |
+| fail | → oh-planner (revise gaps) |
+| blocker | → surface to user |

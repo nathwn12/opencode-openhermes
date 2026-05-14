@@ -19,3 +19,11 @@ After installing new skills or updating existing ones. Verifies that OpenCode ca
 - Copying skills into global config during normal operation
 - Overwriting user-modified skills without explicit intent
 - Linking broken or incomplete skills
+
+## Routing
+
+| Outcome | Route |
+|---------|-------|
+| pass | → [report link status to user] |
+| fail | → oh-skill-craft (fix or rebuild broken skill) |
+| blocker | → surface to user |

@@ -88,3 +88,11 @@ When oh-planner produced a plan artifact. Execute phases in order.
 - Refactoring while RED — get to GREEN first
 - Letting sub-agents produce similar designs — enforce radical difference
 - Implementing without verifying against plan criteria
+
+## Routing
+
+| Outcome | Route |
+|---------|-------|
+| pass | → oh-gauntlet (test built code) |
+| fail | → oh-builder (fix issues) |
+| blocker | → surface to user |

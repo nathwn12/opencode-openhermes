@@ -26,3 +26,11 @@ When a plan exists and needs to be broken into actionable issues. Uses tracer-bu
 - Horizontal slicing (DB layer / API layer / UI layer — no one ships a layer)
 - Issues too large (3+ days) or too small (< 1 hour)
 - Writing issues without acceptance criteria
+
+## Routing
+
+| Outcome | Route |
+|---------|-------|
+| pass | → [done — issues published to tracker] |
+| fail | → oh-planner (re-spec unclear slices) |
+| blocker | → surface to user |

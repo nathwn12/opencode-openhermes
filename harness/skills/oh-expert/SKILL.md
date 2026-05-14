@@ -111,3 +111,11 @@ Do not confuse them.
 | "Memory" (for context window) | Context window |
 | "Working memory" | Contextual knowledge |
 | "Background agent" | AFK |
+
+## Routing
+
+| Outcome | Route |
+|---------|-------|
+| pass | → oh-builder (implement fix) or oh-gauntlet (re-test) |
+| fail | → oh-expert (re-diagnose — load fresh context) |
+| blocker | → surface to user |

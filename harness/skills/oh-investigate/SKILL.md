@@ -25,3 +25,11 @@ No fixes without root cause. Surface-level fixes compound into technical debt.
 - Changing code without reproducing the bug first
 - "Shotgun" debugging — changing multiple things hoping one sticks
 - Not documenting root cause for future reference
+
+## Routing
+
+| Outcome | Route |
+|---------|-------|
+| pass | → oh-builder (implement the fix) |
+| fail | → oh-expert (deepen diagnosis) |
+| blocker | → surface to user |

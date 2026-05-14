@@ -16,3 +16,11 @@ Check:
 - auth and config safety
 
 Return the shortest useful diagnosis with file references and next actions.
+
+## Routing
+
+| Outcome | Route |
+|---------|-------|
+| pass | → [report findings to user] |
+| fail | → oh-investigate (diagnose issues found) |
+| blocker | → surface to user |

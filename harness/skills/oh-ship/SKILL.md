@@ -29,3 +29,11 @@ When code is ready to ship. Runs the full release pipeline from test to PR to de
 - Bumping version without changelog
 - Deploying without post-deploy verification
 - Not tagging releases
+
+## Routing
+
+| Outcome | Route |
+|---------|-------|
+| pass | → oh-retro (post-ship review) |
+| fail | → oh-expert (diagnose deployment failure) |
+| blocker | → surface to user |

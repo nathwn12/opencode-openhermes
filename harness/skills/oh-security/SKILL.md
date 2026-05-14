@@ -100,3 +100,11 @@ STRIDE:
 - **Prioritize by blast radius.** Remote code execution > credential exposure > info leak > best-practice gap.
 - **Always distinguish direct vs transitive** dependencies in supply chain findings.
 - **Use Grep/Glob tools** for searches, not bash grep. The bash blocks below show WHAT to search, not HOW.
+
+## Routing
+
+| Outcome | Route |
+|---------|-------|
+| pass | → [report findings to user] |
+| fail | → oh-investigate (deepen on findings) |
+| blocker | → surface to user |

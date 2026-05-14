@@ -97,3 +97,11 @@ Scripts save tokens and improve reliability vs generated code.
 - [ ] Concrete examples included
 - [ ] Anti-patterns documented
 - [ ] Tests still pass after adding (`npm test`)
+
+## Routing
+
+| Outcome | Route |
+|---------|-------|
+| pass | → oh-skills-link (verify skill discovery) |
+| fail | → oh-expert (diagnose skill creation issues) |
+| blocker | → surface to user |

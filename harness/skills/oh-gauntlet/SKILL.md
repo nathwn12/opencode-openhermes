@@ -109,3 +109,11 @@ Options:
 - Skipping edge case sweep because tests pass (tests confirm behavior, not absence of edge cases)
 - Ignoring minors because no criticals exist (accumulated minors signal design debt)
 - Pushing through critical failures without surfacing blocker
+
+## Routing
+
+| Outcome | Route |
+|---------|-------|
+| pass | → oh-ship (all checks pass) |
+| fail | → oh-builder (fix issues found) |
+| blocker | → surface to user |

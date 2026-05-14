@@ -80,3 +80,11 @@ Read last 10 history entries. Show trend table. For regressions, identify declin
 - **Skipped is not failed.** Tool not installed → skip gracefully, redistribute weight.
 - **Show raw output for failures.** Include tool output so user can act without re-running.
 - **Trends require history.** First run: "No trend data yet. Run again after changes to track progress."
+
+## Routing
+
+| Outcome | Route |
+|---------|-------|
+| pass | → [report score to user] |
+| fail | → oh-investigate (deepen on degraded metrics) |
+| blocker | → surface to user |

@@ -23,3 +23,11 @@ Structured retro report with: shipped items, metrics, praise, growth areas, acti
 - Blame-focused retro (it's about process, not people)
 - Action items without owners (no follow-through)
 - Same retro every week (if nothing changed, why?)
+
+## Routing
+
+| Outcome | Route |
+|---------|-------|
+| pass | → oh-planner (start next cycle with retro insights) |
+| fail | → oh-handoff (document blockers for next session) |
+| blocker | → surface to user |

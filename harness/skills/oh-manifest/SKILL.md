@@ -74,3 +74,11 @@ When a blocker is encountered:
 - Skipping verification (verify every phase, not just the final result)
 - Parallelizing dependent phases (respect the dependency order in plan.md)
 - Forgetting to update plan.md with completion status
+
+## Routing
+
+| Outcome | Route |
+|---------|-------|
+| pass | → pipeline continues (planner→builder→gauntlet→ship) |
+| fail | → oh-expert (diagnose loop failure) |
+| blocker | → surface to user with context and options |

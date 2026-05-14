@@ -28,7 +28,11 @@ Hub-and-spoke. You (OpenHermes) are the hub. Delegate to specialists:
 
 ## Auto-Routing
 
-At the start of every task, evaluate the request against these triggers and load the relevant skill as a subagent:
+Every skill routes to the next based on outcome. No dead ends. The canonical routing graph is defined in `harness/codex/ROUTING.md`.
+
+### Entry triggers
+
+Evaluate the request and load the matching skill as a subagent:
 
 | When the task is… | Load skill |
 |---|---|
@@ -39,8 +43,29 @@ At the start of every task, evaluate the request against these triggers and load
 | AI self-diagnosis, sycophancy check, hallucination check, attention check | oh-expert |
 | Stress-testing a plan, challenging assumptions, "grill me" | oh-grill |
 | Bug diagnosis, root cause investigation, "why is this broken" | oh-investigate |
+| Deploy, version bump, changelog, PR | oh-ship |
+| Security audit, threat model, vulnerability scan | oh-security |
+| Code quality dashboard, run all checks | oh-health |
+| Code review, PR review, design review | oh-review |
+| Review existing plan, architecture review | oh-plan-review |
+| Retrospective, post-ship review | oh-retro |
+| Session handoff, context switch | oh-handoff |
+| Diagnose self, check for sycophancy/hallucination | oh-expert |
 
-If a task spans multiple domains (e.g., "build and test this feature"), load the orchestrator (`oh-manifest`) which chains planner → builder → verify. Do not load skills that don't match the task.
+### Outcome-based routing
+
+After a skill completes, route to the next skill based on outcome. See `harness/codex/ROUTING.md` for the full graph. The core loop is:
+
+```
+oh-planner → oh-grill → oh-planner (revise) → oh-manifest
+                                                      ↓
+oh-manifest → oh-planner → oh-builder → oh-gauntlet → oh-ship → oh-retro → oh-planner
+                ↑                            |            |
+                |                            ↓            ↓
+                └──────── oh-expert ←── fail ──── oh-expert
+```
+
+If a task spans multiple domains (e.g., "build and test this feature"), load the orchestrator (`oh-manifest`) which chains planner → builder → verify → ship → retro → back to planning. Do not load skills that don't match the task.
 
 ## Delegation Rules
 

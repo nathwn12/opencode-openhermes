@@ -21,3 +21,11 @@ Markdown table of skills:
 - Listing "all available" but missing recently installed skills
 - Showing skill file paths instead of human-readable descriptions
 - Not categorising skills (flat list is hard to scan)
+
+## Routing
+
+| Outcome | Route |
+|---------|-------|
+| pass | → [done — read-only report] |
+| fail | → [surface issue to user] |
+| blocker | → surface to user |

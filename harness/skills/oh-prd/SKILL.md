@@ -25,3 +25,11 @@ When a feature discussion has produced enough context to write a product require
 - Writing PRD before understanding the problem
 - Requirements that aren't testable ("fast" vs "loads in <200ms")
 - Gold-plating — every feature is "must have"
+
+## Routing
+
+| Outcome | Route |
+|---------|-------|
+| pass | → oh-issue (break PRD into actionable issues) |
+| fail | → oh-grill (stress-test unclear requirements) |
+| blocker | → surface to user |
