@@ -17,7 +17,7 @@ describe("BootstrapPlugin behavior", () => {
     mod = await import("../bootstrap.ts")
   })
 
-  it("registers package-local skills, commands, agents, and instructions", async () => {
+  it("registers package-local skills, commands, and agents", async () => {
     const plugin = await mod.BootstrapPlugin({ directory: __dirname })
     const config: Record<string, unknown> = { skills: { paths: [] }, command: {}, agent: {}, instructions: [] }
 
@@ -27,8 +27,6 @@ describe("BootstrapPlugin behavior", () => {
     assert.ok((config.command as Record<string, unknown>)["oh-doctor"])
     assert.ok((config.agent as Record<string, unknown>).OpenHermes)
     assert.equal(config.default_agent, "OpenHermes")
-    assert.ok((config.instructions as string[]).some(p => p.endsWith(path.join("harness", "codex", "CONSTITUTION.md"))))
-    assert.ok((config.instructions as string[]).some(p => p.endsWith(path.join("harness", "instructions", "RUNTIME.md"))))
   })
 
   it("loads markdown manifests into command and agent config", async () => {

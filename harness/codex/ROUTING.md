@@ -17,6 +17,7 @@ If a skill has no explicit route for an outcome, the fallback is always **surfac
 ## Canonical routing table
 
 ### Workflow skills
+*Includes oh-doctor (command, not skill) for diagnostic routing.*
 
 | Skill | pass | fail | blocker |
 |-------|------|------|---------|
@@ -49,8 +50,8 @@ If a skill has no explicit route for an outcome, the fallback is always **surfac
 | **oh-triage** | → oh-issue or oh-handoff | → oh-expert (clarify) | surface |
 | **oh-retro** | → oh-planner (next cycle) | → oh-handoff (if blocked) | surface |
 | **oh-handoff** | → [end of session — intended terminal] | → [surface blocker] | surface |
-| **oh-skillcraft** | → oh-skills-link (verify discovery) | → oh-expert (diagnose) | surface |
-| **oh-skills-link** | → [report link status] | → oh-skillcraft (fix skill) | surface |
+| **oh-skill-craft** | → oh-skills-link (verify discovery) | → oh-expert (diagnose) | surface |
+| **oh-skills-link** | → [report link status] | → oh-skill-craft (fix skill) | surface |
 | **oh-skills-list** | → [done — read-only] | → [surface issue] | surface |
 
 ### Mode skills (no routing — mode switches)

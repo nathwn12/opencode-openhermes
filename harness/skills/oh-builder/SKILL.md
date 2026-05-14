@@ -23,15 +23,21 @@ The ALL-arounder builder. Merges prototyping, TDD, implementation from plan, and
 ### Mode A: Prototype (exploratory)
 When you need to answer a question before committing.
 
-1. Determine what question the prototype answers (data model, state flow, UI direction)
-2. Build minimal — just enough to answer the question
-3. Let user play with it
-4. Collect feedback
-5. Decide: discard, iterate, or promote
+**Pick a branch based on the question being asked:**
 
-**Sub-modes:**
-- **Terminal** — for state/business logic questions
-- **UI** — several radical design variations from one route
+- **"Does this logic / state model feel right?"** → **Terminal branch.** Build a tiny interactive terminal app that pushes the state machine through cases that are hard to reason about on paper.
+- **"What should this look like?"** → **UI branch.** Generate several radically different visual variations, switchable via a URL param or floating control bar.
+
+If the question is genuinely ambiguous, default to whichever branch better matches the surrounding code (backend module → terminal, page/component → UI) and state the assumption.
+
+**Rules that apply to both branches:**
+
+1. **Throwaway from day one, clearly marked.** Name it so a casual reader sees it's a prototype.
+2. **One command to run.** Whatever the project's task runner supports — `pnpm <name>`, `bun <path>`, etc.
+3. **No persistence by default.** State lives in memory. If the question involves a database, hit a scratch DB with a clear "PROTOTYPE — wipe me" name.
+4. **Skip the polish.** No tests, no error handling beyond what makes it runnable. The point is to learn and then delete.
+5. **Surface the state.** After every action (terminal) or on every variant switch (UI), show the full relevant state so the user sees what changed.
+6. **Delete or absorb when done.** The answer is the only thing worth keeping. Capture it in a commit, ADR, or note — then delete the prototype code.
 
 ### Mode B: TDD (test-first implementation)
 When building production code from a plan or spec. Red-green-refactor with vertical tracer bullets.

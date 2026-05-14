@@ -45,7 +45,7 @@ Collect all files documenting how code should be written:
 - AGENTS.md, CLAUDE.md, CONTRIBUTING.md
 - CONTEXT.md, ADRs
 - eslint/biome/prettier config (note tool-enforced ones — don't re-check)
-- Any STYLE.md, STANDARDS.md, STYLEGUIDE.md
+
 
 ### 4. Spawn Both Sub-Agents (parallel)
 

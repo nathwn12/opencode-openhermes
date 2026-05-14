@@ -55,7 +55,7 @@ These seven form a pipeline: **think → plan → build → test → ship → se
 | oh-issue | Break plans into vertical-slice issues |
 | oh-prd | Write structured PRDs |
 | oh-caveman | Ultra-compressed response mode |
-| oh-freeze | Freeze dependencies |
+| oh-freeze | Restrict file edits to a specific directory |
 | oh-learn | Learn patterns from the codebase |
 | oh-guard | Safety confirmations for destructive operations |
 | oh-skills-link | Verify skills discovery |
@@ -111,14 +111,14 @@ openhermes-pkg/
 ├── AGENTS.md              # Skill/command/agent inventory
 ├── CONTEXT.md             # Shared language
 ├── ETHOS.md               # Operating principles
-├── bootstrap.mjs          # Plugin loader — registers everything
-├── index.mjs              # Package entrypoint
+├── bootstrap.ts           # Plugin loader — registers everything
+├── index.ts               # Package entrypoint
 ├── harness/
 │   ├── agents/            # Agent manifests (OpenHermes)
 │   ├── codex/             # CONSTITUTION.md
 │   ├── commands/          # Slash command manifests (/oh-doctor)
-│   ├── instructions/      # RUNTIME.md, CONVENTIONS.md
-│       └── skills/            # 25 skill SKILL.md files
+│   ├── instructions/      # RUNTIME.md
+│   └── skills/            # 25 skill SKILL.md files
 └── test/
 ```
 

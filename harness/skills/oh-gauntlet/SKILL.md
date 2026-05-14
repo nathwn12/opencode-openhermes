@@ -34,7 +34,7 @@ If tests are missing or weak, flag what should be added. Do not add them here â€
 
 Spawn two sub-agents simultaneously:
 
-**Standards sub-agent:** Read the repo's documented standards (CONTEXT.md, AGENTS.md, eslint config, ADRs, STYLE.md, CONVENTIONS.md). Then read the diff. Report every place the diff violates a documented standard. Cite the standard source. Distinguish hard violations from judgement calls.
+**Standards sub-agent:** Read the repo's documented standards (CONTEXT.md, AGENTS.md, eslint config, ADRs). Then read the diff. Report every place the diff violates a documented standard. Cite the standard source. Distinguish hard violations from judgement calls.
 
 **Spec sub-agent:** Read the spec source (plan.md, issue, PRD, or user's description). Then read the diff. Report: (a) requirements that are missing or partial, (b) scope creep (behavior not asked for), (c) requirements that look implemented but wrong. Quote the spec.
 

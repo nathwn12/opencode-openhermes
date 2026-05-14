@@ -1,6 +1,5 @@
 // Shared harness directory resolver — canonical implementation.
-// Extracted from bootstrap.mjs to eliminate DRY violation with goal-tracker.mjs.
-// Both consumers import from here.
+// Extracted from bootstrap.ts. Both bootstrap.ts and tests import from here.
 
 import path from "node:path"
 import fs from "node:fs"

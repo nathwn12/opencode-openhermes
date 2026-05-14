@@ -181,13 +181,6 @@ export const BootstrapPlugin: Plugin = async () => {
       }
 
       config.default_agent = OPENHERMES_AGENT
-
-      config.instructions = uniqueStrings(config.instructions || [], [
-        path.join(hDir, "codex", "CONSTITUTION.md"),
-        path.join(hDir, "instructions", "RUNTIME.md"),
-        path.join(__dirname, "CONTEXT.md"),
-        path.join(__dirname, "ETHOS.md"),
-      ])
     },
 
     "experimental.chat.messages.transform": async (_input: unknown, output: { messages?: Array<{ info?: { role?: string }; parts?: Array<{ text?: string }> }> }) => {
