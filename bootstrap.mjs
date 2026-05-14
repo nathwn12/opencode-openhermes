@@ -92,7 +92,8 @@ export const BootstrapPlugin = async ({ directory }) => {
         if (!content) return
         _bootstrapping = true
         try {
-          output.parts.unshift({ type: "text", text: content })
+          const ref = textParts[0]
+          output.parts.unshift({ ...ref, type: "text", text: content })
         } finally {
           _bootstrapping = false
         }
@@ -112,7 +113,8 @@ export const BootstrapPlugin = async ({ directory }) => {
         if (!content) return
         _bootstrapping = true
         try {
-          firstUser.parts.unshift({ type: "text", text: content })
+          const ref = firstUser.parts[0]
+          firstUser.parts.unshift({ ...ref, type: "text", text: content })
         } finally {
           _bootstrapping = false
         }
