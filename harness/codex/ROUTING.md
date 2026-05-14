@@ -87,3 +87,40 @@ oh-ship ──pass──→ oh-retro ──→ oh-planner (loops forever)
 3. Default fallback if no match: **surface to user**
 4. Mode skills (caveman, freeze, guard) return to the skill that invoked them after toggling state
 5. The graph must have no dead ends — the only true terminal is `oh-handoff` (session end)
+
+## OptiRoute Protocol
+
+OptiRoute is a smart auto-routing guard layer. It prevents infinite loops, stops on ambiguity, and auto-generates handoff reports when a task goes nowhere.
+
+### Loop Guard
+
+Tracks routing depth per chain. Two thresholds:
+
+| Threshold | Trigger | Action |
+|-----------|---------|--------|
+| **3x repeat** | Same skill visited 3+ times in one routing chain | STOP, invoke auto-handoff |
+| **5-hop ceiling** | 5+ routing hops without measurable progress toward the original goal | STOP, invoke auto-handoff |
+
+*Progress* is defined as: the routing target changed since the last hop, or a new artifact was produced (plan.md updated, code written, test result).
+
+### Question Gate
+
+Before each routing hop, evaluate:
+
+- Is the next skill's input fully satisfied? (plan.md exists for builder, code exists for gauntlet, etc.)
+- Is there any ambiguity that requires user clarification?
+
+If either is no: **do not route. Ask the user a specific question.** Surface what you have, what's missing, and what you need.
+
+### Auto-Handoff
+
+When Loop Guard triggers:
+
+1. **Stop routing immediately.** Do not attempt another hop.
+2. **Write to plan.md:** Append an OptiRoute report with:
+   - Routing chain: the sequence of skills visited
+   - Trigger: which threshold fired (3x repeat / 5-hop ceiling)
+   - Current state: what artifacts exist, what's pending
+   - Blocker: what prevented progress
+3. **Surface to user** with: `OPTIROUTE STOP: <reason> | Chain: <skills> | See plan.md for full report`
+4. Exit the loop. Await user direction.

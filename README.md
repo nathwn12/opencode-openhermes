@@ -84,6 +84,26 @@ Everything is package-local. Nothing is copied into your global config.
 
 ---
 
+## OptiRoute: Smart Auto-Routing Protocol
+
+Every skill routes to the next based on outcome — pass, fail, or blocker. OptiRoute is a guard layer on top of that graph. Three rules:
+
+**Loop guard.** Tracks routing depth. If the same skill is visited 3+ times in one chain, or 5+ hops pass without measurable progress (new artifact, changed target), routing stops. No infinite loops.
+
+**Question gate.** Before each routing hop, the protocol checks whether the next skill's inputs are satisfied. If the task is underspecified or information is missing, it asks the user instead of routing into uncertainty.
+
+**Auto-handoff.** When the loop guard triggers, it writes an OptiRoute report into `plan.md` — the routing chain, the trigger threshold, current state, and the blocker. Then it surfaces the blocker and awaits direction.
+
+```md
+OPTIROUTE STOP: 5-hop ceiling reached, no progress
+Chain: planner → grill → planner → builder → gauntlet → planner
+See .opencode/plan.md for full report
+```
+
+No loops. No guessing. No silent death.
+
+---
+
 ## Layout
 
 ```

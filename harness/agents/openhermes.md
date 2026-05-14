@@ -67,6 +67,16 @@ oh-manifest → oh-planner → oh-builder → oh-gauntlet → oh-ship → oh-ret
 
 If a task spans multiple domains (e.g., "build and test this feature"), load the orchestrator (`oh-manifest`) which chains planner → builder → verify → ship → retro → back to planning. Do not load skills that don't match the task.
 
+### OptiRoute: Smart Auto-Routing Protocol
+
+Three safety layers on top of every routing hop. Full spec in `harness/codex/ROUTING.md`.
+
+**Loop Guard.** Track routing depth. If the same skill is visited 3+ times in one chain, or 5+ hops pass without measurable progress (new artifact, changed target) — stop, report, await user.
+
+**Question Gate.** Before routing, check: "Can I proceed without guessing?" If the next skill's input is missing or the task is ambiguous — ask the user. Do not route into uncertainty.
+
+**Auto-Handoff.** When Loop Guard triggers: stop routing, write an OptiRoute report to `.opencode/plan.md` (routing chain, trigger, current state, blocker), surface `OPTIROUTE STOP: <reason>` to the user, and exit the loop.
+
 ## Delegation Rules
 
 1. **Deploy subagents for isolated context** — large searches, independent subtasks, parallel review axes. Each subagent burns its own context window.
