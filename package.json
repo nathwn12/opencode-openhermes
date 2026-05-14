@@ -1,7 +1,7 @@
 {
   "name": "openhermes",
   "version": "4.0.0",
-  "description": "The Orchestrator — self-improving agent that gets smarter every session.",
+  "description": "OpenCode-native skills, commands, and rules orchestration for OpenHermes.",
   "type": "module",
   "license": "MIT",
   "main": "./index.mjs",
@@ -15,15 +15,15 @@
   "files": [
     "index.mjs",
     "bootstrap.mjs",
-    "autorecall.mjs",
-    "curator.mjs",
     "ETHOS.md",
     "CONTEXT.md",
     "lib/",
     "test/",
     "harness/codex/",
     "harness/instructions/",
-    "harness/skills/"
+    "harness/skills/",
+    "harness/commands/",
+    "harness/agents/"
   ],
   "scripts": {
     "test": "node --test test/*.test.mjs"
@@ -32,7 +32,10 @@
     "opencode",
     "openhermes",
     "orchestrator",
-    "skills"
+    "skills",
+    "commands",
+    "agents",
+    "rules"
   ],
   "repository": {
     "type": "git",

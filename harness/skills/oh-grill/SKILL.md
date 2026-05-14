@@ -1,24 +1,64 @@
 ---
 name: oh-grill
-description: "Stress-test a plan or design through relentless questioning"
+description: "Stress-test plans and designs through relentless Socratic questioning. Sharpens assumptions, flags blind spots, updates domain docs."
+tier: 3
+benefits-from: [oh-expert, oh-planner]
+triggers:
+  - "grill"
+  - "stress test this plan"
+  - "challenge this"
+  - "grill me"
+  - "poke holes"
+  - "interrogate"
 ---
 
 # oh-grill
 
-## When to Use
-When a plan exists but needs to be challenged. The griller probes every assumption until shared understanding is reached.
+Stress-tests plans and designs through relentless Socratic questioning. Two modes: plain interrogate (quick) or interrogate + update domain docs (thorough).
 
-## Workflow
+## When to Use
+Before committing to a plan or design. When the user says "it is writing exactly what I asked for and it is still wrong" — the design concept is not shared yet. Cheaper to resolve in conversation than in code.
+
+## Modes
+
+### Mode A: Grill (quick)
+Challenge the plan without touching files.
+
 1. Read the plan or design doc
-2. Interview the user relentlessly — each answer reveals new branches
-3. Resolve each branch of the decision tree before moving on
-4. Surface contradictions, blind spots, and unstated assumptions
-5. End with a verified, stress-tested plan
+2. Interview the user one decision at a time — each answer reveals new branches
+3. Resolve each branch before moving on
+4. Surface: contradictions, blind spots, unstated assumptions, ambiguous terms
+5. Propose a recommended answer for each decision
+6. Output: verified, stress-tested plan with flagged ambiguities
+
+### Mode B: Grill with Docs (thorough)
+Same as Mode A, but persists decisions to CONTEXT.md and ADRs.
+
+1. Load existing CONTEXT.md and ADRs
+2. Grill through the decision tree — each resolved decision may:
+   - Update CONTEXT.md domain terms (sharpen fuzzy language)
+   - Create a new ADR for architectural decisions
+   - Flag an ambiguity in the domain glossary
+3. Persist changes to CONTEXT.md immediately as language firms up
+4. Output: updated CONTEXT.md + new ADRs + verified plan with resolution trail
+
+## Technique
+
+- Ask one question at a time
+- Propose a recommended answer for each decision
+- Walk the full decision tree before accepting the design
+- Reference domain glossary from CONTEXT.md when terms are ambiguous
+- Cross-reference with existing ADRs when architecture is at stake
 
 ## When NOT to Use
-When you already have a clear, vetted plan. When the user needs execution, not interrogation.
+- When you already have a clear, vetted plan and need execution
+- When the user needs a builder, not a critic
+- For trivial decisions that don't change the design's shape
 
 ## Anti-patterns
 - Grilling for the sake of grilling (redundant with existing reviews)
-- Asking questions you could answer by reading the plan
+- Asking questions you could answer by reading the plan or codebase
+- Creating ADRs for trivial decisions (not every choice is architecture)
+- Polishing CONTEXT.md prose before concepts are settled
+- Updating domain terms mid-discussion — let the conversation resolve first
 - Not distinguishing between "must resolve now" vs "figure out later"

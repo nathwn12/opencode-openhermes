@@ -15,7 +15,7 @@ When a bug is reported, a test fails, or unexpected behavior occurs. Use this be
 4. **Instrument** — add logging, assertions, or debug output to test hypothesis
 5. **Fix** — implement the smallest correct change addressing root cause
 6. **Regression test** — verify fix doesn't break existing behavior
-7. **Document** — log the root cause and fix to memory as a mistake record
+7. **Document** — log the root cause and fix in the handoff, issue, or docs that are actually in scope
 
 ## Iron Law
 No fixes without root cause. Surface-level fixes compound into technical debt.
