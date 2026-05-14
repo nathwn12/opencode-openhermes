@@ -82,26 +82,6 @@ export const BootstrapPlugin = async ({ directory }) => {
       config.default_agent = "OpenHermes"
     },
 
-    "chat.message": async (_input, output) => {
-      try {
-        if (_bootstrapping) return
-        const textParts = output.parts?.filter(p => p.type === "text")
-        if (!textParts?.length) return
-        if (textParts.some(p => p.text?.includes("OPENHERMES_V4"))) return
-        const content = getContent()
-        if (!content) return
-        _bootstrapping = true
-        try {
-          const ref = textParts[0]
-          output.parts.unshift({ ...ref, type: "text", text: content })
-        } finally {
-          _bootstrapping = false
-        }
-      } catch (err) {
-        log.error("chat.message error:", err?.message)
-      }
-    },
-
     "experimental.chat.messages.transform": async (_input, output) => {
       try {
         if (_bootstrapping) return
