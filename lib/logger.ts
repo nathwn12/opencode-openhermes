@@ -10,7 +10,13 @@ export interface Logger {
 }
 
 const LEVELS: Record<string, number> = { debug: 0, info: 1, warn: 2, error: 3 }
-const CURRENT_LEVEL = LEVELS[process.env.OPENCODE_LOG_LEVEL?.trim().toLowerCase()] ?? (process.env.OPENHERMES_LOG_LEVEL?.trim().toLowerCase() === "debug" ? LEVELS.debug : LEVELS.warn)
+
+function resolveLevel(levelName: string | undefined): number | undefined {
+  if (!levelName) return undefined
+  return LEVELS[levelName as keyof typeof LEVELS]
+}
+
+const CURRENT_LEVEL = resolveLevel(process.env.OPENCODE_LOG_LEVEL?.trim().toLowerCase()) ?? (process.env.OPENHERMES_LOG_LEVEL?.trim().toLowerCase() === "debug" ? LEVELS.debug : LEVELS.warn)
 
 const LOG_DIR = path.join(os.homedir(), ".local", "share", "opencode", "log")
 const LOG_FILE = path.join(LOG_DIR, "openhermes.log")

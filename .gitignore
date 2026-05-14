@@ -8,6 +8,7 @@ AGENTS.md
 PLAN.md
 coverage/
 .config/
+.opencode/
 docs/
 vendor/
 README-DRAFT.md
