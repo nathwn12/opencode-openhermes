@@ -134,6 +134,19 @@ describe("BootstrapPlugin config hook", () => {
     const skillsDir = config.skills.paths[0]
     assert.ok(skillsDir.endsWith("skills"))
   })
+
+  it("config hook registers OpenHermes as the default primary agent", async () => {
+    process.env.OPENCODE_ALLOW_PROJECT_HARNESS = "false"
+    const plugin = await mod.BootstrapPlugin({ directory: __dirname })
+    const config = { agent: {} }
+    await plugin.config(config)
+    assert.equal(config.default_agent, "OpenHermes")
+    assert.ok(config.agent.OpenHermes)
+    assert.equal(config.agent.OpenHermes.mode, "primary")
+    assert.equal(config.agent.OpenHermes.permission.edit, "allow")
+    assert.equal(config.agent.OpenHermes.permission.read, "allow")
+    assert.equal(config.agent.OpenHermes.permission.bash["*"], "allow")
+  })
 })
 
 describe("AmbientMemoryPlugin structure", () => {
@@ -152,5 +165,27 @@ describe("AmbientMemoryPlugin structure", () => {
     const plugin = await mod.AmbientMemoryPlugin()
     await plugin["experimental.chat.messages.transform"]({}, { messages: [] })
     await plugin["experimental.chat.messages.transform"]({}, {})
+  })
+
+  it("injects memory into the user text part instead of the bootstrap part", async () => {
+    const plugin = await mod.AmbientMemoryPlugin()
+    const output = {
+      messages: [
+        {
+          info: { role: "user" },
+          parts: [
+            { type: "text", text: "<OPENHERMES_V4>\nboot" },
+            { type: "text", text: "actual user request" },
+          ],
+        },
+      ],
+    }
+
+    await plugin["experimental.chat.messages.transform"]({}, output)
+
+    assert.match(output.messages[0].parts[0].text, /OPENHERMES_V4/)
+    assert.doesNotMatch(output.messages[0].parts[0].text, /OPENHERMES_MEMORY/)
+    assert.match(output.messages[0].parts[1].text, /OPENHERMES_MEMORY/)
+    assert.match(output.messages[0].parts[1].text, /actual user request/)
   })
 })

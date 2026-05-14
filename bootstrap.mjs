@@ -62,6 +62,43 @@ export const BootstrapPlugin = async ({ directory }) => {
       config.skills.paths = config.skills.paths || []
       const skillsDir = path.join(hDir, "skills")
       if (!config.skills.paths.includes(skillsDir)) config.skills.paths.push(skillsDir)
+
+      const existingAgents = { ...(config.agent ?? {}) }
+      config.agent = {
+        ...existingAgents,
+        "OpenHermes": {
+          description: "Fully autonomous primary coding agent (all tools allowed)",
+          mode: "primary",
+          color: "#F59E0B",
+          permission: {
+            bash: { "*": "allow" },
+            edit: "allow",
+            read: "allow",
+            task: { "*": "allow" },
+          },
+        },
+      }
+
+      config.default_agent = "OpenHermes"
+    },
+
+    "chat.message": async (_input, output) => {
+      try {
+        if (_bootstrapping) return
+        const textParts = output.parts?.filter(p => p.type === "text")
+        if (!textParts?.length) return
+        if (textParts.some(p => p.text?.includes("OPENHERMES_V4"))) return
+        const content = getContent()
+        if (!content) return
+        _bootstrapping = true
+        try {
+          output.parts.unshift({ type: "text", text: content })
+        } finally {
+          _bootstrapping = false
+        }
+      } catch (err) {
+        log.error("chat.message error:", err?.message)
+      }
     },
 
     "experimental.chat.messages.transform": async (_input, output) => {
