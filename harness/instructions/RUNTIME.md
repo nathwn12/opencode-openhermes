@@ -42,6 +42,7 @@ Key skills:
 - `.opencode/plan.md` — produced by oh-planner, consumed by oh-builder and oh-manifest
 - `.opencode/work-log.md` — progress tracking across subagent delegations
 - `.opencode/todo.md` — task tracking for multi-step work
+- `.opencode/instincts.jsonl` — behavioral patterns (trigger-action-confidence) extracted by oh-learn. On session start, read the highest-confidence entries (≥0.7) into context so past patterns inform current work. This is not durable state — it is an opt-in config that grows organically.
 
 **Bootstrap**: `harness/codex/CONSTITUTION.md`, this file, `CONTEXT.md`, and `ETHOS.md` are injected into the first user message so the agent starts with the same operating model every session.
 
@@ -50,5 +51,5 @@ Key skills:
 ## Conventions
 
 Security, coding style, testing, and orchestration standards:
-- See `CONVENTIONS.md` for the shared baseline.
+- For coding conventions, see the Constitution.
 - Skills provide the detailed walkthroughs for specialized workflows.

@@ -15,9 +15,20 @@ triggers:
 
 # oh-manifest
 
-Full build orchestration loop. Runs planner → builder → verify → repeat until done or a blocker is surfaced. Uses gstack decision principles to auto-resolve intermediate questions. Only interrupts the user for genuine blockers.
+Full build orchestration loop. Runs pre-flight checks → planner → builder → verify → repeat until done or a blocker is surfaced. Uses decision principles to auto-resolve intermediate questions. Only interrupts the user for genuine blockers.
 
 ## Pipeline
+
+### Phase 0: Pre-Flight
+
+Before any work begins, ALL of these MUST pass:
+
+- ☐ **Quality baseline** — existing tests pass (if any). Capture output for before/after comparison.
+- ☐ **Rollback path** — clean `git stash` or a committed state you can return to.
+- ☐ **Branch isolation** — confirm you are on a working branch, not main/master.
+- ☐ **Scope documented** — plan or task description exists and is unambiguous.
+
+If any check fails → **STOP**. Report which check failed and why. Do not proceed to Phase 1 until the blocker is resolved.
 
 ### Step 1: Plan
 - If `.opencode/plan.md` exists, load and verify it is current
@@ -42,6 +53,32 @@ Full build orchestration loop. Runs planner → builder → verify → repeat un
 - All phases complete and verified → DONE
 - Phase failed and cannot be fixed → BLOCKER (surface to user with context)
 - Phase passed but new work discovered → add to plan, continue loop
+
+## Loop Patterns
+
+Select a pattern based on the nature of the work:
+
+| Pattern | Use When | Behavior |
+|---------|----------|----------|
+| **sequential** | Normal feature work | One phase at a time, verify each before next |
+| **continuous-pr** | Multi-step refactors | Each phase is its own PR — commit, push, PR per phase |
+| **infinite** | Watch mode, CI repair | Continue until external stop signal or budget exhausted |
+| **rfc-dag** | Complex dependency chains | Resolve phase ordering by DAG; parallelize independent branches |
+
+Default is **sequential**. Switch patterns only when the work structure demands it.
+
+## Escalation Triggers
+
+These conditions cause the loop to **pause** and surface to the user:
+
+| Trigger | Condition | Action |
+|---------|-----------|--------|
+| **Stall** | 2 consecutive checkpoints with zero measurable progress | Pause. Report what was attempted, what blocked. |
+| **Retry storm** | Same error message 3+ times in the loop | Stop retrying. Surface error with attempted fixes. |
+| **Cost drift** | Cumulative changes exceed scope documented in pre-flight | Pause. Show diff between planned and actual scope. |
+| **Quality regression** | Verify phase scores lower than pre-flight baseline | Pause. Report degraded metrics. Do not push through. |
+
+These are not optional suggestions. When a trigger fires, the loop **must** pause and report.
 
 ## Decision Principles
 
@@ -69,11 +106,13 @@ When a blocker is encountered:
 4. **Wait for user decision** before continuing
 
 ## Anti-patterns
+- Skipping pre-flight (every loop needs a baseline and a rollback plan)
 - Auto-deciding premises (fundamental assumptions need user input)
 - Pushing through blockers (surface immediately, don't try 5 workarounds silently)
 - Skipping verification (verify every phase, not just the final result)
 - Parallelizing dependent phases (respect the dependency order in plan.md)
 - Forgetting to update plan.md with completion status
+- Ignoring escalation triggers (stall means pause, not try harder)
 
 ## Routing
 

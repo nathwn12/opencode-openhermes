@@ -1,6 +1,6 @@
 {
   "name": "openhermes",
-  "version": "4.0.3",
+  "version": "4.1.0",
   "description": "OpenCode-native skills, commands, and rules orchestration for OpenHermes.",
   "type": "module",
   "license": "MIT",
@@ -22,7 +22,6 @@
     "ETHOS.md",
     "CONTEXT.md",
     "lib/",
-    "test/",
     "harness/codex/",
     "harness/instructions/",
     "harness/skills/",
