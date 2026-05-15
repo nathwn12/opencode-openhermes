@@ -1,10 +1,15 @@
 ---
 name: oh-issue
 description: "Break a plan, spec, or PRD into independently-grabbable GitHub issues"
+tier: 2
 triggers:
   - "break into issues"
   - "create issues from plan"
   - "issue breakdown"
+route:
+  pass: done
+  fail: oh-planner
+  blocker: surface
 ---
 
 # oh-issue

@@ -12,6 +12,10 @@ triggers:
   - "full review of the code"
   - "validate this feature"
   - "thorough testing"
+route:
+  pass: oh-ship
+  fail: oh-builder
+  blocker: surface
 ---
 
 # oh-gauntlet

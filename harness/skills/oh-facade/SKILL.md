@@ -24,6 +24,12 @@ triggers:
   - "frontend component"
   - "interface design for"
   - "build a component for"
+route:
+  pass:
+    - oh-review
+    - oh-manifest
+  fail: oh-facade
+  blocker: surface
 ---
 
 # oh-facade

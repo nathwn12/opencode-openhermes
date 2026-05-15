@@ -21,6 +21,10 @@ triggers:
   - "many files"
   - "all components"
   - "stop truncating"
+route:
+  pass: done
+  fail: surface
+  blocker: surface
 ---
 
 # oh-full-output

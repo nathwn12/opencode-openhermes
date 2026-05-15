@@ -19,6 +19,12 @@ triggers:
   - "transfer skill"
   - "copy skill"
   - "adopt skill"
+route:
+  pass:
+    - oh-skills-link
+    - oh-skill-craft
+  fail: oh-skill-craft
+  blocker: surface
 ---
 
 # oh-fusion
@@ -261,10 +267,16 @@ Add an entry to the auto-classify matrix in `harness/codex/AUTOPILOT.md`:
 - Classification label
 - Action: "Load **oh-<name>**. Do not ask."
 
-### 6c. Wire into ROUTING.md
+### 6c. Wire routing into frontmatter
 
-Add an entry to the routing table:
-- **oh-<name>** | pass: → <where it routes> | fail: → <where it routes> | blocker: → surface
+Add `route:` frontmatter to the skill — no ROUTING.md edit needed. The dynamic routing system reads `route.pass`, `route.fail`, and `route.blocker` directly from the skill's own `SKILL.md`. The skill becomes routable automatically:
+
+```yaml
+route:
+  pass: <next skill or done>
+  fail: <fallback skill or surface>
+  blocker: surface
+```
 
 ### 6d. Wire into AGENTS.md
 
@@ -298,5 +310,5 @@ Route to `oh-skills-link` to confirm the skill is discoverable by OpenCode.
 - Keeping everything from the source — 50% of most external skills is fluff. Be ruthless.
 - Fusing incompatible domains — the result confuses both the model and the user
 - Naming after the source ("oh-tailwind-v2") instead of the capability ("oh-styles")
-- Skipping integration wiring — a skill that's not in AUTOPILOT and ROUTING.md is invisible
+- Skipping route frontmatter — a skill without `route.pass`/`route.fail`/`route.blocker` won't auto-route
 - Overwriting existing routing entries without checking for collisions

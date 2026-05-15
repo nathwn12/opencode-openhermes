@@ -11,6 +11,12 @@ triggers:
   - "pr review"
   - "design review"
   - "review this code"
+route:
+  pass:
+    - oh-gauntlet
+    - oh-ship
+  fail: oh-builder
+  blocker: surface
 ---
 
 # oh-review

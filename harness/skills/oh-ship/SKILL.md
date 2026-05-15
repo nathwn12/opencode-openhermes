@@ -1,11 +1,16 @@
 ---
 name: oh-ship
 description: "Deploy and PR pipeline — test, bump, changelog, PR, deploy, verify"
+tier: 4
 triggers:
   - "ship this"
   - "create a PR"
   - "version bump"
   - "publish"
+route:
+  pass: oh-retro
+  fail: oh-expert
+  blocker: surface
 ---
 
 # oh-ship

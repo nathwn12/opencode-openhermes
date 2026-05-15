@@ -9,6 +9,10 @@ triggers:
   - "onboard this project"
   - "scaffold project setup"
   - "oh takeover this project"
+route:
+  pass: done
+  fail: oh-init
+  blocker: surface
 ---
 
 # oh-init

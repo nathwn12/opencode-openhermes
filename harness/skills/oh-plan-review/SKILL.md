@@ -14,6 +14,12 @@ triggers:
   - "engineering review"
   - "ceo review"
   - "review plan from"
+route:
+  pass:
+    - oh-grill
+    - oh-manifest
+  fail: oh-planner
+  blocker: surface
 ---
 
 # oh-plan-review

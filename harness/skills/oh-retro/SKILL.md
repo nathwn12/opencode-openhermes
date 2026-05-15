@@ -1,10 +1,15 @@
 ---
 name: oh-retro
 description: "Weekly engineering retrospective — analyze commit history and work patterns"
+tier: 3
 triggers:
   - "retrospective"
   - "retro for"
   - "post-ship review"
+route:
+  pass: oh-planner
+  fail: oh-handoff
+  blocker: surface
 ---
 
 # oh-retro

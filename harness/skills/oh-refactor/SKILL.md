@@ -16,6 +16,10 @@ triggers:
   - "god function"
   - "long method"
   - "nested conditionals"
+route:
+  pass: oh-gauntlet
+  fail: oh-planner
+  blocker: surface
 ---
 
 # oh-refactor

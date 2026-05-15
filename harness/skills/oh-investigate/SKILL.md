@@ -1,11 +1,16 @@
 ---
 name: oh-investigate
 description: "Systematic bug diagnosis with root cause investigation"
+tier: 2
 triggers:
   - "investigate this bug"
   - "debug this"
   - "why is this broken"
   - "root cause"
+route:
+  pass: oh-builder
+  fail: oh-expert
+  blocker: surface
 ---
 
 # oh-investigate

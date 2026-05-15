@@ -1,10 +1,15 @@
 ---
 name: oh-skills-list
 description: "List all available oh-* skills with descriptions"
+tier: 2
 triggers:
   - "list skills"
   - "show skills"
   - "what skills"
+route:
+  pass: done
+  fail: surface
+  blocker: surface
 ---
 
 # oh-skills-list

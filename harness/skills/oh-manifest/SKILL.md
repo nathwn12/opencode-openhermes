@@ -12,6 +12,10 @@ triggers:
   - "pipeline from plan"
   - "run the plan"
   - "manifest this"
+route:
+  pass: oh-planner
+  fail: oh-expert
+  blocker: surface
 ---
 
 # oh-manifest

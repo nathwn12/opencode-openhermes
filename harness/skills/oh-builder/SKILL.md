@@ -13,6 +13,10 @@ triggers:
   - "design an interface"
   - "implement the feature"
   - "build the component"
+route:
+  pass: oh-gauntlet
+  fail: oh-builder
+  blocker: surface
 ---
 
 # oh-builder

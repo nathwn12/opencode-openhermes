@@ -11,6 +11,12 @@ triggers:
   - "hallucination"
   - "attention"
   - "smart zone"
+route:
+  pass:
+    - oh-builder
+    - oh-gauntlet
+  fail: oh-expert
+  blocker: surface
 ---
 
 # oh-expert

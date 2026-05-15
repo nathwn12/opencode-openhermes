@@ -1,10 +1,17 @@
 ---
 name: oh-triage
 description: "Issue triage state machine — classify, prioritise, assign"
+tier: 2
 triggers:
   - "triage this issue"
   - "classify this issue"
   - "triage the backlog"
+route:
+  pass:
+    - oh-issue
+    - oh-handoff
+  fail: oh-expert
+  blocker: surface
 ---
 
 # oh-triage

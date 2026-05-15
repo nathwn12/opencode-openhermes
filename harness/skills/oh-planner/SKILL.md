@@ -14,6 +14,10 @@ triggers:
   - "scope this feature"
   - "create a plan for"
   - "whats the plan for"
+route:
+  pass: oh-grill
+  fail: oh-planner
+  blocker: surface
 ---
 
 # oh-planner

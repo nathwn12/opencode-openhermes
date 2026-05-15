@@ -11,6 +11,10 @@ triggers:
   - "pentest"
   - "security review"
   - "cso"
+route:
+  pass: surface
+  fail: oh-investigate
+  blocker: surface
 ---
 
 # oh-security

@@ -1,10 +1,15 @@
 ---
 name: oh-learn
 description: "Extract, evolve, and promote session learnings as instincts. Review, search, prune, export."
+tier: 2
 triggers:
   - "learn from session"
   - "extract patterns"
   - "run oh-learn"
+route:
+  pass: done
+  fail: surface
+  blocker: surface
 ---
 
 # oh-learn

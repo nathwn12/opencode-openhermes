@@ -232,7 +232,55 @@ export function formatSessionEvent(event: SessionLifecycleEvent): { level: "info
   }
 }
 
-function buildBootstrapContent(hDir: string): string {
+function parseRouteYaml(raw: string): { pass: string; fail: string; blocker: string } {
+  const def: { pass: string; fail: string; blocker: string } = { pass: "surface", fail: "surface", blocker: "surface" }
+  const m = raw.match(/route:\n((?:  [^\n]*\n?)*)/)
+  if (!m) return def
+  const block = m[1]
+
+  const kv = (key: string): string | undefined => {
+    // Single-line:  pass: oh-builder  (horizontal whitespace only, no newlines)
+    const s = block.match(new RegExp(`  ${key}:[ \\t]*(\\S.*)`))
+    if (s) return s[1].trim()
+    // Multi-line array:  pass:\n    - oh-builder\n    - oh-gauntlet
+    const a = block.match(new RegExp(`  ${key}:\\n((?:    - .+\\n?)*)`))
+    if (a) {
+      const items = a[1].match(/    - (.+)/g)?.map(i => i.replace(/    - /, "").trim()) ?? []
+      return items.length > 0 ? `[${items.join(", ")}]` : undefined
+    }
+    return undefined
+  }
+
+  const p = kv("pass")
+  const f = kv("fail")
+  const b = kv("blocker")
+  if (p) def.pass = p
+  if (f) def.fail = f
+  if (b) def.blocker = b
+  return def
+}
+
+function buildRoutingInventory(skillDirs: string[]): string {
+  const rows: string[] = []
+  for (const dir of skillDirs) {
+    let entries: string[] = []
+    try { entries = fs.readdirSync(dir).filter(e => fs.statSync(path.join(dir, e)).isDirectory()) } catch { continue }
+    for (const name of entries.sort()) {
+      const skPath = path.join(dir, name, "SKILL.md")
+      if (!fs.existsSync(skPath)) continue
+      const raw = fs.readFileSync(skPath, "utf8").replace(/\r\n/g, "\n")
+      const fm = raw.match(/^---\n([\s\S]*?)\n---/)
+      if (!fm) continue
+      const route = parseRouteYaml(fm[1])
+      rows.push(`| **${name}** | ${route.pass} | ${route.fail} | ${route.blocker} |`)
+    }
+  }
+  if (rows.length === 0) return ""
+  const header = "## Dynamic Routing Inventory\n\nAll skills and their routes:\n\n| Skill | pass | fail | blocker |\n|---|---|---|---|\n"
+  return header + rows.join("\n")
+}
+
+function buildBootstrapContent(hDir: string, extraDirs: string[] = []): string {
   const parts = [
     `<${BOOTSTRAP_MARKER}>`,
     `You are OpenHermes.`,
@@ -251,6 +299,12 @@ function buildBootstrapContent(hDir: string): string {
   if (runtime) parts.push(`<RUNTIME>\n${runtime}\n</RUNTIME>`)
   if (context) parts.push(`<CONTEXT>\n${context}\n</CONTEXT>`)
   if (ethos) parts.push(`<ETHOS>\n${ethos}\n</ETHOS>`)
+
+  // Dynamic routing inventory: built-in skills + user skills
+  const allSkillDirs = [path.join(hDir, "skills"), ...extraDirs.filter(Boolean)]
+  const inventory = buildRoutingInventory(allSkillDirs)
+  if (inventory) parts.push(inventory)
+
   parts.push(`</${BOOTSTRAP_MARKER}>`)
 
   return parts.join("\n\n")
@@ -269,10 +323,8 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
   const skillsDir = path.join(hDir, "skills")
   const commandsDir = path.join(hDir, "commands")
   const agentsDir = path.join(hDir, "agents")
-  const bootstrapContent = buildBootstrapContent(hDir)
-  const compactionContext = buildCompactionContext(ctx.directory)
-
   // Auto-detect and wire user skills from ~/.agents/skills and ~/.config/opencode/skills
+  // (Must happen before bootstrapContent is built so routing inventory includes user skills)
   const userSkillPaths: string[] = []
   for (const userDir of USER_SKILL_DIRS) {
     ensureDir(userDir)
@@ -282,6 +334,9 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
       log.info(`found ${count} user skill(s) in ${userDir}`)
     }
   }
+
+  const bootstrapContent = buildBootstrapContent(hDir, userSkillPaths)
+  const compactionContext = buildCompactionContext(ctx.directory)
   const builtInCount = countSkills(skillsDir)
   const userCount = userSkillPaths.reduce((sum, d) => sum + countSkills(d), 0)
 

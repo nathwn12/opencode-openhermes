@@ -1,10 +1,15 @@
 ---
 name: oh-freeze
 description: "Restrict file edits to a specific directory for the session"
+tier: 2
 triggers:
   - "freeze directory"
   - "restrict edits to"
   - "lock edits to"
+route:
+  pass: mode
+  fail: mode
+  blocker: surface
 ---
 
 # oh-freeze

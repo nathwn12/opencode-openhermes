@@ -1,10 +1,15 @@
 ---
 name: oh-skills-link
 description: "Verify that OpenCode can discover the package-local skills directory"
+tier: 2
 triggers:
   - "verify skills"
   - "check skill discovery"
   - "link skills"
+route:
+  pass: surface
+  fail: oh-skill-craft
+  blocker: surface
 ---
 
 # oh-skills-link

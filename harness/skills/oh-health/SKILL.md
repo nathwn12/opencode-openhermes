@@ -9,6 +9,10 @@ triggers:
   - "how healthy is the codebase"
   - "run all project checks"
   - "code health"
+route:
+  pass: surface
+  fail: oh-investigate
+  blocker: surface
 ---
 
 # oh-health

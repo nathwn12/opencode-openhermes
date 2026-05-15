@@ -10,6 +10,10 @@ triggers:
   - "skill-craft"
   - "meta-skill"
   - "add a capability"
+route:
+  pass: oh-skills-link
+  fail: oh-expert
+  blocker: surface
 ---
 
 # oh-skill-craft

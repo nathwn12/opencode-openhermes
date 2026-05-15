@@ -8,9 +8,9 @@ Before any substantive response, classify the task using this decision matrix:
 
 | Signal | Classification | Action |
 |---|---|---|
-| Multi-step, vague, aimless, "improve", "make better", "fix up", "clean up", "organize", no clear deliverable | PLANNING NEEDED | Load **oh-planner** (Mode A brainstorm or Mode C structured plan). Do not ask. |
+| Multi-step, vague, aimless, "improve", "make better", "fix up", "clean up", "organize", "I have an idea", no clear deliverable | PLANNING NEEDED | Load **oh-planner** (Mode A brainstorm or Mode C structured plan). Do not ask. |
 | Bug, crash, regression, unexpected behavior, "why is X broken" | INVESTIGATION NEEDED | Load **oh-investigate**. Do not ask. |
-| UI, frontend, design system, page, component, dashboard, visual, redesign, theme, layout, "make it look good" | UI PIPELINE NEEDED | Load **oh-facade** (5-phase: Concept → Design System → Build → Audit → Iterate). Do not ask. |
+| UI, frontend, design system, page, component, dashboard, visual, redesign, theme, layout, "make it look good", "janky", "laggy", "slow UI", UI quality complaint | UI PIPELINE NEEDED | Load **oh-facade** (5-phase: Concept → Design System → Build → Audit → Iterate). Do not ask. |
 | Security concern, vulnerability, threat model | SECURITY NEEDED | Load **oh-security**. Do not ask. |
 | Code quality, performance, linting, dead code | HEALTH CHECK | Load **oh-health**. Do not ask. |
 | Full pipeline: plan+implement+test+ship | PIPELINE NEEDED | Load **oh-manifest**. Do not ask. |
@@ -28,31 +28,59 @@ Before any substantive response, classify the task using this decision matrix:
 
 After every skill completes, follow this protocol:
 
-1. **Check the skill's routing table** (defined in its SKILL.md Routing section, or the canonical graph in `harness/codex/ROUTING.md`)
-2. **Determine outcome**: pass (completed successfully), fail (found issues or partial results), blocker (unrecoverable)
-3. **Route immediately** to the next skill based on outcome
-4. **Repeat** until blocker or completion
+1. **Determine outcome**: pass (completed successfully), fail (found issues or partial results), blocker (unrecoverable)
+2. **Read the skill's `route:` frontmatter** — every SKILL.md has `route.pass`, `route.fail`, and `route.blocker` values
+3. **Route immediately** to the next skill based on outcome and the skill's own routing metadata
+4. **Repeat** until blocker, completion (`done`), or surface (`surface`)
 
-**Routing is mandatory. It is not optional.** You do not ask "should I route to X?" You determine the outcome and follow the routing table. The routing graph in ROUTING.md is the authority. Do not deviate from it.
+**Routing is mandatory. It is not optional.** You do not ask "should I route to X?" You determine the outcome and follow the skill's routing metadata. Do not deviate from it.
 
-### Core Loop
+### Route Values
+
+Every skill's `route:` frontmatter uses these value types:
+
+| Value | Meaning |
+|-------|---------|
+| `oh-<name>` | Route to a specific skill (built-in or user) |
+| `[oh-a, oh-b]` | Route to one of — choose the best fit for current context |
+| `surface` | Report findings to the user and end the chain |
+| `done` | Task is complete — terminal |
+| `mode` | Internal mode switch — return to the calling skill after toggling state |
+
+### Dynamic Routing Loop
+
+Routing is determined at runtime by scanning all available skills and reading the *current skill's* routing metadata:
 
 ```
-oh-planner ──pass──→ oh-grill ──pass──→ oh-planner (revise) ──→ oh-manifest
-              fail──→ oh-planner (revise gaps)
-
-oh-manifest ──→ oh-planner → oh-builder → oh-gauntlet → oh-ship → oh-retro → oh-planner
-                 ↑_____________________________|              |
-                 |                                             ↓
-                 └───────── oh-expert ←───────────────── fail
-
-oh-investigate ──pass──→ oh-builder ──→ oh-gauntlet
-                  fail──→ oh-expert ──→ oh-investigate (re-diagnose)
+           ┌──────────────────────────────────────┐
+           │                                      │
+           ↓                                      │
+classify → load best skill → execute              │
+                              ↓                   │
+                         check outcome ──→ read skill's route frontmatter
+                                              ↓
+                                        route by outcome ──→ next skill ──→ execute
+                                              │                    ↑
+                                              ↓                    │
+                                        surface/done/blocker      │
+                                              ↓                    │
+                                        report to user            │
+                                                                   │
+                                                                   │
+                              User skills participate:             │
+                              If current skill's route.pass       │
+                              points to oh-deploy (user skill),   │
+                              load oh-deploy. Its own route       │
+                              metadata routes onward from there.  │
+                              No registration step needed.        │
+                                           ┌──────────────────────┘
+                                           │
+                                           └── loop until surface/done/blocker
 ```
 
 ## Close the Loop
 
-Every skill must route somewhere. No leaf nodes. The only intentional terminal is `oh-handoff` (session end).
+Every skill must route somewhere. No leaf nodes (task-level terminals use `done`; the only session-ending terminal is `oh-handoff`).
 
 - If a chain completes (pass all the way through) and the task has more work → start a new auto-classify cycle
 - If a chain completes and the task is done → summarize with receipts, present results
@@ -86,4 +114,13 @@ Before routing, check: "Can I proceed without guessing?" If the next skill's inp
 
 ## User Skills
 
-Skills in `~/.agents/skills/` and `~/.config/opencode/skills/` are auto-discovered on every session. On name conflict with a built-in `oh-*` skill, the user version wins. User skills survive `npm update openhermes`. The autopilot treats them identically to built-in skills — they appear in the available skills list and can be loaded through the skill tool on demand.
+Skills in `~/.agents/skills/` and `~/.config/opencode/skills/` are auto-discovered on every session. On name conflict with a built-in `oh-*` skill, the user version wins. User skills survive `npm update openhermes`.
+
+### User skills in the routing loop
+
+User skills are **first-class routing citizens**. The autopilot treats them identically to built-in skills:
+
+- **They appear in the available skills list** and can be loaded through the skill tool on demand
+- **Their `route:` frontmatter drives routing** — after a user skill completes, the autopilot reads its `route.pass`/`route.fail`/`route.blocker` and routes to the next skill
+- **Any skill can route to a user skill** — if a built-in skill's `route.pass` points to `oh-deploy` (user skill), the autopilot routes there
+- **No registration step** — add `route:` frontmatter to any skill file and it participates in the routing graph automatically

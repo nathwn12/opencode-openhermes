@@ -1,10 +1,15 @@
 ---
 name: oh-handoff
 description: "Compact session state into a structured handoff document"
+tier: 2
 triggers:
   - "session handoff"
   - "handoff to another agent"
   - "handoff the session"
+route:
+  pass: done
+  fail: surface
+  blocker: surface
 ---
 
 # oh-handoff

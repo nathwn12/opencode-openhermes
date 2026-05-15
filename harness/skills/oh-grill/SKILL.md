@@ -10,6 +10,10 @@ triggers:
   - "poke holes in this plan"
   - "interrogate this plan"
   - "stress test this design"
+route:
+  pass: oh-planner
+  fail: oh-expert
+  blocker: surface
 ---
 
 # oh-grill

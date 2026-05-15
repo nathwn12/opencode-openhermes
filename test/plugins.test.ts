@@ -46,7 +46,7 @@ describe("bootstrap helpers", () => {
     const requiredFiles: ReadonlyArray<readonly string[]> = [
       ["codex", "CONSTITUTION.md"],
       ["instructions", "RUNTIME.md"],
-      ["skills", "oh-plan", "SKILL.md"],
+      ["skills", "oh-planner", "SKILL.md"],
     ]
 
     for (const parts of requiredFiles) {

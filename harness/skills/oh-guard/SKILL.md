@@ -1,10 +1,15 @@
 ---
 name: oh-guard
 description: "Safety confirmation mode — warn before destructive operations"
+tier: 2
 triggers:
   - "confirm before"
   - "safety confirmation"
   - "guard mode"
+route:
+  pass: mode
+  fail: mode
+  blocker: surface
 ---
 
 # oh-guard

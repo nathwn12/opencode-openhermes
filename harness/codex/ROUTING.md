@@ -1,76 +1,24 @@
 # OpenHermes Routing Graph
 
-Every skill routes to the next based on outcome. No dead ends.
+## Overview
 
-## Routing semantics
+Routing is **dynamic** — each skill carries its own routing metadata in its `SKILL.md` frontmatter (`route.pass`, `route.fail`, `route.blocker`). The autopilot reads the current skill's frontmatter at runtime to determine the next hop. This allows user skills to participate in routing automatically.
 
-Every routing directive uses three outcomes:
+This document serves as a human-readable reference for the overall flow. For routing decisions, always read the skill's frontmatter — it is the authoritative source.
 
-| Outcome | Meaning |
-|---------|---------|
-| **→ pass** | Skill completed its primary mission successfully |
-| **→ fail** | Skill found issues, got incomplete results, or cannot satisfy its objective |
-| **→ blocker** | Skill hit an unrecoverable obstacle — surface to user immediately |
+## Route value types
 
-If a skill has no explicit route for an outcome, the fallback is always **surface to user with findings**.
-
-## Canonical routing table
-
-### Workflow skills
-*Includes oh-doctor (command, not skill) for diagnostic routing.*
-
-| Skill | pass | fail | blocker |
-|-------|------|------|---------|
-| **oh-planner** | → oh-grill (stress-test plan) | → oh-planner (revise gaps) | surface |
-| **oh-builder** | → oh-gauntlet (test) | → oh-builder (fix) | surface |
-| **oh-gauntlet** | → oh-ship (all pass) | → oh-builder (fix issues) | surface |
-| **oh-manifest** | → [pipeline: planner→builder→gauntlet→ship] | → oh-expert (diagnose loop failure) | surface |
-| **oh-grill** | → oh-planner (revise based on feedback) | → oh-expert (resolve confusion) | surface |
-| **oh-investigate** | → oh-builder (implement fix) | → oh-expert (deepen diagnosis) | surface |
-| **oh-expert** | → oh-builder (fix) or oh-gauntlet (re-test) | → oh-expert (re-diagnose) | surface |
-| **oh-ship** | → oh-retro (post-ship review) | → oh-expert (diagnose failure) | surface |
-| **oh-doctor** | → [report findings to user] | → oh-investigate (diagnose issues) | surface |
-| **oh-facade** | → oh-review (design review) or oh-manifest (return to pipeline) | → Phase 5 iterate (fix and re-audit) | surface |
-| **oh-fusion** | → oh-skills-link (verify discovery) or oh-skill-craft (optimize) | → oh-skill-craft (iterate via eval loop) | surface |
-
-### Review & analysis skills
-
-| Skill | pass | fail | blocker |
-|-------|------|------|---------|
-| **oh-review** | → oh-gauntlet (if code changes needed) or oh-ship | → oh-builder (fix violations) | surface |
-| **oh-plan-review** | → oh-grill (if concerns) or oh-manifest (execute) | → oh-planner (revise plan) | surface |
-| **oh-security** | → [report findings] | → oh-investigate (deepen) | surface |
-| **oh-health** | → [report score] | → oh-investigate (deepen) | surface |
-
-### Utility skills
-
-| Skill | pass | fail | blocker |
-|-------|------|------|---------|
-| **oh-init** | → [done — one-time setup] | → [retry with corrections] | surface |
-| **oh-prd** | → oh-issue (break into issues) | → oh-grill (stress requirements) | surface |
-| **oh-issue** | → [done — issues published] | → oh-planner (re-spec) | surface |
-| **oh-triage** | → oh-issue or oh-handoff | → oh-expert (clarify) | surface |
-| **oh-retro** | → oh-planner (next cycle) | → oh-handoff (if blocked) | surface |
-| **oh-handoff** | → [end of session — intended terminal] | → [surface blocker] | surface |
-| **oh-skill-craft** | → oh-skills-link (verify discovery) | → oh-expert (diagnose) | surface |
-| **oh-skills-link** | → [report link status] | → oh-skill-craft (fix skill) | surface |
-| **oh-skills-list** | → [done — read-only] | → [surface issue] | surface |
-
-### Mode skills (no routing — mode switches)
-
-| Skill | pass | fail | blocker |
-|-------|------|------|---------|
-| **oh-caveman** | → [mode active — return to prior skill] | → [fallback to normal mode] | surface |
-| **oh-freeze** | → [scope lock active — return to prior skill] | → [surface issue] | surface |
-| **oh-guard** | → [guard active — return to prior skill] | → [surface warning] | surface |
-| **oh-learn** | → [done — read-only] | → [surface gaps] | surface |
+| Value | Meaning |
+|-------|---------|
+| `oh-<name>` | Route to skill |
+| `[oh-a, oh-b]` | Route to one of — choose by context |
+| `surface` | Report findings to user, end chain |
+| `done` | Task complete — terminal |
+| `mode` | Mode switch — return to caller after toggle |
 
 ## Routing graph (simplified)
 
 ```
-oh-doctor ──fail──→ oh-investigate ──pass──→ oh-builder
-                                       fail──→ oh-expert ──pass──→ oh-builder
-                                                            fail──→ oh-expert
 oh-planner ──pass──→ oh-grill ──pass──→ oh-planner (revise) ──→ oh-manifest
               fail──→ oh-planner (revise)
 
