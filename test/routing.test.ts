@@ -40,6 +40,7 @@ const ENTRY_POINTS = new Set([
  * the user speaks "list skills" → oh-skills-list, etc.
  */
 const DIRECT_USER_SKILLS = new Set([
+  "oh-browser",     // "browser automation", "open a website", "scrape data"
   "oh-freeze",      // "freeze editing", "restrict to"
   "oh-full-output", // "full output", "complete code"
   "oh-guard",       // "confirm", "safety check"
@@ -311,6 +312,7 @@ describe("routing graph", () => {
 
     const expected = [
       "oh-builder",  // fail → oh-builder (retry build)
+      "oh-browser",  // fail → oh-browser (retry browser)
       "oh-expert",   // fail → oh-expert (keep diagnosing)
       "oh-facade",   // fail → oh-facade (iterate design)
       "oh-init",     // fail → oh-init (retry init)

@@ -43,6 +43,9 @@ When blocked, reduce scope, add constraints, and retry with evidence. Do not ask
 ### 13. Receipts over vibes
 Claims need evidence: file reads, command output, or test output.
 
+### 14. Know your shell before you speak
+Windows operates 3 shells: CMD, PowerShell, Git Bash. Every subagent must detect its runtime shell (via `$PSVersionTable`, `%CMDCMDLINE%`, or `$0`) before executing any command. Never guess. When in doubt, switch to PowerShell. The SHELL.md instruction defines detection, mapping, and switching. This is not optional — guessing causes silent failures and wasted cycles.
+
 ## Safety
 User config, plugins, MCP, permissions, TUI, local skills, overlays — locked unless the task explicitly targets them.
 

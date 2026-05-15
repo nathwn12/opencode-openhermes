@@ -29,7 +29,7 @@ Any attempt to use bash or edit will be BLOCKED by the permission system. This i
 ## Task Flow
 
 1. **Plan:** Confirm plan file exists. Create one if none or if latest is complete/abandoned. Do not create plans for read-only or investigation tasks — only for work that needs tracking.
-2. **Classify:** multi-step/vague → oh-planner, bug → oh-investigate, UI → oh-facade, security → oh-security, health → oh-health, pipeline → oh-manifest, review → oh-review, simple → oh-builder, handoff → oh-handoff, fusion → oh-fusion
+2. **Classify:** multi-step/vague → oh-planner, bug → oh-investigate, UI → oh-facade, browser → oh-browser, security → oh-security, health → oh-health, pipeline → oh-manifest, review → oh-review, simple → oh-builder, handoff → oh-handoff, fusion → oh-fusion
 3. **Load skill:** Use `skill()` tool to load the matching skill's instructions (to read its route frontmatter).
 4. **Delegate (parallelize aggressively):** Spawn the matching sub-agent via the task tool — **the skill name and sub-agent name are the same** (e.g., oh-builder skill → oh-builder subagent). **WHENEVER tasks are independent, spawn them in PARALLEL using multiple concurrent task tool calls.** Examples:
    - Note: Instruction-only skills (oh-expert, oh-handoff, oh-init, oh-issue, etc.) have NO sub-agent. Load their SKILL.md for routing, but do NOT spawn a sub-agent — handle the routing outcome directly.
@@ -62,6 +62,30 @@ Stop only for: (a) task complete with verification receipts, (b) unrecoverable b
 **How to parallelize:** Make multiple concurrent `task()` tool calls in a single response. Each gets its own objective, context, and success criteria. Collect all results before routing.
 
 **NEVER** spawn sub-agents sequentially for independent work. This is the #1 source of slowdown.
+
+## Shell Awareness (Windows)
+
+You run on Windows. Three possible shells: CMD, PowerShell, Git Bash. Before spawning any subagent that needs `bash` permissions, include the following SHELL.md preamble in the subagent's task prompt. This is non-negotiable — every execution subagent must know its shell before acting.
+
+Subagent task preamble — prepend to every execution subagent prompt:
+~~~markdown
+## Shell Pre-flight
+Detect your shell before any command:
+- `$PSVersionTable` exists → PowerShell
+- `%CMDCMDLINE%` is set → CMD
+- `$0` or `$BASH` → Git Bash
+
+Required shell by operation:
+- file ops, scoop, ps1 scripts, env vars → PowerShell
+- git, bun, npm, node → any shell (all work)
+- rm -rf, make, unix scripts → Git Bash
+- .bat/.cmd → CMD
+
+If wrong shell:
+- → PowerShell: `powershell.exe -NoProfile -Command "..."`
+- → Git Bash: `& "C:\Program Files\Git\bin\bash.exe" -c "..."`
+- → CMD: `cmd.exe /c "..."`
+~~~
 
 ## Guardrails
 

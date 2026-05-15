@@ -1,5 +1,26 @@
 # Changelog
 
+## [4.6.2] - 2026-05-16
+
+### Added
+
+- **Shell detection discipline:** 5-layer hardening — SHELL.md (canonical reference), CONSTITUTION principle 14 (behavioral rule), RUNTIME shell pre-flight (runtime check), AUTOPILOT phase 0 (session-first), openhermes.md shell awareness (orchestrator ground rule).
+- **oh-browser skill:** New browser automation agent skill wrapping the agent-browser CLI. Navigate pages, fill forms, take screenshots, scrape data, test web apps.
+- **oh-browser wired into routing tests:** Browser skill added to routing.test.ts to verify skill detection and routing.
+
+### Changed
+
+- **SkillSlice architecture:** 8 skills restructured with progressive-disclosure sections/ layout — oh-ascii, oh-facade, oh-fusion, oh-init, oh-plan-review, oh-planner, oh-refactor, oh-skill-craft. Each skill now uses modular sections/ directory for maintainability.
+- **oh-ship rewritten:** New branch protocol (auto-create/auto-validate), conditional PR creation (only when target branch differs), no auto-PR on same-branch pushes. Safer ship workflow with explicit user confirmation gates.
+- **oh-facade fused 5 user skills into one:** External design-taste-frontend, frontend-design, gpt-taste, high-end-visual-design, stitch-design-taste absorbed into a unified oh-facade with integrated design system generation.
+- **README SkillSlice section reorganized:** Added gpt-tokenizer benchmark table showing token counts per skill section. Clearer section hierarchy for SkillSlice architecture docs.
+- **Agents updated (15 agents):** oh-builder, oh-facade, oh-fusion, oh-gauntlet, oh-grill, oh-manifest, oh-plan-review, oh-planner, oh-refactor, oh-retro, oh-review, oh-security, oh-ship, oh-skill-craft, openhermes — skill descriptions, delegation rules, and routing references refreshed.
+
+### Removed
+
+- **User skill debloat:** gh-cli + 8 redundant user skills removed. Only essential skills retained in user skill directories.
+- **oh-powershell removed:** Was benchmark-only, never intended to ship. Eliminated from the harness.
+
 ## 4.4.0 — 2026-05-16
 
 ### Features

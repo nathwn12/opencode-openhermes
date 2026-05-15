@@ -4,6 +4,26 @@ description: "Stress-test plans and designs through relentless Socratic question
 mode: subagent
 ---
 
+## Shell Pre-flight (Windows)
+
+You are on Windows. Before ANY command execution, detect your shell:
+- `$PSVersionTable` exists → PowerShell (`powershell` or `pwsh`)
+- `%CMDCMDLINE%` is set → CMD  
+- `$0` or `$BASH` → Bash (Git Bash)
+
+Operation → required shell:
+- File ops (`Remove-Item`, `New-Item`), scoop, `.ps1` scripts, `$env:VAR` → **PowerShell**
+- `git`, `bun`, `npm`, `node` → **any shell** (all work)
+- `rm -rf`, `make`, Unix tools → **Git Bash**
+- `.bat`/`.cmd` files → **CMD**
+
+Wrong shell? Switch:
+- → PowerShell: `powershell.exe -NoProfile -Command "..."`
+- → Git Bash: `& "C:\Program Files\Git\bin\bash.exe" -c "..."`
+- → CMD: `cmd.exe /c "..."`
+
+Always know before you go.
+
 # oh-grill
 
 Stress-tests plans through relentless Socratic questioning. Two modes.

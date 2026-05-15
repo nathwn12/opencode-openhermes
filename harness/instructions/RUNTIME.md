@@ -17,6 +17,17 @@ Root: package-local harness plus repo AGENTS.md. The autopilot engine (`harness/
 - `~/.local/share/opencode/openhermes/plans/<project-name>-plan-<nnn>.md` — produced by oh-planner, consumed by oh-builder and oh-manifest. The plan file is self-contained: it includes task tracking (Tasks + Completed sections) and work log (Subagents table + Completed log). No separate todo.md or work-log.md files.
 - `~/.local/share/opencode/openhermes/plans/<project-name>-instincts.jsonl` — behavioral patterns extracted by oh-learn.
 
+## Shell Pre-Flight (Windows)
+
+Before every subagent spawn, the primary agent MUST:
+
+1. **Detect** the runtime shell using SHELL.md detection snippet
+2. **Map** the required operation to the correct shell (SHELL.md table)
+3. **Switch** if the current shell doesn't match the operation
+4. **Document** the detected shell in the subagent's task context
+
+The SHELL.md instruction is loaded alongside CONSTITUTION.md and RUNTIME.md as part of the bootstrap. Every execution-enabled subagent receives it.
+
 ## Plan Lifecycle
 
 Plans accumulate over sessions. The AI manages them directly — no special command or skill needed.

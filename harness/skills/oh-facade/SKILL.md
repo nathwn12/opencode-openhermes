@@ -2,34 +2,19 @@
 name: oh-facade
 description: "Full UI pipeline: from concept to production frontend. Design system generation, premium component architecture, production-grade implementation, structured audit. Use when building any user-facing interface, component system, or visual application."
 tier: 4
+format: chunked
 benefits-from: [oh-planner, oh-gauntlet, oh-review]
-triggers:
-  - "build a frontend for"
-  - "create a design system"
-  - "build a landing page"
-  - "build a dashboard"
-  - "build a web app"
-  - "visual design for"
-  - "make this look good"
-  - "redesign this page"
-  - "redesign this app"
-  - "theme the application"
-  - "layout this page"
-  - "responsive layout"
-  - "user interface design"
-  - "improve the UX"
-  - "aesthetic design"
-  - "style the component"
-  - "polish the UI"
-  - "frontend component"
-  - "interface design for"
-  - "build a component for"
+triggers: ["build a frontend for", "create a design system", "build a landing page", "build a dashboard", "build a web app", "visual design for", "make this look good", "redesign this page", "redesign this app", "theme the application", "layout this page", "responsive layout", "user interface design", "improve the UX", "aesthetic design", "style the component", "polish the UI", "frontend component", "interface design for", "build a component for"]
 route:
-  pass:
-    - oh-review
-    - oh-manifest
+  pass: [oh-review, oh-manifest]
   fail: oh-facade
   blocker: surface
+sections:
+  phase-0-redesign: "Framework/styling scan, audit-driven diagnosis using Phase 4 checklist, targeted in-place upgrades without rewrite"
+  phase-1-concept: "Context questions (product/user/problem/constraints), 4 archetypes (Warm Minimalist, Premium SaaS, Industrial Brutalist, Creative/Expressive), 3 metric dials (VARIANCE/MOTION/DENSITY 1-10), design brief output"
+  phase-2-design-system: "Color system (neutral/accent/surface/text/semantic/dark), typography stack (display/body/mono/serif + banned fonts), component specs (buttons/cards/forms/loading/empty/nav), layout (grid/container/spacing/responsive), motion (spring/scroll/hover/active/performance), GSAP ScrollTrigger patterns (pinning/scale/horizontal/stagger/text-split/python-randomization/bento)"
+  phase-3-build: "CSS custom properties + Tailwind token mapping, component library (all states: default/hover/active/focus/disabled/loading/empty/error), page assembly + responsive collapse + viewport states, framework/a11y/meta requirements"
+  phase-4-audit: "Priority-ranked audit P1-P5 (typography/color/layout, interactivity/states/motion, content quality, hardening/a11y, existing-project redesign scan). Iteration loop: fix in priority order, re-audit per level, surface blocker"
 ---
 
 # oh-facade
@@ -38,90 +23,20 @@ Full UI pipeline: Concept → Design System → Build → Audit → Iterate. Clo
 
 ---
 
-## Phase 1: Concept
+## Sections
 
-Input: vague idea / brief. Output: structured design brief.
-
-### 1a. Context
-What product/feature? Who uses it? What problem does it solve? Technical constraints (framework, viewport, a11y)? New build or redesign?
-
-### 1b. Direction Archetype
-
-Commit to one. Do not hedge.
-
-| Archetype | Best for | Substrate | Density |
-|-----------|----------|-----------|---------|
-| Minimal Editorial | Content sites, portfolios | Light (warm off-white) | Low (1-3) |
-| Premium SaaS | Web apps, dashboards | Light/Dark (zinc) | Medium (4-7) |
-| Industrial/Data | Analytics, monitoring, tools | Dark (charcoal) | High (7-10) |
-| Creative/Expressive | Marketing, showcases | Dark or Light | Variable |
-
-### 1c. Metric Dials
-
-| Dial | 1-3 | 4-7 | 8-10 |
-|------|-----|-----|------|
-| VARIANCE | Symmetric | Offset, asymmetric | Chaotic |
-| MOTION | CSS only | CSS + spring | Cinematic |
-| DENSITY | Airy | Standard app | Cockpit |
-
-**Default:** VARIANCE=6, MOTION=5, DENSITY=4
-
-### 1d. Output Brief
-Single paragraph: archetype, substrate, dials, key differentiator. Self-contradictory → surface. Otherwise → Phase 2.
+| Phase | Description |
+|-------|-------------|
+| [Phase 0: Redesign Entry](sections/phase-0-redesign.md) | Existing project scan — detect framework/styling, run Phase 4 diagnosis, apply targeted upgrades without rewrite |
+| [Phase 1: Concept](sections/phase-1-concept.md) | Context questions (product/user/problem/constraints), 4 visual archetypes (Warm Minimalist, Premium SaaS, Industrial Brutalist, Creative/Expressive), 3 metric dials (VARIANCE/MOTION/DENSITY), design brief output |
+| [Phase 2: Design System](sections/phase-2-design-system.md) | Color tokens, typography stack, component specs, layout grid, motion/spring rules, GSAP ScrollTrigger patterns (pinning/scale/horizontal/stagger/text-split/python-randomization/bento) |
+| [Phase 3: Build](sections/phase-3-build.md) | CSS foundations + token mapping, component library (all states: default/hover/active/focus/disabled/loading/empty/error), page assembly + responsive + viewport states, framework/a11y/meta |
+| [Phase 4: Audit + Iterate](sections/phase-4-audit.md) | Priority-ranked audit P1-P5 (typography/color/layout, interactivity/states/motion, content quality, hardening/a11y, existing-project redesign). Fix in priority order, re-audit per level, surface blocker |
 
 ---
 
-## Phase 2: Design System
+## Hard Bans
 
-Input: brief + dials. Output: `DESIGN.md` — single source of truth. Every value specific, no vagueness.
-
-### 2a. Color
-- **Neutral**: Zinc or Slate. One. Never mix.
-- **Accent**: Exactly one. Saturation < 80%. No AI purple/blue.
-- **Surface**: Background, card, border, elevated. Specific hex.
-- **Text**: Primary, secondary, muted, inverse. Specific hex.
-- **Semantic**: Success, warning, error, info. Specific hex.
-- **Dark**: Never `#000`. Use `#0a0a0a` or `#121212`.
-
-### 2b. Typography
-- **Display**: Premium sans (Geist, Satoshi, Cabinet Grotesk, Outfit, Switzer). Tight tracking `-0.03em` to `-0.05em`. Fluid `clamp()`.
-- **Body**: Leading 1.6-1.8. Max 65ch. Off-black, not `#000`.
-- **Mono**: JetBrains Mono, Geist Mono, SF Mono. Required when DENSITY > 5.
-- **Serif**: Editorial/creative only (Fraunces, Instrument Serif). Never in dashboards.
-- **BANNED**: Inter, Roboto, Arial, Open Sans, Helvetica, Georgia, Times New Roman.
-
-### 2c. Components
-
-**Buttons:** Primary (solid, off-black/accent), Secondary (outline/ghost), Icon (square). Hover lift/darken. Active `scale(0.98)`. Focus ring.
-
-**Cards:** Double-Bezel (outer shell + inner core) or border-only (`border-t`/`divide-y` for high density). Cards only when elevation communicates hierarchy.
-
-**Forms:** Label above, error below. Focus ring. Touch targets ≥ 44px.
-
-**Loading:** Skeletons matching layout dimensions. No spinners.
-
-**Empty:** Composed illustration + message + action button.
-
-**Nav:** Glass floating pill (low density), sidebar (medium/high), or top bar. Active state. Mobile collapse (not hamburger-only).
-
-### 2d. Layout
-- **Grid**: CSS Grid. No flexbox percentage math for multi-column.
-- **Container**: 1200-1440px max-width with auto margins.
-- **Section spacing**: `py-32 md:py-48` (low), `py-24` (medium), `py-16` (high).
-- **Responsive**: All multi-column → single below 768px. No exceptions.
-- **Full-height**: `min-h-[100dvh]`. Never `h-screen` (iOS Safari bug).
-- **BANNED**: Centered hero when VARIANCE > 4, 3-equal-card rows, edge-to-edge on wide screens.
-
-### 2e. Motion
-- **Spring**: `cubic-bezier(0.32, 0.72, 0, 1)` or Framer `spring(stiffness:100, damping:20)`. No linear.
-- **Scroll entry**: fade up `translateY(12-24px)` + opacity 0→1, 600-800ms. IntersectionObserver or CSS scroll-driven. No `window.addEventListener('scroll')`.
-- **Stagger**: Lists cascade via `animation-delay` or `staggerChildren`.
-- **Hover**: scale, translate, shadow, or color. 200-300ms.
-- **Active**: Every clickable gets `scale(0.98)` or `translateY(1px)`.
-- **Performance**: Only `transform` and `opacity`. No `top/left/width/height`. `will-change: transform` sparingly.
-- **Backdrop-blur**: Fixed/sticky elements only. Never scrolling containers.
-
-### 2f. Hard Bans (Anti-Patterns)
 - No emojis in code/content/alt/markup
 - No Lorem Ipsum — write real draft copy
 - No "Elevate", "Seamless", "Next-Gen", "Unleash", "Game-changer"
@@ -132,57 +47,16 @@ Input: brief + dials. Output: `DESIGN.md` — single source of truth. Every valu
 - No animated `top/left/width/height`
 - No `window.addEventListener('scroll')`
 - No `h-screen`
+- No pill shapes on large containers, cards, or primary buttons
+- No generic icon libraries (Lucide, Feather, Heroicons)
+- No 3-equal-card feature rows — replace with 2-column zig-zag, asymmetric grid, or masonry
+- No `#000000` backgrounds — use off-black `#0a0a0a` or `#121212`
+- No even 45-degree linear gradients — break with radial, noise overlay, or mesh
+- No mixing warm and cool grays — stick to one gray family throughout
+- No random dark section in light page (or vice versa) — commit to one substrate
+- No orphaned words — use `text-wrap: balance` or `text-wrap: pretty`
 
 ---
-
-## Phase 3: Build
-
-Input: DESIGN.md. Output: production code.
-
-### 3a. Foundations
-CSS custom properties for colors, spacing, typography, shadows, radii. Tailwind config extensions mapping tokens to utilities. Theme provider. Component directory structure.
-
-### 3b. Component Library
-Implement ALL defined components with every state: default, hover, active, focus-visible, disabled, loading (skeleton), empty (illustration + action), error (inline). Performance: transform/opacity only, systemic z-index scale.
-
-### 3c. Pages
-Full interface from components. Responsive collapse at 768px. All viewport states (loading → populated → empty → error). Nav with active states and mobile collapse.
-
-### 3d. Requirements
-- Check `package.json` before importing — never assume a library exists
-- Framework-appropriate patterns (Server Components, island architecture)
-- Semantic HTML: `<nav>`, `<main>`, `<section>`, `<article>`, `<aside>`, `<header>`, `<footer>`
-- A11y: focus rings, skip-to-content, alt text, aria labels
-- Meta: `<title>`, description, `og:image`, viewport
-
----
-
-## Phase 4: Audit
-
-Input: built code + DESIGN.md. Output: ranked pass/fail report.
-
-### Priority 1 (do first)
-- **Typography**: font matches spec? scale correct? tracking? no orphans? max-width?
-- **Color**: single accent? saturation < 80%? no AI purple? consistent? dark not pure black?
-- **Layout**: grid not flexbox math? `min-h-[100dvh]`? responsive at 768px?
-
-### Priority 2 (feel)
-- **Interactivity**: hover on all clickables? active feedback? focus rings? 200-300ms transitions?
-- **States**: every component has loading/empty/error? skeletons (not spinners)?
-- **Motion**: scroll entries? staggered? spring physics?
-
-### Priority 3 (content)
-- No lorem ipsum, cliches (Elevate, etc), generic names, emojis, bad icons?
-
-### Priority 4 (hardening)
-- Double-Bezel or appropriate card? button-in-button? nav active states?
-- Consistent icon stroke? semantic HTML? no inline styles?
-- 404 page? skip-to-content? meta tags? cookie consent?
-
-### Phase 5: Iterate
-1. Fix in Priority order. Re-audit after each level.
-2. All P1-P3 pass → done. P4 surface as recommendations.
-3. Blocked on a check → narrow scope or surface.
 
 ## Design Principles
 
@@ -191,6 +65,9 @@ Input: built code + DESIGN.md. Output: ranked pass/fail report.
 3. **Consistency** — One palette, one font system, one architecture.
 4. **Performance** — Beautiful + laggy = not beautiful. Transform-only, guarded backdrop-blur.
 5. **Ship every state** — Default-only is not production.
+6. **Redesign first** — For existing projects, diagnose before prescribing. Improve in-place. A targeted upgrade beats a rewrite.
+
+---
 
 ## Routing
 

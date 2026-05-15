@@ -14,6 +14,17 @@ Logic:
 
 This is non-negotiable. If the plan condition is not satisfied, do not proceed to classification.
 
+## Phase 0: Shell Pre-Flight (Before Classification)
+
+Check and document the current runtime shell:
+- PowerShell detected → `powershell` or `pwsh`
+- CMD detected → `cmd`
+- Git Bash detected → `bash`
+
+This is not a blocker — all shells can start work. But the detected shell MUST be documented in the plan's current state section. If the task will require a different shell for core operations, note the switch.
+
+The classification decision matrix below uses the detected shell to issue context-appropriate commands when spawning subagents.
+
 ## Auto-Classify
 
 Before any substantive response, classify the task using this decision matrix:
@@ -26,6 +37,7 @@ Before any substantive response, classify the task using this decision matrix:
 | Security concern, vulnerability, threat model | SECURITY NEEDED | Load **oh-security**. Do not ask. |
 | Code quality, performance, linting, dead code | HEALTH CHECK | Load **oh-health**. Do not ask. |
 | ASCII diagram, box drawing, diagram alignment, architecture diagram, PlantUML, "make a diagram", diagram validation | ASCII DIAGRAM NEEDED | Load **oh-ascii** (Design + Generate + Validate). Do not ask. |
+| Browser, website interaction, form fill, click, screenshot, scrape data, "open a website", "test web app", "login to a site", "automate browser", "check slack" | BROWSER AUTOMATION NEEDED | Load **oh-browser** (CLI-based browser automation via agent-browser). Do not ask. |
 | Full pipeline: plan+implement+test+ship | PIPELINE NEEDED | Load **oh-manifest**. Do not ask. |
 | Full pipeline with UI components | PIPELINE + UI | Load **oh-manifest**. It delegates UI work to **oh-facade** internally. |
 | Code review, design review, PR review | REVIEW NEEDED | Load **oh-review**. Do not ask. |
