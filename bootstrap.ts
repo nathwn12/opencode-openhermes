@@ -6,6 +6,7 @@ import { createLogger } from "./lib/logger.ts"
 import { getHarnessDir, setHarnessRootForTest, resolveHarnessRoot } from "./lib/harness-resolver.ts"
 
 const log = createLogger("bootstrap")
+const sessionLog = createLogger("session")
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const BOOTSTRAP_MARKER = "OPENHERMES_BOOTSTRAP"
 const OPENHERMES_AGENT = "OpenHermes"
@@ -113,6 +114,56 @@ function readText(filePath: string): string {
   return fs.existsSync(filePath) ? fs.readFileSync(filePath, "utf8") : ""
 }
 
+function readPlanSummary(projectDir: string): string | null {
+  const planPath = path.join(projectDir, ".opencode", "plan.md")
+  if (!fs.existsSync(planPath)) return null
+  const source = fs.readFileSync(planPath, "utf8")
+  const status = source.match(/^Status:\s*(.+)$/m)?.[1]?.trim()
+  const objective = source.match(/^Objective:\s*(.+)$/m)?.[1]?.trim()
+  if (!status && !objective) return null
+  const parts = [status ? `status=${status}` : null, objective ? `objective=${objective}` : null].filter(Boolean)
+  return `Active plan: ${parts.join(" | ")}`
+}
+
+export function buildCompactionContext(projectDir: string): string[] {
+  const context = [
+    "OpenHermes: native-first, verify before claim, delegate substantive work, concise over verbose.",
+    "Preserve domain terms: skill, command, agent, bootstrap, compaction.",
+    "Preserve blockers, current task, and next steps; do not invent durable state.",
+  ]
+
+  const planSummary = readPlanSummary(projectDir)
+  if (planSummary) context.push(planSummary)
+
+  return context
+}
+
+type SessionLifecycleEvent =
+  | { type: "session.created"; properties: { info: { id: string } } }
+  | { type: "session.compacted"; properties: { sessionID: string } }
+  | { type: "session.error"; properties: { sessionID?: string; error?: unknown } }
+
+function readErrorMessage(error: unknown): string {
+  if (!error || typeof error !== "object") return "unknown error"
+  const value = error as { name?: unknown; message?: unknown; data?: { message?: unknown } }
+  const name = typeof value.name === "string" && value.name ? value.name : "Error"
+  const message = typeof value.data?.message === "string" && value.data.message ? value.data.message : typeof value.message === "string" && value.message ? value.message : ""
+  return message ? `${name}: ${message}` : name
+}
+
+export function formatSessionEvent(event: SessionLifecycleEvent): { level: "info" | "error"; message: string } | null {
+  switch (event.type) {
+    case "session.created":
+      return { level: "info", message: `session.created session=${event.properties.info.id}` }
+    case "session.compacted":
+      return { level: "info", message: `session.compacted session=${event.properties.sessionID}` }
+    case "session.error":
+      return { level: "error", message: `session.error session=${event.properties.sessionID ?? "unknown"} error=${readErrorMessage(event.properties.error)}` }
+    default:
+      return null
+  }
+}
+
 function buildBootstrapContent(hDir: string): string {
   const parts = [
     `<${BOOTSTRAP_MARKER}>`,
@@ -143,12 +194,13 @@ interface OpenHermesConfig {
   default_agent?: string
 }
 
-export const BootstrapPlugin: Plugin = async () => {
+export const BootstrapPlugin: Plugin = async (ctx) => {
   const hDir = getHarnessDir()
   const skillsDir = path.join(hDir, "skills")
   const commandsDir = path.join(hDir, "commands")
   const agentsDir = path.join(hDir, "agents")
   const bootstrapContent = buildBootstrapContent(hDir)
+  const compactionContext = buildCompactionContext(ctx.directory)
 
   return {
     config: async (config: OpenHermesConfig) => {
@@ -183,14 +235,23 @@ export const BootstrapPlugin: Plugin = async () => {
       config.default_agent = OPENHERMES_AGENT
     },
 
-    "experimental.chat.messages.transform": async (_input: unknown, output: { messages?: Array<{ info?: { role?: string }; parts?: Array<{ text?: string }> }> }) => {
+    event: async ({ event }) => {
+      const record = formatSessionEvent(event as SessionLifecycleEvent)
+      if (!record) return
+      sessionLog[record.level](record.message)
+    },
+
+    "experimental.session.compacting": async (_input, output) => {
+      output.context.push(...compactionContext)
+    },
+
+    "experimental.chat.messages.transform": async (_input: unknown, output: { messages?: Array<{ info?: { role?: string }; parts?: Array<{ text?: string; type?: string }> }> }) => {
       try {
         if (!output.messages?.length) return
         const firstUser = output.messages.find(m => m?.info?.role === "user")
         if (!firstUser?.parts?.length) return
         if (firstUser.parts.some(p => p.text?.includes(BOOTSTRAP_MARKER))) return
-        const ref = firstUser.parts[0]
-        firstUser.parts.unshift({ ...ref, type: "text", text: bootstrapContent })
+        firstUser.parts.unshift({ type: "text", text: bootstrapContent })
       } catch (err: unknown) {
         log.error("transform error:", (err as Error)?.message)
       }

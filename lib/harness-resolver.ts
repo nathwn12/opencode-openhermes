@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url"
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const PKG_DIR = path.resolve(__dirname, "..")
 
-const REQUIRED_HARNESS_FILES: ReadonlyArray<[string, string, string]> = [
+const REQUIRED_HARNESS_FILES: ReadonlyArray<readonly string[]> = [
   ["codex", "CONSTITUTION.md"],
   ["instructions", "RUNTIME.md"],
   ["skills", "oh-plan", "SKILL.md"],
