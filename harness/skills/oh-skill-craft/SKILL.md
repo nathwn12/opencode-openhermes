@@ -98,10 +98,90 @@ Scripts save tokens and improve reliability vs generated code.
 - [ ] Anti-patterns documented
 - [ ] Tests still pass after adding (`npm test`)
 
+## Eval-Driven Iteration
+
+After writing the initial skill draft, iterate using test cases and evidence rather than guessing.
+
+### 1. Create Test Cases
+
+Come up with 2-3 realistic test prompts — the kind of thing a real user would actually say. Save to `evals/evals.json`:
+
+```json
+{
+  "skill_name": "oh-<name>",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "User's realistic task prompt",
+      "expected_output": "Description of expected result",
+      "files": []
+    }
+  ]
+}
+```
+
+Good test prompts are substantive multi-step tasks — not simple queries like "read this file." The model can handle simple tasks without a skill. Complex, multi-step, or specialized queries reveal whether the skill is pulling its weight.
+
+### 2. Spawn Runs
+
+For each test case, spawn two subagents in parallel:
+- **With-skill run** — load the skill, execute the task
+- **Baseline run** — same prompt without the skill (for new skills) or with the previous version (for improvements)
+
+Save outputs to `iteration-<N>/eval-<ID>/with_skill/outputs/` and `iteration-<N>/eval-<ID>/without_skill/outputs/`.
+
+### 3. Draft Assertions
+
+While runs execute, draft objectively verifiable assertions for each test case. Good assertions have descriptive names and can be checked programmatically where possible. Update `evals/evals.json` with the assertions.
+
+### 4. Grade and Compare
+
+Grade runs against assertions. Aggregate results into pass rates, timing, and token usage. Look for:
+- Assertions that always pass regardless of skill (non-discriminating — remove them)
+- High-variance evals (possibly flaky tests)
+- Time/token tradeoffs between skill and baseline
+
+### 5. Improve
+
+Based on results, revise the skill. Generalize from specific failures rather than overfitting to the test cases. The goal is a skill that works across a million different prompts, not just 2-3 examples. Keep instructions lean — remove anything not pulling its weight.
+
+### 6. Loop
+
+Rerun all test cases into a new iteration directory. Repeat until:
+- User says they're happy
+- All feedback is positive
+- No meaningful progress between iterations
+
+## Description Optimization
+
+The description field in frontmatter is the primary mechanism for skill triggering. After the skill is solid, optimize the description for accuracy.
+
+### Trigger Eval Queries
+
+Create 20 eval queries — a mix of should-trigger and should-not-trigger cases:
+
+```json
+[
+  {"query": "realistic user prompt that should trigger", "should_trigger": true},
+  {"query": "near-miss prompt that should NOT trigger", "should_trigger": false}
+]
+```
+
+Key principles:
+- **Should-trigger** (8-10): different phrasings of the same intent — formal, casual. Include edge cases and contexts where this skill competes with another but should win.
+- **Should-not-trigger** (8-10): near-misses that share keywords but need a different skill. Avoid obviously irrelevant queries — the hard cases are the adjacent ones.
+
+Queries must be realistic — what a user would actually type, with concrete details, not abstract descriptions.
+
+### Run Optimization
+
+Iterate the description: test current, propose improvements based on failures, re-test. Select the description that scores best on held-out test data. Apply the winner to the skill's frontmatter.
+
 ## Routing
 
 | Outcome | Route |
 |---------|-------|
 | pass | → oh-skills-link (verify skill discovery) |
+| iteration data available | → oh-learn (extract patterns from eval results) |
 | fail | → oh-expert (diagnose skill creation issues) |
 | blocker | → surface to user |

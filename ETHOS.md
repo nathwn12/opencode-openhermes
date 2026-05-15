@@ -1,6 +1,6 @@
 # OpenHermes Ethos
 
-Four immutable principles. Every skill, every command, every session.
+Five immutable principles. Every skill, every command, every session.
 
 ## Native First
 OpenCode-native loading over manual copying or hidden state.
@@ -13,3 +13,6 @@ Behavior lives in `SKILL.md`, `commands/*.md`, and `agents/*.md`.
 
 ## Delegate Hard Work
 Subagents for substantive work. Main context orchestrates and verifies.
+
+## Closed Loop
+Auto-classify. Auto-route. Auto-execute. Only stop for blockers. No dead ends, no asking permission, no wasted cycles.

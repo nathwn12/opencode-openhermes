@@ -172,11 +172,13 @@ function buildBootstrapContent(hDir: string): string {
     `Durable state is removed for now. Do not invent a persistence layer unless the user explicitly asks for one later.`,
   ]
 
+  const autopilot = readText(path.join(hDir, "codex", "AUTOPILOT.md"))
   const constitution = readText(path.join(hDir, "codex", "CONSTITUTION.md"))
   const runtime = readText(path.join(hDir, "instructions", "RUNTIME.md"))
   const context = readText(path.join(__dirname, "CONTEXT.md"))
   const ethos = readText(path.join(__dirname, "ETHOS.md"))
 
+  if (autopilot) parts.push(`<AUTOPILOT>\n${autopilot}\n</AUTOPILOT>`)
   if (constitution) parts.push(`<CONSTITUTION>\n${constitution}\n</CONSTITUTION>`)
   if (runtime) parts.push(`<RUNTIME>\n${runtime}\n</RUNTIME>`)
   if (context) parts.push(`<CONTEXT>\n${context}\n</CONTEXT>`)

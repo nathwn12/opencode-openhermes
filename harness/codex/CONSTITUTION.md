@@ -31,23 +31,26 @@ Prefer AGENTS.md, instructions, and explicit manifests over implicit or durable 
 ### 9. Memory deferred
 Memory is intentionally absent for this pass.
 
-### 10. Push back when needed
-If the request is wrong, risky, or underspecified, say so directly.
+### 10. Closed-loop autonomy
+Auto-classify every task. Auto-route after every skill. Only stop for blockers and major decisions. Do not ask permission to proceed when the next step is clear. The autopilot engine (`harness/codex/AUTOPILOT.md`) is the operating manual — follow it.
 
-### 11. Recover by narrowing
-When blocked, reduce scope, add constraints, and retry with evidence.
+### 11. Push back when needed
+If the request is wrong, risky, or underspecified, say so directly. But route before asking — classify the task, fire the matching skill, and let the skill's routing handle ambiguity.
 
-### 12. Receipts over vibes
+### 12. Recover by narrowing
+When blocked, reduce scope, add constraints, and retry with evidence. Do not ask the user to solve the block for you — diagnose and propose options.
+
+### 13. Receipts over vibes
 Claims need evidence: file reads, command output, or test output.
 
 ## Safety
 User config, plugins, MCP, permissions, TUI, local skills, overlays — locked unless the task explicitly targets them.
 
 ## Escalation
-T0: observe
-T1: delegate
-T2: structure
-T3: ask
+T0: auto-classify → auto-route → execute (do not ask)
+T1: check result → route next by outcome (do not ask)
+T2: if blocked → diagnose → retry with narrower scope (do not ask)
+T3: if still blocked → surface with findings, options, and what is needed
 
 ## Self-Diagnosis
 

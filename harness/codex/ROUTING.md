@@ -30,6 +30,8 @@ If a skill has no explicit route for an outcome, the fallback is always **surfac
 | **oh-expert** | → oh-builder (fix) or oh-gauntlet (re-test) | → oh-expert (re-diagnose) | surface |
 | **oh-ship** | → oh-retro (post-ship review) | → oh-expert (diagnose failure) | surface |
 | **oh-doctor** | → [report findings to user] | → oh-investigate (diagnose issues) | surface |
+| **oh-facade** | → oh-review (design review) or oh-manifest (return to pipeline) | → Phase 5 iterate (fix and re-audit) | surface |
+| **oh-fusion** | → oh-skills-link (verify discovery) or oh-skill-craft (optimize) | → oh-skill-craft (iterate via eval loop) | surface |
 
 ### Review & analysis skills
 
@@ -78,7 +80,22 @@ oh-manifest ──→ oh-planner → oh-builder → oh-gauntlet → oh-ship → 
                  └───────── oh-expert ←───────────────── fail
 
 oh-ship ──pass──→ oh-retro ──→ oh-planner (loops forever)
-          fail──→ oh-expert ──→ oh-builder ──→ oh-gauntlet
+           fail──→ oh-expert ──→ oh-builder ──→ oh-gauntlet
+
+oh-facade ─── Concept → Design System → Build → Audit → Iterate (loop until pass)
+                pass──→ oh-review or back to oh-manifest
+                audit fail──→ Iterate (fix priority order)
+```
+
+## oh-facade Pipeline Detail
+
+```
+oh-facade:
+  Phase 1 Concept    → direction brief
+  Phase 2 Design Sys → DESIGN.md (color, typography, components, layout, motion, anti-patterns)
+  Phase 3 Build      → production code (components + pages + all states)
+  Phase 4 Audit      → 9-layer checklist (Priority 1-4)
+  Phase 5 Iterate    → fix → re-audit → loop until pass
 ```
 
 ## Rules
