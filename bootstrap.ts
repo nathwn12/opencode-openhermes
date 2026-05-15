@@ -2,17 +2,15 @@ import path from "node:path"
 import fs from "node:fs"
 import os from "node:os"
 import type { Plugin } from "@opencode-ai/plugin"
-import { createLogger } from "./lib/logger.ts"
 import { getHarnessDir, setHarnessRootForTest, resolveHarnessRoot } from "./lib/harness-resolver.ts"
 
-const log = createLogger("bootstrap")
-const sessionLog = createLogger("session")
 const OPENHERMES_AGENT = "OpenHermes"
 
 // User skill directories — auto-discovered on every session, survive npm updates
 const USER_SKILL_DIRS: ReadonlyArray<string> = [
   path.join(os.homedir(), ".agents", "skills"),
   path.join(os.homedir(), ".config", "opencode", "skills"),
+  path.join(os.homedir(), ".claude", "skills"),      // Claude Code backward compat
 ]
 
 // Canonical storage under OpenCode's data directory — survives npm updates
@@ -228,19 +226,7 @@ function ensurePlanFile(projectDir: string): string {
   ].join("\n")
 
   fs.writeFileSync(planPath, content, "utf8")
-  log.info(`created plan file: ${planPath}`)
   return planPath
-}
-
-function countSkills(dir: string): number {
-  try {
-    return fs.readdirSync(dir).filter(e => {
-      const full = path.join(dir, e)
-      return fs.statSync(full).isDirectory() && fs.existsSync(path.join(full, "SKILL.md"))
-    }).length
-  } catch {
-    return 0
-  }
 }
 
 export function buildCompactionContext(projectDir: string): string[] {
@@ -298,22 +284,26 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
   const skillsDir = path.join(hDir, "skills")
   const commandsDir = path.join(hDir, "commands")
   const agentsDir = path.join(hDir, "agents")
+  const client = ctx.client  // SDK client for structured logging
+
+  // Safe logging — uses OpenCode SDK when available, falls back to stdout for tests
+  async function logToOC(level: "info" | "warn" | "error" | "debug", message: string): Promise<void> {
+    if (client?.app?.log) {
+      await client.app.log({ body: { service: "openhermes", level, message } })
+    } else {
+      console.log(`[openhermes] [${level.toUpperCase()}] ${message}`)
+    }
+  }
 
   // Auto-detect and wire user skills from ~/.agents/skills and ~/.config/opencode/skills
   const userSkillPaths: string[] = []
   for (const userDir of USER_SKILL_DIRS) {
     ensureDir(userDir)
-    const count = countSkills(userDir)
-    if (count > 0) {
-      userSkillPaths.push(userDir)
-      log.info(`found ${count} user skill(s) in ${userDir}`)
-    }
+    userSkillPaths.push(userDir)
+    await logToOC("info", `wired user skills from ${userDir}`)
   }
 
   const compactionContext = buildCompactionContext(ctx.directory)
-  const builtInCount = countSkills(skillsDir)
-  const userCount = userSkillPaths.reduce((sum, d) => sum + countSkills(d), 0)
-
   // Ensure plan storage exists
   ensureDir(planStorageDir())
 
@@ -324,7 +314,13 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
       const allPaths = [skillsDir, ...userSkillPaths]
       config.skills.paths = uniqueStrings(config.skills.paths || [], allPaths)
 
-      log.info(`skills: ${builtInCount} built-in + ${userCount} user (${allPaths.length} path(s))`)
+      await logToOC("info", `skills: ${allPaths.length} path(s)`)
+
+      // Register harness docs as native OpenCode instructions — no prompt-embedding needed
+      config.instructions = uniqueStrings(config.instructions ?? [], [
+        path.join(hDir, "codex"),
+        path.join(hDir, "instructions"),
+      ])
 
       config.command = { ...(config.command ?? {}), ...commandDefinitions(commandsDir) }
 
@@ -335,18 +331,60 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
         prompt: "You are OpenHermes.",
       }
 
+      // Subagent permissions — tier-4 and tier-3 get execution access but cannot spawn orchestrators
+      const SUBAGENT_PERMISSIONS: Record<string, Record<string, unknown>> = {
+        "oh-builder": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
+        "oh-facade": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
+        "oh-gauntlet": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
+        "oh-manifest": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
+        "oh-ship": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
+        "oh-planner": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
+        "oh-grill": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
+        "oh-plan-review": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
+        "oh-security": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
+        "oh-refactor": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
+        "oh-review": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
+        "oh-fusion": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
+        "oh-retro": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
+      }
+
       config.agent = {
         ...(config.agent ?? {}),
         ...loadedAgents,
+        // Apply permissions + hidden flag to subagents
+        ...Object.fromEntries(
+          Object.entries(loadedAgents)
+            .filter(([name]) => name !== OPENHERMES_AGENT)
+            .map(([name, agentDef]) => [
+              name,
+              {
+                ...agentDef,
+                permission: SUBAGENT_PERMISSIONS[name] ?? { bash: { "*": "deny" }, edit: "deny", read: "allow" },
+                // Hide routing-internal subagents from @-menu
+                // Only agents with existing .md files can be hidden — names without files are no-ops
+                ...(["oh-planner", "oh-grill"].includes(name) ? { hidden: true } : {}),
+              },
+            ])
+        ),
         [OPENHERMES_AGENT]: {
           ...openHermesAgent,
           description: openHermesAgent.description || "OpenHermes primary orchestrator",
           mode: "primary",
+          steps: 10,                     // Max agentic iterations — prevents runaway loops
           permission: {
-            bash: { "*": "allow" },
-            edit: "allow",
-            read: "allow",
-            task: { "*": "allow" },
+            bash: { "*": "deny" },       // CANNOT execute commands
+            edit: "deny",                // CANNOT write/edit files
+            read: "allow",               // CAN read for classification
+            glob: "allow",               // CAN search for files
+            grep: "allow",               // CAN search content
+            task: { "*": "allow" },      // MUST delegate via subagents
+            skill: "allow",              // CAN load skill instructions
+            webfetch: "allow",           // CAN fetch docs for context
+            question: "allow",           // CAN ask user questions
+            websearch: "allow",          // CAN search web for research context
+            external_directory: {         // CAN read/write plan files outside worktree
+              "~/.local/share/opencode/openhermes/**": "allow",
+            },
           },
         },
       }
@@ -358,11 +396,15 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
       const typed = event as SessionLifecycleEvent
       const record = formatSessionEvent(typed)
       if (!record) return
-      sessionLog[record.level](record.message)
+      await logToOC(record.level, record.message)
 
-      // Structural guard: ensure plan file exists on session start
-      if (typed.type === "session.created") {
-        ensurePlanFile(ctx.directory)
+      // NOTE: Plan files are NOT auto-created here. The LLM agent
+      // creates plans on demand (see Task Flow step 1 in agent prompt).
+      // Auto-creation produced ghost skeletons like plan-004.
+
+      // Reset delegation depth on session start/error
+      if (typed.type === "session.created" || typed.type === "session.error") {
+        delegationDepths.delete(`delegation:${ctx.directory}`)
       }
     },
 
@@ -370,5 +412,28 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
       output.context.push(...compactionContext)
     },
 
+    // Mechanical delegation loop guard — prevents runaway agent nesting
+    "tool.execute.before": async (input, output) => {
+      if (input.tool === "task") {
+        // Track delegation depth per project (one session per project at a time)
+        const depthKey = `delegation:${ctx.directory}`
+        const currentDepth = (delegationDepths.get(depthKey) ?? 0) + 1
+        delegationDepths.set(depthKey, currentDepth)
+
+        if (currentDepth >= 5) {
+          const errOutput = output as { args: unknown; isError?: boolean; content?: unknown[] }
+          errOutput.isError = true
+          errOutput.content = [{
+            type: "text",
+            text: "LOOP GUARD: Delegation depth exceeded (max 5). " +
+                  "Surface to orchestrator with findings and stop delegating."
+          }]
+        }
+      }
+    },
+
   }
 }
+
+// Module-level delegation depth tracker — reset per project session
+const delegationDepths = new Map<string, number>()

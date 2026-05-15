@@ -66,12 +66,32 @@ describe("bootstrap integration", () => {
   // -----------------------------------------------------------------------
   // Config callback: registers commands + agents
   // -----------------------------------------------------------------------
+  it("config callback loads agent files from harness/agents/", async () => {
+    const { BootstrapPlugin, setHarnessRootForTest, setPlanStorageDirForTest } = await import("../bootstrap.ts")
+    setHarnessRootForTest(harnessDir)
+    setPlanStorageDirForTest(path.join(tmpDir, "plans"))
+
+    const plugin = await BootstrapPlugin({ directory: tmpDir } as never)
+    const config: Record<string, unknown> = { skills: { paths: [] }, command: {}, agent: {}, instructions: [] }
+    await plugin.config!(config)
+
+    const agents = config.agent as Record<string, { mode: string; prompt: string; description: string }>
+    assert.ok(agents.OpenHermes, "OpenHermes primary agent should be registered")
+    assert.equal(agents.OpenHermes.mode, "primary")
+    assert.ok(agents.OpenHermes.prompt.includes("OpenHermes"), "agent prompt should contain agent name")
+
+    // No subagent files in test harness (only openhermes.md exists) — 
+    // the real harness has 13 subagent files. This test confirms the loading mechanism works.
+    const subagentCount = Object.keys(agents).filter(n => n !== "OpenHermes").length
+    assert.equal(subagentCount, 0, "no subagents in minimal test harness")
+  })
+
   it("config callback registers commands and agents", async () => {
     const { BootstrapPlugin, setHarnessRootForTest, setPlanStorageDirForTest } = await import("../bootstrap.ts")
     setHarnessRootForTest(harnessDir)
     setPlanStorageDirForTest(path.join(tmpDir, "plans"))
 
-    const plugin = await BootstrapPlugin({ directory: tmpDir })
+    const plugin = await BootstrapPlugin({ directory: tmpDir } as never)
     const config: Record<string, unknown> = { skills: { paths: [] } }
     await plugin.config!(config)
 
@@ -91,11 +111,11 @@ describe("bootstrap integration", () => {
     setHarnessRootForTest(harnessDir)
     setPlanStorageDirForTest(path.join(tmpDir, "plans"))
 
-    const plugin = await BootstrapPlugin({ directory: tmpDir })
+    const plugin = await BootstrapPlugin({ directory: tmpDir } as never)
     const config: Record<string, unknown> = { skills: { paths: [] } }
     await plugin.config!(config)
 
-    const paths = config.skills?.paths as string[] | undefined
+    const paths = (config.skills as Record<string, unknown> | undefined)?.paths as string[] | undefined
     assert.ok(paths, "config.skills.paths should be defined")
     assert.ok(paths.some(p => p.includes("harness") && p.includes("skills")),
       "Built-in skills path should be registered")
@@ -128,11 +148,11 @@ describe("bootstrap integration", () => {
       setHarnessRootForTest(harnessDir)
       setPlanStorageDirForTest(path.join(tmpDir, "plans"))
 
-      const plugin = await BootstrapPlugin({ directory: tmpDir })
+      const plugin = await BootstrapPlugin({ directory: tmpDir } as never)
       const config: Record<string, unknown> = { skills: { paths: [] } }
       await plugin.config!(config)
 
-      const paths = config.skills?.paths as string[] | undefined
+      const paths = (config.skills as Record<string, unknown> | undefined)?.paths as string[] | undefined
       assert.ok(paths, "config.skills.paths should be defined")
       assert.ok(paths.some(p => p.includes(AGENTS_SKILLS_DIR)),
         `~/.agents/skills/ dir should be in skill paths (has: ${paths.join(", ")})`)

@@ -14,7 +14,7 @@ const REQUIRED_HARNESS_FILES: ReadonlyArray<readonly string[]> = [
   ["skills", "oh-planner", "SKILL.md"],
 ]
 
-function ancestorDirs(start: string, limit = 6): string[] {
+function ancestorDirs(start: string, limit = 3): string[] {
   const dirs: string[] = []
   let current = path.resolve(start)
   for (let i = 0; i < limit; i++) {
@@ -26,17 +26,15 @@ function ancestorDirs(start: string, limit = 6): string[] {
   return dirs
 }
 
-function buildHarnessCandidates(currentDir: string, execPath: string, cwd: string): string[] {
-  const roots = [path.resolve(currentDir, "harness")]
-  const seen = new Set(roots)
+function buildHarnessCandidates(currentDir: string, cwd: string): string[] {
+  const roots: string[] = []
+  const seen = new Set<string>()
 
-  const anchors = [path.dirname(execPath), path.dirname(path.dirname(execPath)), cwd]
-  for (const anchor of anchors) {
+  for (const anchor of [currentDir, cwd]) {
     for (const dir of ancestorDirs(anchor)) {
       for (const root of [
         path.join(dir, "harness"),
         path.join(dir, "node_modules", "openhermes", "harness"),
-        path.join(dir, "bin", "node_modules", "openhermes", "harness"),
       ]) {
         const normalized = path.normalize(root)
         if (seen.has(normalized)) continue
@@ -64,7 +62,7 @@ export function resolveHarnessRoot({
   cwd?: string
   candidateRoots?: string[]
 } = {}): string {
-  const roots = candidateRoots ?? buildHarnessCandidates(currentDir, execPath, cwd)
+  const roots = candidateRoots ?? buildHarnessCandidates(currentDir, cwd)
   for (const root of roots) {
     if (hasRequiredHarnessFiles(root)) return root
   }

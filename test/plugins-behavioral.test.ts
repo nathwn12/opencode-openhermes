@@ -64,7 +64,7 @@ describe("BootstrapPlugin behavior", () => {
     assert.equal(logCmd.agent, "OpenHermes")
 
     const agentEntry = config.agent as Record<string, { prompt: string; mode: string }>
-    assert.match(agentEntry.OpenHermes.prompt, /You are OpenHermes, the primary orchestrator/)
+    assert.match(agentEntry.OpenHermes.prompt, /You are OpenHermes, an OpenCode-native orchestration layer/)
     assert.equal(agentEntry.OpenHermes.mode, "primary")
   })
 
@@ -193,6 +193,83 @@ describe("BootstrapPlugin behavior", () => {
     assert.match(content, /Status: active/, "new plan is active")
   })
 
+  it("buildCompactionContext works with no plan file", () => {
+    const { buildCompactionContext, setPlanStorageDirForTest } = mod as {
+      buildCompactionContext: (projectDir: string) => string[]
+      setPlanStorageDirForTest: (dir: string | undefined) => void
+    }
+    const storageDir = makePlanStorageDir()
+    setPlanStorageDirForTest(storageDir)
+    const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), "oh-no-plan-"))
+
+    const context = buildCompactionContext(projectDir)
+    setPlanStorageDirForTest(undefined)
+
+    // Should still return operating doctrine even with no plan file
+    assert.ok(context.length >= 1, "should return context even without a plan")
+    assert.ok(context.some(line => line.includes("verify before claim")), "should include doctrine text")
+    assert.ok(!context.some(line => line.includes("Active plan:")), "should NOT include plan summary when no plan exists")
+  })
+
+  it("delegation depth guard blocks at depth >= 5", async () => {
+    // BootstrapPlugin with a clean directory so delegation depth starts at 0
+    const uniqueDir = fs.mkdtempSync(path.join(os.tmpdir(), "oh-depth-test-"))
+    tmpDirs.push(uniqueDir)
+    const plugin = await mod.BootstrapPlugin({ directory: uniqueDir })
+
+    // Helper: simulate calling tool.execute.before with task tool
+    async function callTaskHook(): Promise<{ blocked: boolean; errorMsg?: string }> {
+      const input = { tool: "task", args: { name: "oh-builder", prompt: "test" } }
+      const output: { isError?: boolean; content?: { type: string; text: string }[] } = {}
+      await plugin["tool.execute.before"](input, output)
+      return { blocked: !!output.isError, errorMsg: output.content?.[0]?.text }
+    }
+
+    // Non-task tool calls should not affect depth
+    const nonTaskInput = { tool: "read", args: { filePath: "foo.txt" } }
+    const nonTaskOutput: { isError?: boolean } = {}
+    await plugin["tool.execute.before"](nonTaskInput, nonTaskOutput)
+    assert.equal(nonTaskOutput.isError, undefined, "non-task tool never blocked")
+
+    // Call task hook 4 times — should NOT block
+    for (let i = 0; i < 4; i++) {
+      const result = await callTaskHook()
+      assert.equal(result.blocked, false, `task call ${i + 1} should not block`)
+    }
+
+    // 5th call should BLOCK
+    const fifth = await callTaskHook()
+    assert.equal(fifth.blocked, true, "5th task call should be blocked")
+    assert.ok(fifth.errorMsg?.includes("LOOP GUARD"), "block message should include LOOP GUARD")
+    assert.ok(fifth.errorMsg?.includes("Delegation depth exceeded"), "block message should mention depth exceeded")
+  })
+
+  it("registers user skill paths in config.skills.paths", async () => {
+    const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), "oh-user-skill-"))
+    tmpDirs.push(projectDir)
+    const plugin = await mod.BootstrapPlugin({ directory: projectDir })
+    const config: Record<string, unknown> = { skills: { paths: [] }, command: {}, agent: {}, instructions: [] }
+    await plugin.config(config)
+
+    const paths = (config.skills as { paths: string[] }).paths
+
+    // Must include built-in harness/skills path
+    assert.ok(paths.some(p => p.includes("harness") && p.includes("skills")), "built-in skills path present")
+
+    // Must include user skill directories (use path.sep for cross-platform)
+    const userAgentSkills = path.join(".agents", "skills")
+    const userConfigSkills = path.join(".config", "opencode", "skills")
+    const userClaudeSkills = path.join(".claude", "skills")
+    assert.ok(paths.some(p => p.includes(userAgentSkills)), "~/.agents/skills path present")
+    assert.ok(paths.some(p => p.includes(userConfigSkills)), "~/.config/opencode/skills path present")
+    assert.ok(paths.some(p => p.includes(userClaudeSkills)), "~/.claude/skills path present")
+
+    // User paths come after built-in (user wins on conflict)
+    const harnessIdx = paths.findIndex(p => p.includes("harness") && p.includes("skills"))
+    const agentsIdx = paths.findIndex(p => p.includes(userAgentSkills))
+    assert.ok(harnessIdx < agentsIdx, "user skill paths should come after built-in path (user wins on conflict)")
+  })
+
   it("ensurePlanFile creates sequential plan numbers", () => {
     const { ensurePlanFile, setPlanStorageDirForTest } = mod as {
       ensurePlanFile: (projectDir: string) => string
@@ -220,27 +297,4 @@ describe("BootstrapPlugin behavior", () => {
     assert.match(plan3, /-plan-003\.md$/, "third plan is 003")
   })
 
-  it("injects bootstrap text only once", async () => {
-    const plugin = await mod.BootstrapPlugin({ directory: __dirname })
-    const output = {
-      messages: [
-        {
-          info: { role: "user" },
-          parts: [
-            { type: "text", text: "actual user request" },
-          ],
-        },
-      ],
-    }
-
-    await plugin["experimental.chat.messages.transform"]({}, output)
-    await plugin["experimental.chat.messages.transform"]({}, output)
-
-    assert.match(output.messages[0].parts[0].text!, /OPENHERMES_BOOTSTRAP/)
-    assert.match(output.messages[0].parts[1].text, /actual user request/)
-    assert.equal(
-      output.messages[0].parts.filter(part => typeof part.text === "string" && part.text.includes("OPENHERMES_BOOTSTRAP")).length,
-      1,
-    )
-  })
 })

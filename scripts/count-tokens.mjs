@@ -149,12 +149,10 @@ console.log(`TOTAL CONFIG SKILLS: ${categories["User Skills (.config/opencode/sk
 console.log(`TOTAL INSTRUCTIONS: ${instructionsTotal} tokens`);
 console.log(`AGENT PROMPT (openhermes.md): ${agentPromptTotal} tokens`);
 console.log(`available_skills XML (ALL 61 skills, registered): ${xmlTokensAll} tokens`);
-console.log(`\nBOOTSTRAP INJECTION: REMOVED (was 4,503 tokens — no more transform hook)`);
-console.log(`ROUTING INVENTORY: REMOVED (was ~902 tokens — no more buildRoutingInventory())`);
-console.log(`\nPER-TURN SYSTEM PROMPT COST (NEW): ${instructionsTotal + xmlTokensAll + agentPromptTotal} tokens`);
+console.log(`\nBOOTSTRAP INJECTION: REMOVED (was 4,503 via transform hook)`);
+console.log(`ROUTING INVENTORY: REMOVED (was ~902 via buildRoutingInventory())`);
+console.log(`\nPER-TURN SYSTEM PROMPT COST: ${instructionsTotal + xmlTokensAll + agentPromptTotal} tokens`);
 console.log(`  (instructions ${instructionsTotal} + available_skills ${xmlTokensAll} + agent prompt ${agentPromptTotal})`);
-console.log(`OLD PER-TURN COST: ${instructionsTotal + xmlTokensAll + 4503 + 902} tokens`);
-console.log(`  (instructions ${instructionsTotal} + available_skills ${xmlTokensAll} + bootstrap injection 4,503 + routing 902)`);
+console.log(`PRE-REFACTOR COST: ${instructionsTotal + xmlTokensAll + 4503 + 902} tokens`);
 console.log(`SAVINGS: ${(instructionsTotal + xmlTokensAll + 4503 + 902) - (instructionsTotal + xmlTokensAll + agentPromptTotal)} tokens per turn`);
-console.log(`  (removed bootstrap injection 4,503 + routing 902 — added agent prompt ${agentPromptTotal})`);
 console.log("=".repeat(80));

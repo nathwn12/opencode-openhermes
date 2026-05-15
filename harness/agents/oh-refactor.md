@@ -1,25 +1,7 @@
 ---
 name: oh-refactor
 description: "Surgical, behavior-preserving code refactoring. Extract functions, eliminate duplication, improve type safety, remove dead code, simplify conditionals. Use when code is hard to maintain, functions are too long, code smells accumulate, or user asks to clean up/improve/refactor code."
-tier: 3
-benefits-from: [oh-investigate, oh-review]
-triggers:
-  - "refactor"
-  - "clean up"
-  - "improve this code"
-  - "code smell"
-  - "make this better"
-  - "extract method"
-  - "reduce duplication"
-  - "fix this mess"
-  - "technical debt"
-  - "god function"
-  - "long method"
-  - "nested conditionals"
-route:
-  pass: oh-gauntlet
-  fail: oh-planner
-  blocker: surface
+mode: subagent
 ---
 
 # oh-refactor
@@ -156,12 +138,3 @@ Remove commented-out code, stale imports, dead paths. Update docs only if semant
 - [ ] Clear module boundaries, no circular deps
 - [ ] Types for all public APIs, no `any` without justification
 - [ ] All tests pass, edge cases covered
-
-## Routing
-
-| Outcome | Route |
-|---------|-------|
-| pass | → oh-gauntlet (test integrity) |
-| behavior unclear | → oh-investigate |
-| test gap found | → oh-builder (TDD mode) |
-| blocker | → surface |
