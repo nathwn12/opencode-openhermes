@@ -17,6 +17,21 @@ Root: package-local harness plus repo AGENTS.md. The autopilot engine (`harness/
 - `~/.local/share/opencode/openhermes/plans/<project-name>-plan-<nnn>.md` — produced by oh-planner, consumed by oh-builder and oh-manifest. The plan file is self-contained: it includes task tracking (Tasks + Completed sections) and work log (Subagents table + Completed log). No separate todo.md or work-log.md files.
 - `~/.local/share/opencode/openhermes/plans/<project-name>-instincts.jsonl` — behavioral patterns extracted by oh-learn.
 
+## Plan Lifecycle
+
+Plans accumulate over sessions. The AI manages them directly — no special command or skill needed.
+
+**Location pattern:** `~/.local/share/opencode/openhermes/plans/<project-name>-plan-<nnn>.md`
+
+**Statuses and retention:**
+- Keep: `active`, `in-progress`, `blocked` — still relevant
+- Delete: `complete`, `abandoned` — historical, safe to remove
+
+**Cleanup rules:**
+- On user request to clean/nuke/prune plans: list all plans for the current project, keep the ones with active/in-progress/blocked status, delete the rest
+- The AI knows the project name from the working directory. The plan path is derived naturally: `~/.local/share/opencode/openhermes/plans/` plus `<basename(projectDir)>-plan-*.md`
+- Cleanup is a direct filesystem operation. Do not ask the user which files to keep — the status field decides. Only surface summary: how many kept, how many deleted.
+
 ## Orchestration discipline
 
 - **Session pool**: Subagents run in their own sessions with isolated context. Each reports one result back.

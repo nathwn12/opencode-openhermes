@@ -2,6 +2,18 @@
 
 The closed-loop auto-routing engine. Every task auto-classifies, auto-routes, and auto-chains. Only stop for genuine blockers.
 
+## Plan Pre-condition (Before Classification)
+
+Before any classification or execution, verify a plan file exists at:
+`~/.local/share/opencode/openhermes/plans/<project-name>-plan-<nnn>.md`
+
+Logic:
+- No plan exists → create one (Status: active)
+- Latest plan is complete/abandoned → create the next sequential plan
+- Latest plan is active/in-progress → reuse it
+
+This is non-negotiable. If the plan condition is not satisfied, do not proceed to classification.
+
 ## Auto-Classify
 
 Before any substantive response, classify the task using this decision matrix:
@@ -13,6 +25,7 @@ Before any substantive response, classify the task using this decision matrix:
 | UI, frontend, design system, page, component, dashboard, visual, redesign, theme, layout, "make it look good", "janky", "laggy", "slow UI", UI quality complaint | UI PIPELINE NEEDED | Load **oh-facade** (5-phase: Concept → Design System → Build → Audit → Iterate). Do not ask. |
 | Security concern, vulnerability, threat model | SECURITY NEEDED | Load **oh-security**. Do not ask. |
 | Code quality, performance, linting, dead code | HEALTH CHECK | Load **oh-health**. Do not ask. |
+| ASCII diagram, box drawing, diagram alignment, architecture diagram, PlantUML, "make a diagram", diagram validation | ASCII DIAGRAM NEEDED | Load **oh-ascii** (Design + Generate + Validate). Do not ask. |
 | Full pipeline: plan+implement+test+ship | PIPELINE NEEDED | Load **oh-manifest**. Do not ask. |
 | Full pipeline with UI components | PIPELINE + UI | Load **oh-manifest**. It delegates UI work to **oh-facade** internally. |
 | Code review, design review, PR review | REVIEW NEEDED | Load **oh-review**. Do not ask. |
@@ -47,36 +60,17 @@ Every skill's `route:` frontmatter uses these value types:
 | `done` | Task is complete — terminal |
 | `mode` | Internal mode switch — return to the calling skill after toggling state |
 
-### Dynamic Routing Loop
+### Routing Flow (per step)
 
-Routing is determined at runtime by scanning all available skills and reading the *current skill's* routing metadata:
+1. Verify plan exists (create if needed)
+2. Classify task using decision matrix
+3. Load best matching skill
+4. Execute the skill
+5. Read the skill's `route:` frontmatter (pass/fail/blocker)
+6. Route by outcome → go to step 3, or surface/done/blocker
+7. Report to user
 
-```
-           ┌──────────────────────────────────────┐
-           │                                      │
-           ↓                                      │
-classify → load best skill → execute              │
-                              ↓                   │
-                         check outcome ──→ read skill's route frontmatter
-                                              ↓
-                                        route by outcome ──→ next skill ──→ execute
-                                              │                    ↑
-                                              ↓                    │
-                                        surface/done/blocker      │
-                                              ↓                    │
-                                        report to user            │
-                                                                   │
-                                                                   │
-                              User skills participate:             │
-                              If current skill's route.pass       │
-                              points to oh-deploy (user skill),   │
-                              load oh-deploy. Its own route       │
-                              metadata routes onward from there.  │
-                              No registration step needed.        │
-                                           ┌──────────────────────┘
-                                           │
-                                           └── loop until surface/done/blocker
-```
+User skills participate identically: their `route:` frontmatter drives routing the same way. No registration needed.
 
 ## Close the Loop
 

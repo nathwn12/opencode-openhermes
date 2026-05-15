@@ -70,14 +70,14 @@ The loop runs unsupervised because these never turn off:
 | Capability | Why it matters |
 |---|---|
 | **Self-driving loop** | Type once. OpenHermes classifies, delegates, and routes — no pauses, no asking permission. |
-| **29 specialist skills** | Planning → building → testing → security → review → shipping → retro. Every dev cycle phase. |
+| **30 specialist skills** | Planning → building → testing → security → review → shipping → retro. Every dev cycle phase. |
 | **Auto-detected user skills** | Drop a skill in `~/.agents/skills/`. OpenHermes finds it. Same name as a built-in? Your version wins. Survives `npm update`. |
 | **`/oh-doctor`** | Verify plugin load, skill discovery, command registration, config safety. |
 | **`/oh-log`** | Session log — routing hops, skill loads, compaction events. |
 | **Shared operating model** | CONSTITUTION + RUNTIME + CONTEXT + ETHOS injected every session. Every interaction grounded in the same rules. |
 | **Plan file storage** | `~/.local/share/opencode/openhermes/plans/`. Survives `npm update`. |
 
-## 29 skills — three tiers
+## 30 skills — three tiers
 
 ### Tier 4 — Pipeline orchestrators
 Full multi-phase workflows:
@@ -109,6 +109,7 @@ Single-purpose, one thing well:
 
 | Skill | Purpose |
 |---|---|
+| **oh-ascii** | Complete ASCII diagramming: design patterns, generation, structural validation |
 | **oh-expert** | AI self-diagnosis: sycophancy, hallucination, attention dynamics |
 | **oh-full-output** | Override truncation, ban placeholders, enforce complete generation |
 | **oh-health** | Code quality dashboard: tools, composite score, trend |
@@ -143,7 +144,7 @@ openhermes-pkg/
 │   ├── codex/             # CONSTITUTION, AUTOPILOT, ROUTING
 │   ├── commands/          # Slash commands (/oh-doctor, /oh-log)
 │   ├── instructions/      # RUNTIME.md
-│   └── skills/            # 29 skill SKILL.md files
+│   └── skills/            # 30 skill SKILL.md files
 └── test/
 ```
 

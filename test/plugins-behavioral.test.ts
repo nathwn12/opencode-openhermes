@@ -132,6 +132,94 @@ describe("BootstrapPlugin behavior", () => {
     assert.ok(output.context.some(line => line.includes("Active plan: status=active | objective=keep context")))
   })
 
+  it("ensurePlanFile creates plan when none exists", () => {
+    const { ensurePlanFile, setPlanStorageDirForTest } = mod as {
+      ensurePlanFile: (projectDir: string) => string
+      setPlanStorageDirForTest: (dir: string | undefined) => void
+    }
+    const storageDir = makePlanStorageDir()
+    setPlanStorageDirForTest(storageDir)
+    const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), "oh-test-project-"))
+
+    const planPath = ensurePlanFile(projectDir)
+    setPlanStorageDirForTest(undefined)
+
+    assert.ok(fs.existsSync(planPath), "plan file was created")
+    const content = fs.readFileSync(planPath, "utf8")
+    assert.match(content, /Status: active/, "plan status is active")
+    assert.match(content, /\(pending classification\)/, "objective is pending")
+    assert.match(content, /## Tasks/, "plan has tasks section")
+    assert.match(content, /- \[ \]/, "plan has pending task")
+  })
+
+  it("ensurePlanFile reuses active plan", () => {
+    const { ensurePlanFile, setPlanStorageDirForTest } = mod as {
+      ensurePlanFile: (projectDir: string) => string
+      setPlanStorageDirForTest: (dir: string | undefined) => void
+    }
+    const storageDir = makePlanStorageDir()
+    setPlanStorageDirForTest(storageDir)
+    const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), "oh-test-project-"))
+
+    const firstPath = ensurePlanFile(projectDir)
+    const secondPath = ensurePlanFile(projectDir)
+    setPlanStorageDirForTest(undefined)
+
+    assert.equal(firstPath, secondPath, "reuses same plan file path when active")
+    assert.equal(path.basename(firstPath), `${path.basename(projectDir)}-plan-001.md`, "plan is 001")
+  })
+
+  it("ensurePlanFile creates new plan when latest is complete", () => {
+    const { ensurePlanFile, setPlanStorageDirForTest } = mod as {
+      ensurePlanFile: (projectDir: string) => string
+      setPlanStorageDirForTest: (dir: string | undefined) => void
+    }
+    const storageDir = makePlanStorageDir()
+    setPlanStorageDirForTest(storageDir)
+    const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), "oh-test-project-"))
+
+    // Create a complete plan first
+    const firstPlan = ensurePlanFile(projectDir)
+    const completedContent = fs.readFileSync(firstPlan, "utf8").replace("Status: active", "Status: complete")
+    fs.writeFileSync(firstPlan, completedContent)
+
+    // Now ensurePlanFile should create a new one
+    const secondPlan = ensurePlanFile(projectDir)
+    setPlanStorageDirForTest(undefined)
+
+    assert.notEqual(firstPlan, secondPlan, "creates new plan when latest is complete")
+    assert.ok(fs.existsSync(secondPlan), "second plan file exists")
+    const content = fs.readFileSync(secondPlan, "utf8")
+    assert.match(content, /Status: active/, "new plan is active")
+  })
+
+  it("ensurePlanFile creates sequential plan numbers", () => {
+    const { ensurePlanFile, setPlanStorageDirForTest } = mod as {
+      ensurePlanFile: (projectDir: string) => string
+      setPlanStorageDirForTest: (dir: string | undefined) => void
+    }
+    const storageDir = makePlanStorageDir()
+    setPlanStorageDirForTest(storageDir)
+    const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), "oh-test-project-"))
+
+    const plan1 = ensurePlanFile(projectDir)
+    assert.match(plan1, /-plan-001\.md$/, "first plan is 001")
+
+    // Mark complete, create second
+    const content1 = fs.readFileSync(plan1, "utf8").replace("Status: active", "Status: complete")
+    fs.writeFileSync(plan1, content1)
+    const plan2 = ensurePlanFile(projectDir)
+    assert.match(plan2, /-plan-002\.md$/, "second plan is 002")
+
+    // Mark complete, create third
+    const content2 = fs.readFileSync(plan2, "utf8").replace("Status: active", "Status: complete")
+    fs.writeFileSync(plan2, content2)
+    const plan3 = ensurePlanFile(projectDir)
+    setPlanStorageDirForTest(undefined)
+
+    assert.match(plan3, /-plan-003\.md$/, "third plan is 003")
+  })
+
   it("injects bootstrap text only once", async () => {
     const plugin = await mod.BootstrapPlugin({ directory: __dirname })
     const output = {

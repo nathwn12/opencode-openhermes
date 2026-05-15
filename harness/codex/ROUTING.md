@@ -71,12 +71,13 @@ Tracks routing depth per chain. Two thresholds:
 
 ### Question Gate
 
-Before each routing hop, evaluate:
+Before each routing hop, evaluate in order:
 
-- Is the next skill's input fully satisfied? (plan file exists for builder, code exists for gauntlet, etc.)
-- Is there any ambiguity that requires user clarification?
+1. **Does a valid plan file exist?** (Status is active or in-progress. If complete/abandoned, create the next sequential plan first. If none exists, create one.)
+2. **Is the next skill's input fully satisfied?** (plan file exists for builder, code exists for gauntlet, etc.)
+3. **Is there any ambiguity that requires user clarification?**
 
-If either is no: **do not route. Ask the user a specific question.** Surface what you have, what's missing, and what you need.
+If any answer is no: **do not route. Do not guess.** Surface what you have, what is missing, and what you need. For plan issues, create the plan yourself — do not ask the user to do it.
 
 ### Auto-Handoff
 

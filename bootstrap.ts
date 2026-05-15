@@ -29,7 +29,7 @@ const USER_SKILL_DIRS: ReadonlyArray<string> = [
   path.join(os.homedir(), ".config", "opencode", "skills"),
 ]
 
-export { resolveHarnessRoot, setHarnessRootForTest, getHarnessDir }
+export { resolveHarnessRoot, setHarnessRootForTest, getHarnessDir, ensurePlanFile }
 
 function parseFrontmatter(raw: string | undefined): Record<string, string> {
   const frontmatter: Record<string, string> = {}
@@ -180,6 +180,61 @@ function ensureDir(dir: string): void {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true })
   }
+}
+
+/**
+ * Ensure a plan file exists for the project.
+ * Creates a skeleton plan if none exists or if the latest is complete/abandoned.
+ * Reuses an existing active or in-progress plan.
+ * Returns the path to the plan file.
+ */
+function ensurePlanFile(projectDir: string): string {
+  const projectName = getProjectName(projectDir)
+  const storage = planStorageDir()
+  ensureDir(storage)
+
+  // Reuse active or in-progress plan
+  const latest = findLatestPlanFile(projectDir)
+  if (latest) {
+    const content = fs.readFileSync(latest, "utf8")
+    const status = content.match(/^Status:\s*(.+)$/m)?.[1]?.trim()
+    if (status === "active" || status === "in-progress") {
+      return latest
+    }
+  }
+
+  // Determine next sequence number
+  let nextSeq = 1
+  if (latest) {
+    const m = path.basename(latest).match(/-plan-(\d{3})\.md$/)
+    if (m) nextSeq = parseInt(m[1], 10) + 1
+  }
+
+  const planId = `${projectName}-plan-${String(nextSeq).padStart(3, "0")}`
+  const planPath = path.join(storage, `${planId}.md`)
+  const now = new Date().toISOString().replace("T", " ").slice(0, 16)
+
+  const content = [
+    `# PLAN: ${projectName}`,
+    "",
+    `Plan ID: ${planId}`,
+    `Project: ${projectName}`,
+    `Status: active`,
+    `Created: ${now}`,
+    `Updated: ${now}`,
+    `Project Path: ${projectDir}`,
+    `Plan Path: ${planPath}`,
+    `Objective: (pending classification)`,
+    "",
+    "## Tasks",
+    "",
+    "- [ ] (discoverable — pending classification)",
+    "",
+  ].join("\n")
+
+  fs.writeFileSync(planPath, content, "utf8")
+  log.info(`created plan file: ${planPath}`)
+  return planPath
 }
 
 function countSkills(dir: string): number {
@@ -381,9 +436,15 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
     },
 
     event: async ({ event }) => {
-      const record = formatSessionEvent(event as SessionLifecycleEvent)
+      const typed = event as SessionLifecycleEvent
+      const record = formatSessionEvent(typed)
       if (!record) return
       sessionLog[record.level](record.message)
+
+      // Structural guard: ensure plan file exists on session start
+      if (typed.type === "session.created") {
+        ensurePlanFile(ctx.directory)
+      }
     },
 
     "experimental.session.compacting": async (_input, output) => {

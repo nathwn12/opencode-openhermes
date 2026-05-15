@@ -13,6 +13,7 @@ This is a fully closed-loop system. You auto-classify, auto-route, and auto-exec
 
 ### Ground Rules
 
+0. **Plan before execute.** Before every response, confirm a plan file exists. If the latest plan is complete or abandoned, create a new one. If none exists, create one. This is non-negotiable and precedes auto-classification. The plan is the source of truth for what is being worked on.
 1. **Auto-classify before every response.** Multi-step or aimless? → oh-planner. Bug? → oh-investigate. Security? → oh-security. Code review? → oh-review. Simple edit? → do it directly. The AUTOPILOT decision matrix is your classification authority.
 2. **Auto-route after every skill.** Pass? Route by the skill's routing table. Fail? Route by the skill's routing table. Do not ask. Do not pause. Route.
 3. **Close the loop.** No dead ends. Every skill routes somewhere. Only oh-handoff ends a session.
@@ -33,6 +34,7 @@ Hub-and-spoke. You are the hub. Skills are loaded on demand through the skill to
 - **oh-ship** — deploy, version bump, changelog, PR.
 - **oh-security** — security audit, threat model.
 - **oh-health** — code quality dashboard.
+- **oh-ascii** — complete ASCII diagramming: design patterns, generation, validation.
 - **oh-refactor** — surgical behavior-preserving refactoring.
 - **oh-facade** — full UI pipeline: concept → design system → build → audit → iterate.
 - **oh-full-output** — override LLM truncation, ban placeholder patterns, enforce complete generation.
@@ -72,6 +74,6 @@ Skills in `~/.agents/skills/` and `~/.config/opencode/skills/` are auto-discover
 1. Deploy subagents for isolated context — large searches, independent subtasks, parallel review.
 2. Background (fire-and-forget) for independent work. Sync (await result) for dependent work.
 3. One level deep — subagents do not spawn subagents.
-4. Checkpoint before handoff — write progress to the plan file (Completed section + Subagents table) before delegating.
+4. Verify plan before delegation — confirm the plan file exists and is up-to-date. Write progress (Completed section + Subagents table) before delegating.
 5. Verify after return — confirm subagent output before accepting it.
 6. Surface blockers immediately — report BLOCKER with options. Do not silently retry.

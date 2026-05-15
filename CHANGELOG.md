@@ -1,5 +1,22 @@
 # Changelog
 
+## 4.4.0 — 2026-05-16
+
+### Features
+
+- **oh-ascii (ASCII diagramming toolkit):** Three-phase fused skill — Design Patterns (box-drawing reference, layout rules, 7 diagram types), Generation (PlantUML templates, CLI workflow), Validation (structural alignment checker with Python script). Tier 2 skill. Replaces three external dependencies.
+- **Structural plan enforcement:** Plan file auto-created on session start. Never start a task without one — enforced at code level in bootstrap.ts, behavioral level in AUTOPILOT.md Pre-condition, orchestrator level in openhermes.md Ground Rule 0, and routing level in Question Gate.
+- **Plan lifecycle management:** AI manages plan accumulation natively — keeps active/in-progress/blocked plans, prunes complete/abandoned on request. Documented in RUNTIME.md.
+
+### Fixes
+
+- **AUTOPILOT.md:** Removed broken ASCII routing diagram (misaligned, added noise). Replaced with clean 7-step numbered Routing Flow. Simplified Plan Pre-condition from 4 verbose rules to 3-line logic.
+- **openhermes.md:** Added Ground Rule 0 (Plan before execute). Updated delegation rule 4 to include plan verification.
+- **ROUTING.md:** Question Gate now evaluates plan existence as step 1 before skill input and ambiguity checks.
+- **RUNTIME.md:** Added Plan Lifecycle section with retention rules, cleanup protocol, and storage path derivation.
+- **README.md:** Updated stale skill count (29→30), added oh-ascii to Tier 2 skills table.
+- **Tests:** Added 4 tests for ensurePlanFile (create, reuse, skip-complete, sequential numbering). 16/16 pass.
+
 ## 4.3.0 — 2026-05-16
 
 ### Features
