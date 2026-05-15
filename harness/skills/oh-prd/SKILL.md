@@ -1,6 +1,10 @@
 ---
 name: oh-prd
 description: "Turn conversation context into a PRD and publish as GitHub issue"
+triggers:
+  - "write a prd"
+  - "product requirements"
+  - "prd for"
 ---
 
 # oh-prd

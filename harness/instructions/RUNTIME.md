@@ -14,10 +14,8 @@ Root: package-local harness plus repo AGENTS.md. The autopilot engine (`harness/
 
 ## Shared state
 
-- `.opencode/plan.md` — produced by oh-planner, consumed by oh-builder and oh-manifest
-- `.opencode/work-log.md` — progress tracking across subagent delegations
-- `.opencode/todo.md` — task tracking for multi-step work
-- `.opencode/instincts.jsonl` — behavioral patterns extracted by oh-learn
+- `~/.local/share/opencode/openhermes/plans/<project-name>-plan-<nnn>.md` — produced by oh-planner, consumed by oh-builder and oh-manifest. The plan file is self-contained: it includes task tracking (Tasks + Completed sections) and work log (Subagents table + Completed log). No separate todo.md or work-log.md files.
+- `~/.local/share/opencode/openhermes/plans/<project-name>-instincts.jsonl` — behavioral patterns extracted by oh-learn.
 
 ## Orchestration discipline
 

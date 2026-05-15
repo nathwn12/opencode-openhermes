@@ -4,12 +4,13 @@ description: "Two-axis code and design review: Standards (conformance) + Spec (f
 tier: 3
 benefits-from: [oh-expert]
 triggers:
-  - "review"
-  - "code review"
-  - "review since"
-  - "review changes"
+  - "code review please"
+  - "review the code"
+  - "review the PR"
+  - "review changes since"
   - "pr review"
   - "design review"
+  - "review this code"
 ---
 
 # oh-review

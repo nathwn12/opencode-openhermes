@@ -1,6 +1,11 @@
 ---
 name: oh-ship
 description: "Deploy and PR pipeline — test, bump, changelog, PR, deploy, verify"
+triggers:
+  - "ship this"
+  - "create a PR"
+  - "version bump"
+  - "publish"
 ---
 
 # oh-ship

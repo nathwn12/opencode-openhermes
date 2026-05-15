@@ -1,6 +1,11 @@
 ---
 name: oh-investigate
 description: "Systematic bug diagnosis with root cause investigation"
+triggers:
+  - "investigate this bug"
+  - "debug this"
+  - "why is this broken"
+  - "root cause"
 ---
 
 # oh-investigate

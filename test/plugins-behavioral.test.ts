@@ -1,4 +1,4 @@
-import { describe, it, before } from "node:test"
+import { describe, it, before, after } from "node:test"
 import assert from "node:assert/strict"
 import fs from "node:fs"
 import os from "node:os"
@@ -7,12 +7,34 @@ import { fileURLToPath } from "node:url"
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
+// Helper: create a plan file in the canonical storage dir
+function writePlanFile(projectDir: string, content: string, storageDir: string): string {
+  const projectName = path.basename(projectDir)
+  const planFile = path.join(storageDir, `${projectName}-plan-001.md`)
+  fs.mkdirSync(storageDir, { recursive: true })
+  fs.writeFileSync(planFile, content)
+  return planFile
+}
+
 describe("BootstrapPlugin behavior", () => {
   let mod: any
+  const tmpDirs: string[] = []
 
   before(async () => {
     mod = await import("../bootstrap.ts")
   })
+
+  after(() => {
+    for (const d of tmpDirs) {
+      fs.rmSync(d, { recursive: true, force: true })
+    }
+  })
+
+  function makePlanStorageDir(): string {
+    const d = fs.mkdtempSync(path.join(os.tmpdir(), "oh-plans-"))
+    tmpDirs.push(d)
+    return d
+  }
 
   it("registers package-local skills, commands, and agents", async () => {
     const plugin = await mod.BootstrapPlugin({ directory: __dirname })
@@ -57,19 +79,21 @@ describe("BootstrapPlugin behavior", () => {
   })
 
   it("buildCompactionContext includes plan summary when available", async () => {
-    const { buildCompactionContext } = mod as { buildCompactionContext: (projectDir: string) => string[] }
+    const { buildCompactionContext, setPlanStorageDirForTest } = mod as {
+      buildCompactionContext: (projectDir: string) => string[]
+      setPlanStorageDirForTest: (dir: string | undefined) => void
+    }
+    const storageDir = makePlanStorageDir()
+    setPlanStorageDirForTest(storageDir)
     const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), "openhermes-plan-"))
-    fs.mkdirSync(path.join(projectDir, ".opencode"), { recursive: true })
-    fs.writeFileSync(
-      path.join(projectDir, ".opencode", "plan.md"),
-      [
-        "# PLAN: openhermes",
-        "Status: active",
-        "Objective: Keep context intact across compaction",
-      ].join("\n"),
-    )
+    writePlanFile(projectDir, [
+      "# PLAN: openhermes",
+      "Status: active",
+      "Objective: Keep context intact across compaction",
+    ].join("\n"), storageDir)
 
     const context = buildCompactionContext(projectDir)
+    setPlanStorageDirForTest(undefined)
     assert.ok(context.some(line => line.includes("verify before claim")))
     assert.ok(context.some(line => line.includes("Active plan: status=active | objective=Keep context intact across compaction")))
   })
@@ -92,14 +116,17 @@ describe("BootstrapPlugin behavior", () => {
   })
 
   it("injects compaction context and preserves the active plan", async () => {
+    const { setPlanStorageDirForTest } = mod as { setPlanStorageDirForTest: (dir: string | undefined) => void }
+    const storageDir = makePlanStorageDir()
+    setPlanStorageDirForTest(storageDir)
     const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), "openhermes-project-"))
-    fs.mkdirSync(path.join(projectDir, ".opencode"), { recursive: true })
-    fs.writeFileSync(path.join(projectDir, ".opencode", "plan.md"), "Status: active\nObjective: keep context\n")
+    writePlanFile(projectDir, "Status: active\nObjective: keep context\n", storageDir)
 
     const plugin = await mod.BootstrapPlugin({ directory: projectDir })
     const output = { context: [] as string[] }
 
     await plugin["experimental.session.compacting"]({ sessionID: "s-1" }, output)
+    setPlanStorageDirForTest(undefined)
 
     assert.ok(output.context.some(line => line.includes("verify before claim")))
     assert.ok(output.context.some(line => line.includes("Active plan: status=active | objective=keep context")))

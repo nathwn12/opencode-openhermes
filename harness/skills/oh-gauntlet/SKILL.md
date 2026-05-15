@@ -4,14 +4,14 @@ description: "Rigorous multi-axis testing gauntlet: unit, integration, edge case
 tier: 4
 benefits-from: [oh-expert, oh-builder]
 triggers:
-  - "gauntlet"
+  - "run the gauntlet on"
   - "test everything"
   - "rigorous testing"
   - "review all angles"
-  - "qa"
-  - "full review"
-  - "run the gauntlet"
-  - "validate"
+  - "qa the feature"
+  - "full review of the code"
+  - "validate this feature"
+  - "thorough testing"
 ---
 
 # oh-gauntlet

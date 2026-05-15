@@ -1,6 +1,6 @@
 {
   "name": "openhermes",
-  "version": "4.2.0",
+  "version": "4.3.0",
   "description": "OpenCode-native orchestration for packaged skills, commands, and agents.",
   "type": "module",
   "license": "MIT",

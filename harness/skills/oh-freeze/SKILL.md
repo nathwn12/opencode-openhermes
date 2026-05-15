@@ -1,6 +1,10 @@
 ---
 name: oh-freeze
 description: "Restrict file edits to a specific directory for the session"
+triggers:
+  - "freeze directory"
+  - "restrict edits to"
+  - "lock edits to"
 ---
 
 # oh-freeze

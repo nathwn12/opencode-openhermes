@@ -250,7 +250,9 @@ Output: skill fully wired into the harness
 
 ### 6a. Create the Skill File
 
-Write to `harness/skills/oh-<name>/SKILL.md`.
+Write to `~/.config/opencode/skills/oh-<name>/SKILL.md` (user dir, survives npm updates).
+If the user has an alternative preference (`~/.agents/skills/`), use that instead.
+The file structure follows the standard OH skill template.
 
 ### 6b. Wire into AUTOPILOT
 

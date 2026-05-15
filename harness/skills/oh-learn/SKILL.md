@@ -1,6 +1,10 @@
 ---
 name: oh-learn
 description: "Extract, evolve, and promote session learnings as instincts. Review, search, prune, export."
+triggers:
+  - "learn from session"
+  - "extract patterns"
+  - "run oh-learn"
 ---
 
 # oh-learn
@@ -9,7 +13,7 @@ Learning engine for the harness. Distills patterns from sessions into **instinct
 
 ## Instinct Data Model
 
-Every learning stored as one JSONL line in `.opencode/instincts.jsonl`:
+Every learning stored as one JSONL line in `~/.local/share/opencode/openhermes/plans/<project-name>-instincts.jsonl`:
 
 ```json
 { "trigger": "situation pattern", "action": "recommended response", "confidence": 0.5, "applications": 1, "successes": 1, "category": "coding", "source": "oh-learn:extract", "ts": "2026-05-15T12:00:00Z" }
@@ -32,7 +36,7 @@ Mine the current session for reusable patterns.
 
 1. Scan recent conversation + code changes for repeated decision patterns
 2. For each distinct pattern write an instinct: trigger, action, confidence=0.5, category
-3. Read existing `.opencode/instincts.jsonl`, check for near-duplicate triggers
+3. Read existing `~/.local/share/opencode/openhermes/plans/<project-name>-instincts.jsonl`, check for near-duplicate triggers
 4. If duplicate found: merge — `confidence = max(existing, 0.8 × new)`, increment applications
 5. If new: append line to file
 
@@ -43,7 +47,7 @@ Mine the current session for reusable patterns.
 ### Evolve
 Cluster related instincts into skill/command/agent candidates.
 
-1. Read all instincts from `.opencode/instincts.jsonl`
+1. Read all instincts from `~/.local/share/opencode/openhermes/plans/<project-name>-instincts.jsonl`
 2. Group by `category`, then by trigger topic similarity
 3. **If cluster ≥ 5 instincts AND avg confidence ≥ 0.7** → generate `oh-skill-craft` spec for a new skill
 4. **If cluster 3-4 instincts with confidence ≥ 0.8** → suggest update to existing skill
@@ -52,7 +56,7 @@ Cluster related instincts into skill/command/agent candidates.
 ### Promote
 Graduate high-confidence instincts from project to global scope.
 
-1. Scan `.opencode/instincts.jsonl` for instincts with `confidence >= 0.85 AND applications >= 10`
+1. Scan `~/.local/share/opencode/openhermes/plans/<project-name>-instincts.jsonl` for instincts with `confidence >= 0.85 AND applications >= 10`
 2. Filter out project-specific patterns (reference paths, local APIs, domain terms)
 3. Append filtered candidates to `%USERPROFILE%\.config\opencode\instincts.jsonl` (global)
 4. Tag promoted instincts with `"promoted": true` in project file

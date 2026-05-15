@@ -65,6 +65,10 @@ These seven form a pipeline: **think → plan → build → test → ship → se
 
 OpenHermes is the default primary agent — a hub-and-spoke commander that delegates to skills, spawns sub-agents for isolated context, and surfaces blockers instead of silently retrying.
 
+### Auto-detected user skills
+
+Skills in `~/.agents/skills/` and `~/.config/opencode/skills/` are discovered automatically on every session. On name conflict with a built-in `oh-*` skill, the user version wins. User skills survive `npm update openhermes`. Customize or extend the harness without touching the package.
+
 ### One diagnostic command
 
 `/oh-doctor` — inspect plugin load, skills discovery, command/agent registration, and config safety.
@@ -97,7 +101,7 @@ Every skill routes to the next based on outcome — pass, fail, or blocker. Opti
 ```md
 OPTIROUTE STOP: 5-hop ceiling reached, no progress
 Chain: planner → grill → planner → builder → gauntlet → planner
-See .opencode/plan.md for full report
+See plan file for full report
 ```
 
 No loops. No guessing. No silent death.
@@ -115,12 +119,14 @@ openhermes-pkg/
 ├── index.ts               # Package entrypoint
 ├── harness/
 │   ├── agents/            # Agent manifests (OpenHermes)
-│   ├── codex/             # CONSTITUTION.md
+│   ├── codex/             # CONSTITUTION.md, AUTOPILOT.md, ROUTING.md
 │   ├── commands/          # Slash command manifests (/oh-doctor)
 │   ├── instructions/      # RUNTIME.md
-│   └── skills/            # 25 skill SKILL.md files
+│   └── skills/            # 29 skill SKILL.md files
 └── test/
 ```
+
+Plan files are written to OpenCode's canonical storage: `~/.local/share/opencode/openhermes/plans/<project-name>-plan-<nnn>.md`. No `.opencode/` directory, no global task directory.
 
 ---
 

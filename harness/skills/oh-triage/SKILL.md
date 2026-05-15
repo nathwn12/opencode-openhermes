@@ -1,6 +1,10 @@
 ---
 name: oh-triage
 description: "Issue triage state machine — classify, prioritise, assign"
+triggers:
+  - "triage this issue"
+  - "classify this issue"
+  - "triage the backlog"
 ---
 
 # oh-triage

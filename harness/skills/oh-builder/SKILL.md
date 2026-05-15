@@ -1,22 +1,23 @@
 ---
 name: oh-builder
-description: "ALL-arounder builder — prototype, TDD, implement from plan, design interfaces. Consumes plan.md, produces working code."
+description: "ALL-arounder builder — prototype, TDD, implement from plan, design interfaces. Consumes the plan file, produces working code."
 tier: 4
 benefits-from: [oh-planner, oh-expert]
 triggers:
   - "build this"
-  - "implement"
-  - "write the code"
+  - "implement this phase"
+  - "write the code for"
   - "prototype"
   - "tdd"
   - "red-green"
   - "design an interface"
-  - "implement phase"
+  - "implement the feature"
+  - "build the component"
 ---
 
 # oh-builder
 
-The ALL-arounder builder. Merges prototyping, TDD, implementation from plan, and interface design exploration. Consumes `.opencode/plan.md` from oh-planner or works standalone.
+The ALL-arounder builder. Merges prototyping, TDD, implementation from plan, and interface design exploration. Consumes the plan file from oh-planner or works standalone.
 
 ## Entry Modes
 
@@ -79,13 +80,13 @@ When the interface shape is uncertain. "Design it twice" — generate multiple r
 4. **Compare** — simplicity, generality, implementation efficiency, depth
 5. **Synthesize** — combine insights from multiple options
 
-### Mode D: From Plan (plan.md exists)
+### Mode D: From Plan (plan file exists)
 When oh-planner produced a plan artifact. Execute phases in order.
 
-1. Read `.opencode/plan.md`
+1. Read the plan file ( `~/.local/share/opencode/openhermes/plans/<project-name>-plan-<nnn>.md` )
 2. For each phase: implement per plan spec using TDD discipline (Mode B)
 3. Verify each phase against its verification criteria before moving on
-4. Update `.opencode/plan.md` with completed phase status
+4. Update plan file with completed phase status
 
 ## Anti-patterns
 - Polishing a prototype ("it's just a prototype!" — it never is)

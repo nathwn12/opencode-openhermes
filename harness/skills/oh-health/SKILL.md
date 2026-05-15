@@ -3,12 +3,12 @@ name: oh-health
 description: "Code quality dashboard: runs project tools (typecheck, lint, test, dead code detection), computes weighted composite 0-10 score, persists history, shows trend. Read-only — no fixes."
 tier: 2
 triggers:
-  - "health check"
-  - "code quality"
+  - "health check the codebase"
+  - "code quality check"
   - "quality dashboard"
   - "how healthy is the codebase"
-  - "run all checks"
-  - "health"
+  - "run all project checks"
+  - "code health"
 ---
 
 # oh-health

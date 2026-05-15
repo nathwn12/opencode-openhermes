@@ -1,5 +1,6 @@
 import path from "node:path"
 import fs from "node:fs"
+import os from "node:os"
 import { fileURLToPath } from "node:url"
 import type { Plugin } from "@opencode-ai/plugin"
 import { createLogger } from "./lib/logger.ts"
@@ -10,6 +11,23 @@ const sessionLog = createLogger("session")
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const BOOTSTRAP_MARKER = "OPENHERMES_BOOTSTRAP"
 const OPENHERMES_AGENT = "OpenHermes"
+
+// Canonical storage under OpenCode's data directory — survives npm updates
+let _planStorageOverride: string | undefined
+export function setPlanStorageDirForTest(dir: string | undefined): void { _planStorageOverride = dir }
+function planStorageDir(): string {
+  return _planStorageOverride ?? path.join(os.homedir(), ".local", "share", "opencode", "openhermes", "plans")
+}
+
+function getProjectName(projectDir: string): string {
+  return path.basename(projectDir)
+}
+
+// User skill directories — auto-scanned on every session, survive npm updates
+const USER_SKILL_DIRS: ReadonlyArray<string> = [
+  path.join(os.homedir(), ".agents", "skills"),
+  path.join(os.homedir(), ".config", "opencode", "skills"),
+]
 
 export { resolveHarnessRoot, setHarnessRootForTest, getHarnessDir }
 
@@ -114,10 +132,37 @@ function readText(filePath: string): string {
   return fs.existsSync(filePath) ? fs.readFileSync(filePath, "utf8") : ""
 }
 
-function readPlanSummary(projectDir: string): string | null {
-  const planPath = path.join(projectDir, ".opencode", "plan.md")
-  if (!fs.existsSync(planPath)) return null
-  const source = fs.readFileSync(planPath, "utf8")
+function regexEscape(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
+function findLatestPlanFile(projectDir: string): string | null {
+  const projectName = getProjectName(projectDir)
+  const storage = planStorageDir()
+  if (!fs.existsSync(storage)) return null
+  const pattern = new RegExp(`^${regexEscape(projectName)}-plan-(\\d{3})\\.md$`)
+  let latest: string | null = null
+  let highest = -1
+  try {
+    for (const entry of fs.readdirSync(storage)) {
+      const m = entry.match(pattern)
+      if (m) {
+        const n = parseInt(m[1], 10)
+        if (n > highest) {
+          highest = n
+          latest = path.join(storage, entry)
+        }
+      }
+    }
+  } catch {
+    return null
+  }
+  return latest
+}
+
+function readPlanFromFile(filePath: string): string | null {
+  if (!fs.existsSync(filePath)) return null
+  const source = fs.readFileSync(filePath, "utf8")
   const status = source.match(/^Status:\s*(.+)$/m)?.[1]?.trim()
   const objective = source.match(/^Objective:\s*(.+)$/m)?.[1]?.trim()
   if (!status && !objective) return null
@@ -125,9 +170,32 @@ function readPlanSummary(projectDir: string): string | null {
   return `Active plan: ${parts.join(" | ")}`
 }
 
+function readPlanSummary(projectDir: string): string | null {
+  const planFile = findLatestPlanFile(projectDir)
+  if (!planFile) return null
+  return readPlanFromFile(planFile)
+}
+
+function ensureDir(dir: string): void {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true })
+  }
+}
+
+function countSkills(dir: string): number {
+  try {
+    return fs.readdirSync(dir).filter(e => {
+      const full = path.join(dir, e)
+      return fs.statSync(full).isDirectory() && fs.existsSync(path.join(full, "SKILL.md"))
+    }).length
+  } catch {
+    return 0
+  }
+}
+
 export function buildCompactionContext(projectDir: string): string[] {
   const context = [
-    "OpenHermes: native-first, verify before claim, delegate substantive work, concise over verbose.",
+    "OpenHermes: native-first, verify before claim, always delegate, concise over verbose.",
     "Preserve domain terms: skill, command, agent, bootstrap, compaction.",
     "Preserve blockers, current task, and next steps; do not invent durable state.",
   ]
@@ -168,7 +236,7 @@ function buildBootstrapContent(hDir: string): string {
   const parts = [
     `<${BOOTSTRAP_MARKER}>`,
     `You are OpenHermes.`,
-    `OpenHermes is OpenCode-native: load skills on demand, prefer subagents for substantive work, and keep the surface small.`,
+    `OpenHermes is OpenCode-native: load skills on demand, always delegate, never execute tasks directly, and keep the surface small.`,
     `Durable state is removed for now. Do not invent a persistence layer unless the user explicitly asks for one later.`,
   ]
 
@@ -204,10 +272,30 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
   const bootstrapContent = buildBootstrapContent(hDir)
   const compactionContext = buildCompactionContext(ctx.directory)
 
+  // Auto-detect and wire user skills from ~/.agents/skills and ~/.config/opencode/skills
+  const userSkillPaths: string[] = []
+  for (const userDir of USER_SKILL_DIRS) {
+    ensureDir(userDir)
+    const count = countSkills(userDir)
+    if (count > 0) {
+      userSkillPaths.push(userDir)
+      log.info(`found ${count} user skill(s) in ${userDir}`)
+    }
+  }
+  const builtInCount = countSkills(skillsDir)
+  const userCount = userSkillPaths.reduce((sum, d) => sum + countSkills(d), 0)
+
+  // Ensure plan storage exists
+  ensureDir(planStorageDir())
+
   return {
     config: async (config: OpenHermesConfig) => {
       config.skills = config.skills || {}
-      config.skills.paths = uniqueStrings(config.skills.paths || [], [skillsDir])
+      // Built-in paths first, user paths last → user skills override built-in on name conflict
+      const allPaths = [skillsDir, ...userSkillPaths]
+      config.skills.paths = uniqueStrings(config.skills.paths || [], allPaths)
+
+      log.info(`skills: ${builtInCount} built-in + ${userCount} user (${allPaths.length} path(s))`)
 
       config.command = { ...(config.command ?? {}), ...commandDefinitions(commandsDir) }
 

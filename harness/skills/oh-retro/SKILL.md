@@ -1,6 +1,10 @@
 ---
 name: oh-retro
 description: "Weekly engineering retrospective — analyze commit history and work patterns"
+triggers:
+  - "retrospective"
+  - "retro for"
+  - "post-ship review"
 ---
 
 # oh-retro

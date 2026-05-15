@@ -4,12 +4,12 @@ description: "Stress-test plans and designs through relentless Socratic question
 tier: 3
 benefits-from: [oh-expert, oh-planner]
 triggers:
-  - "grill"
   - "stress test this plan"
-  - "challenge this"
-  - "grill me"
-  - "poke holes"
-  - "interrogate"
+  - "challenge this plan"
+  - "grill me on this"
+  - "poke holes in this plan"
+  - "interrogate this plan"
+  - "stress test this design"
 ---
 
 # oh-grill

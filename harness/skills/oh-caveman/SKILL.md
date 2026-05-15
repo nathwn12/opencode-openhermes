@@ -1,6 +1,10 @@
 ---
 name: oh-caveman
 description: "Ultra-compressed communication mode — cut token usage ~75%"
+triggers:
+  - "compress your response"
+  - "caveman mode"
+  - "shorter answers"
 ---
 
 # oh-caveman

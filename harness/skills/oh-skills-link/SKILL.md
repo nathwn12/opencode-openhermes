@@ -1,6 +1,10 @@
 ---
 name: oh-skills-link
 description: "Verify that OpenCode can discover the package-local skills directory"
+triggers:
+  - "verify skills"
+  - "check skill discovery"
+  - "link skills"
 ---
 
 # oh-skills-link

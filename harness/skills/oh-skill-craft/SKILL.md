@@ -83,6 +83,10 @@ The description is the only thing the agent sees when deciding which skill to lo
 
 Scripts save tokens and improve reliability vs generated code.
 
+## Output Location
+
+Skills created with oh-skill-craft should be written to `~/.config/opencode/skills/` (or `~/.agents/skills/` if the user prefers). Built-in skills live in the package `harness/skills/` and get replaced on npm update. User-written skills in `~/.config/opencode/skills/` survive updates and are auto-discovered on every session. On name conflict with a built-in skill, the user version wins.
+
 ## When to Split Files
 - SKILL.md exceeds 100 lines
 - Content has distinct domains

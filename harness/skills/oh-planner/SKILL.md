@@ -6,17 +6,19 @@ benefits-from: [oh-expert, oh-grill]
 triggers:
   - "plan this"
   - "how should I build"
-  - "architecture"
+  - "plan the architecture for"
   - "design this feature"
   - "brainstorm"
   - "autoplan"
-  - "strategy"
-  - "scope this"
+  - "strategy for this feature"
+  - "scope this feature"
+  - "create a plan for"
+  - "whats the plan for"
 ---
 
 # oh-planner
 
-The ALL-arounder planner. Merges brainstorm, architecture analysis, strategy review, and automatic plan review into one skill. Produces `.opencode/plan.md` that oh-builder consumes.
+The ALL-arounder planner. Merges brainstorm, architecture analysis, strategy review, and automatic plan review into one skill. Produces a plan file in OpenCode's canonical storage at `~/.local/share/opencode/openhermes/plans/`.
 
 ## Entry Modes
 
@@ -80,9 +82,7 @@ Never auto-decide: premises (need human judgment) or cases where both the plan a
 
 ## Plan Artifact
 
-Output goes in `.opencode/plan.md` (per-project, overwritten each session) with this structure (matching the global AGENTS.md schema).
-
-**Then save a copy** to `%USERPROFILE%/.config/opencode/task/<project-name>-plan-<nnn>.md` (global, incrementing, persistent) per AGENTS.md persistent plan rules.
+Output goes in `~/.local/share/opencode/openhermes/plans/<project-name>-plan-<nnn>.md` (OpenCode's canonical storage, sequence-numbered per-session/project). The plan ID matches the filename.
 
 ```markdown
 # PLAN: <project-name>
@@ -93,7 +93,7 @@ Status: active
 Created: <local-date-time>
 Updated: <local-date-time>
 Project Path: <absolute-project-path>
-Plan Path: .opencode/plan.md
+Plan Path: ~/.local/share/opencode/openhermes/plans/<project-name>-plan-<nnn>.md
 Objective: <short objective>
 
 ## Current State
@@ -123,6 +123,10 @@ Objective: <short objective>
 
 - <what's done>
 
+## Work Log
+
+<timestamped entries for subagent handoffs>
+
 ## Blockers
 
 - None
@@ -141,6 +145,8 @@ Objective: <short objective>
 
 <anything else>
 ```
+
+The plan file is self-contained — Tasks, Completed, Subagents, and Work Log sections eliminate the need for separate todo.md or work-log.md files.
 
 ## Anti-patterns
 - Skipping strategy review for complex features (architecture mistakes compound)

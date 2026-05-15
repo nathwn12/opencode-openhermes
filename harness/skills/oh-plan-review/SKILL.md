@@ -4,15 +4,16 @@ description: "Multi-lens plan review: 4 perspectives in one skill. Choose Engine
 tier: 3
 benefits-from: [oh-planner, oh-expert]
 triggers:
-  - "plan review"
-  - "review the plan"
-  - "architecture review"
-  - "design review"
-  - "ux review"
-  - "dx review"
+  - "review this plan"
+  - "review the plan file"
+  - "architecture review of"
+  - "design review the plan"
+  - "ux review this plan"
+  - "dx review the plan"
   - "strategy review"
-  - "eng review"
+  - "engineering review"
   - "ceo review"
+  - "review plan from"
 ---
 
 # oh-plan-review
@@ -110,7 +111,7 @@ Product/CEO review with 4 scope modes.
 
 ## Output
 
-After each lens, the plan file (`/.opencode/plan.md`) is updated with findings and decisions. The user reviews and accepts changes interactively.
+After each lens, the plan file (`~/.local/share/opencode/openhermes/plans/<project-name>-plan-<nnn>.md`) is updated with findings and decisions. The user reviews and accepts changes interactively.
 
 ## Rules
 

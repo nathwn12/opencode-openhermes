@@ -1,6 +1,10 @@
 ---
 name: oh-skills-list
 description: "List all available oh-* skills with descriptions"
+triggers:
+  - "list skills"
+  - "show skills"
+  - "what skills"
 ---
 
 # oh-skills-list

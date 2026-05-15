@@ -119,13 +119,13 @@ Tracks routing depth per chain. Two thresholds:
 | **3x repeat** | Same skill visited 3+ times in one routing chain | STOP, invoke auto-handoff |
 | **5-hop ceiling** | 5+ routing hops without measurable progress toward the original goal | STOP, invoke auto-handoff |
 
-*Progress* is defined as: the routing target changed since the last hop, or a new artifact was produced (plan.md updated, code written, test result).
+*Progress* is defined as: the routing target changed since the last hop, or a new artifact was produced (plan file updated, code written, test result).
 
 ### Question Gate
 
 Before each routing hop, evaluate:
 
-- Is the next skill's input fully satisfied? (plan.md exists for builder, code exists for gauntlet, etc.)
+- Is the next skill's input fully satisfied? (plan file exists for builder, code exists for gauntlet, etc.)
 - Is there any ambiguity that requires user clarification?
 
 If either is no: **do not route. Ask the user a specific question.** Surface what you have, what's missing, and what you need.
@@ -135,10 +135,10 @@ If either is no: **do not route. Ask the user a specific question.** Surface wha
 When Loop Guard triggers:
 
 1. **Stop routing immediately.** Do not attempt another hop.
-2. **Write to plan.md:** Append an OptiRoute report with:
+2. **Write to plan file:** Append an OptiRoute report with:
    - Routing chain: the sequence of skills visited
    - Trigger: which threshold fired (3x repeat / 5-hop ceiling)
    - Current state: what artifacts exist, what's pending
    - Blocker: what prevented progress
-3. **Surface to user** with: `OPTIROUTE STOP: <reason> | Chain: <skills> | See plan.md for full report`
+3. **Surface to user** with: `OPTIROUTE STOP: <reason> | Chain: <skills> | See plan file for full report`
 4. Exit the loop. Await user direction.

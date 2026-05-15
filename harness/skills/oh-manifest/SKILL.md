@@ -4,13 +4,14 @@ description: "Full build loop: plan → build → verify → loop until done or 
 tier: 4
 benefits-from: [oh-planner, oh-builder, oh-expert]
 triggers:
-  - "manifest"
-  - "full build"
+  - "run the full build"
+  - "full build pipeline"
   - "build loop"
   - "build until done"
-  - "orchestrate"
-  - "pipeline"
+  - "orchestrate this build"
+  - "pipeline from plan"
   - "run the plan"
+  - "manifest this"
 ---
 
 # oh-manifest
@@ -31,21 +32,21 @@ Before any work begins, ALL of these MUST pass:
 If any check fails → **STOP**. Report which check failed and why. Do not proceed to Phase 1 until the blocker is resolved.
 
 ### Step 1: Plan
-- If `.opencode/plan.md` exists, load and verify it is current
+- If a plan file (`~/.local/share/opencode/openhermes/plans/<project-name>-plan-<nnn>.md`) exists, load and verify it is current
 - If not, run `oh-planner` (Mode A, B, or C depending on context)
 - Auto-decide minor scope decisions using decision principles
 - Surface only: premises that need human judgment, or plan/alternative conflicts
 
 ### Step 2: Build
-- For each phase in plan.md, run `oh-builder` (Mode D: From Plan)
+- For each phase in the plan file, run `oh-builder` (Mode D: From Plan)
 - Implements phases in dependency order
 - Parallelizable phases may be delegated to sub-agents
 - Auto-decide implementation choices using decision principles
 
 ### Step 3: Verify
-- Check each phase against its verification criteria in plan.md
+- Check each phase against its verification criteria in the plan file
 - Run tests if they exist
-- If phase passes: mark complete in plan.md, proceed to next
+- If phase passes: mark complete in plan file, proceed to next
 - If phase fails: diagnose (use oh-expert self-diagnosis), fix, re-verify
 - If fix is impossible within scope: surface blocker
 
@@ -110,8 +111,8 @@ When a blocker is encountered:
 - Auto-deciding premises (fundamental assumptions need user input)
 - Pushing through blockers (surface immediately, don't try 5 workarounds silently)
 - Skipping verification (verify every phase, not just the final result)
-- Parallelizing dependent phases (respect the dependency order in plan.md)
-- Forgetting to update plan.md with completion status
+- Parallelizing dependent phases (respect the dependency order in the plan file)
+- Forgetting to update the plan file with completion status
 - Ignoring escalation triggers (stall means pause, not try harder)
 
 ## Routing

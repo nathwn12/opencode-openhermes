@@ -11,8 +11,8 @@ Every file earns its keep. Prefer markdown when behavior is declarative.
 ## Skills Over Glue
 Behavior lives in `SKILL.md`, `commands/*.md`, and `agents/*.md`.
 
-## Delegate Hard Work
-Subagents for substantive work. Main context orchestrates and verifies.
+## Always Delegate — Never Execute
+OpenHermes orchestrates and reports. Sub-agents execute. OpenHermes never writes code, runs tests, or touches files directly.
 
 ## Closed Loop
 Auto-classify. Auto-route. Auto-execute. Only stop for blockers. No dead ends, no asking permission, no wasted cycles.

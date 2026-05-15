@@ -1,6 +1,10 @@
 ---
 name: oh-handoff
 description: "Compact session state into a structured handoff document"
+triggers:
+  - "session handoff"
+  - "handoff to another agent"
+  - "handoff the session"
 ---
 
 # oh-handoff

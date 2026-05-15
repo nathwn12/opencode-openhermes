@@ -79,7 +79,11 @@ Every skill must route somewhere. No leaf nodes. The only intentional terminal i
 ## Safety Valves
 
 ### Loop Guard
-If the same skill is visited 3+ times in one chain, or 5+ hops pass without producing a new artifact — STOP, write OptiRoute report to `.opencode/plan.md`, surface to user. Do not keep looping.
+If the same skill is visited 3+ times in one chain, or 5+ hops pass without producing a new artifact — STOP, write OptiRoute report to the plan file, surface to user. Do not keep looping.
 
 ### Question Gate
 Before routing, check: "Can I proceed without guessing?" If the next skill's input is missing and you cannot create or discover it independently — surface to user. Do not route into guaranteed failure.
+
+## User Skills
+
+Skills in `~/.agents/skills/` and `~/.config/opencode/skills/` are auto-discovered on every session. On name conflict with a built-in `oh-*` skill, the user version wins. User skills survive `npm update openhermes`. The autopilot treats them identically to built-in skills — they appear in the available skills list and can be loaded through the skill tool on demand.

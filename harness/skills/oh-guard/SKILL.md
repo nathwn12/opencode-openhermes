@@ -1,6 +1,10 @@
 ---
 name: oh-guard
 description: "Safety confirmation mode — warn before destructive operations"
+triggers:
+  - "confirm before"
+  - "safety confirmation"
+  - "guard mode"
 ---
 
 # oh-guard
