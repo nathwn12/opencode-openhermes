@@ -5,7 +5,8 @@ tier: 2
 triggers:
   - "write a prd"
   - "product requirements"
-  - "prd for"
+  - "spec this feature"
+  - "feature spec"
 route:
   pass: oh-issue
   fail: oh-grill
@@ -15,30 +16,55 @@ route:
 # oh-prd
 
 ## When to Use
-When a feature discussion has produced enough context to write a product requirements document. Captures the decision tree and outputs a structured issue.
-
-## Workflow
-1. Extract requirements from conversation history
-2. Structure into PRD format: problem statement, target users, requirements (must/should/could), out of scope
-3. Create as GitHub issue with `gh issue create`
-4. Add triage label for prioritisation
+Conversation has defined a feature well enough to write requirements. Produces a structured PRD and publishes as a GitHub issue.
 
 ## PRD Structure
-- **Problem** — what problem does this solve?
-- **Target users** — who benefits?
-- **Requirements** — must have / should have / could have
-- **Out of scope** — explicitly what's NOT included
-- **Success metrics** — how will we know it works?
+
+```markdown
+# PRD: <feature name>
+
+## Problem Statement
+<what problem does this solve, for whom>
+
+## Success Criteria
+<measurable outcomes>
+
+## Scope
+### In scope
+- <features included>
+
+### Out of scope
+- <explicitly excluded — prevents scope creep>
+
+## Requirements
+### Functional
+- <numbered behaviors>
+
+### Non-functional
+- <performance, security, accessibility, observability>
+
+## Open Questions
+- <unresolved items>
+
+## Dependencies
+- <what must exist first>
+```
+
+## Workflow
+1. Extract requirements from conversation context
+2. Structure into PRD format
+3. Surface open questions to user
+4. Publish as GitHub issue via `gh issue create`
 
 ## Anti-patterns
-- Writing PRD before understanding the problem
-- Requirements that aren't testable ("fast" vs "loads in <200ms")
-- Gold-plating — every feature is "must have"
+- Specifying solutions instead of problems (let the builder decide how)
+- Too detailed (PRD sets direction, not implementation)
+- No open questions section (there are always open questions)
 
 ## Routing
 
 | Outcome | Route |
 |---------|-------|
-| pass | → oh-issue (break PRD into actionable issues) |
-| fail | → oh-grill (stress-test unclear requirements) |
-| blocker | → surface to user |
+| pass | → oh-issue (break into work items) |
+| fail | → oh-grill (stress-test requirements) |
+| blocker | → surface |

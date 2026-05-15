@@ -4,8 +4,8 @@ description: "Restrict file edits to a specific directory for the session"
 tier: 2
 triggers:
   - "freeze directory"
-  - "restrict edits to"
-  - "lock edits to"
+  - "only edit in"
+  - "dont touch other files"
 route:
   pass: mode
   fail: mode
@@ -15,23 +15,23 @@ route:
 # oh-freeze
 
 ## When to Use
-When debugging a specific module and you want to prevent accidentally "fixing" unrelated code. Scopes all Edit/Write operations to one directory.
+When the user says "don't touch anything outside [path]" or "only edit files in [dir]." Prevents accidental edits to configuration, infrastructure, or unrelated modules.
 
-## Workflow
-1. Specify target directory to freeze
-2. All Edit/Write operations outside that directory are blocked
-3. User can explicitly approve cross-boundary edits
-4. Unfreeze to release the boundary
+## Mode
+- Allowed paths: only the specified directory and its children
+- If you need to edit outside: state the reason and ask
+- Read operations unrestricted anywhere
+- File creation restricted to allowed paths
 
 ## Anti-patterns
-- Freezing too broadly (defeats the purpose)
-- Forgetting to unfreeze when task scope expands
-- Using freeze as a substitute for git discipline
+- Editing outside allowed path without asking
+- Reading unrelated files for context and using that to justify edits
+- "Just this one file outside" — ask first
 
 ## Routing
 
 | Outcome | Route |
 |---------|-------|
-| pass | → [return to prior skill — scope lock active] |
-| fail | → [surface issue — freeze not applied] |
-| blocker | → surface to user |
+| pass | → [return to prior skill — freeze active] |
+| fail | → [return to prior skill — reverting to unfrozen] |
+| blocker | → surface |

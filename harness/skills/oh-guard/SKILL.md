@@ -3,8 +3,9 @@ name: oh-guard
 description: "Safety confirmation mode — warn before destructive operations"
 tier: 2
 triggers:
-  - "confirm before"
-  - "safety confirmation"
+  - "be careful"
+  - "dont break anything"
+  - "safety mode"
   - "guard mode"
 route:
   pass: mode
@@ -15,28 +16,30 @@ route:
 # oh-guard
 
 ## When to Use
-When touching production, running destructive commands, or working in shared environments. Combines warning prompts with directory-scoped edit locks.
+When user says "be careful," "don't break anything," or context involves production, destructive changes, or irreversible actions.
 
-## Workflow
-1. **Enable guard mode** — set safety level (careful / freeze / full guard)
-2. **Destructive command warnings** — intercept rm -rf, DROP TABLE, force-push, git reset --hard, kubectl delete
-3. **Directory scope lock** — restrict file edits to specified directory (freeze)
-4. **User override** — user can approve or deny each operation
+## Mode
+Before any write/edit/delete operation:
+1. State the planned operation
+2. Ask for confirmation
+3. Proceed only on explicit approval
 
-## Modes
-- **Careful** — warn before destructive commands
-- **Freeze** — restrict edits to one directory
-- **Guard** — both careful + freeze
+## What triggers a guard check
+- File deletion or rename
+- Git destructive operations (reset, rebase, force push)
+- Dependency changes (add/remove/upgrade)
+- Configuration changes affecting auth, network, data
+- Any command with `--force`, `-f`, `--hard`, or destructive flags
 
 ## Anti-patterns
-- Disabling guard because "I know what I'm doing" (narrator: they didn't)
-- Running prod commands outside guard mode
-- Ignoring warnings about irreversible operations
+- Guarding trivial operations (wastes time)
+- Forgetting to ask on genuinely destructive operations
+- Asking for confirmation on reads or analysis steps
 
 ## Routing
 
 | Outcome | Route |
 |---------|-------|
-| pass | → [return to prior skill — guard mode active] |
-| fail | → [surface warning — operation denied] |
-| blocker | → surface to user |
+| pass | → [return to prior skill — guard active] |
+| fail | → [return to prior skill — guard lifted] |
+| blocker | → surface |

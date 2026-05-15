@@ -1,16 +1,19 @@
 import path from "node:path"
 import fs from "node:fs"
 import os from "node:os"
-import { fileURLToPath } from "node:url"
 import type { Plugin } from "@opencode-ai/plugin"
 import { createLogger } from "./lib/logger.ts"
 import { getHarnessDir, setHarnessRootForTest, resolveHarnessRoot } from "./lib/harness-resolver.ts"
 
 const log = createLogger("bootstrap")
 const sessionLog = createLogger("session")
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const BOOTSTRAP_MARKER = "OPENHERMES_BOOTSTRAP"
 const OPENHERMES_AGENT = "OpenHermes"
+
+// User skill directories — auto-discovered on every session, survive npm updates
+const USER_SKILL_DIRS: ReadonlyArray<string> = [
+  path.join(os.homedir(), ".agents", "skills"),
+  path.join(os.homedir(), ".config", "opencode", "skills"),
+]
 
 // Canonical storage under OpenCode's data directory — survives npm updates
 let _planStorageOverride: string | undefined
@@ -23,11 +26,6 @@ function getProjectName(projectDir: string): string {
   return path.basename(projectDir)
 }
 
-// User skill directories — auto-scanned on every session, survive npm updates
-const USER_SKILL_DIRS: ReadonlyArray<string> = [
-  path.join(os.homedir(), ".agents", "skills"),
-  path.join(os.homedir(), ".config", "opencode", "skills"),
-]
 
 export { resolveHarnessRoot, setHarnessRootForTest, getHarnessDir, ensurePlanFile }
 
@@ -128,9 +126,6 @@ function uniqueStrings(existing: string[] = [], additions: string[] = []): strin
   return merged
 }
 
-function readText(filePath: string): string {
-  return fs.existsSync(filePath) ? fs.readFileSync(filePath, "utf8") : ""
-}
 
 function regexEscape(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
@@ -287,83 +282,8 @@ export function formatSessionEvent(event: SessionLifecycleEvent): { level: "info
   }
 }
 
-function parseRouteYaml(raw: string): { pass: string; fail: string; blocker: string } {
-  const def: { pass: string; fail: string; blocker: string } = { pass: "surface", fail: "surface", blocker: "surface" }
-  const m = raw.match(/route:\n((?:  [^\n]*\n?)*)/)
-  if (!m) return def
-  const block = m[1]
 
-  const kv = (key: string): string | undefined => {
-    // Single-line:  pass: oh-builder  (horizontal whitespace only, no newlines)
-    const s = block.match(new RegExp(`  ${key}:[ \\t]*(\\S.*)`))
-    if (s) return s[1].trim()
-    // Multi-line array:  pass:\n    - oh-builder\n    - oh-gauntlet
-    const a = block.match(new RegExp(`  ${key}:\\n((?:    - .+\\n?)*)`))
-    if (a) {
-      const items = a[1].match(/    - (.+)/g)?.map(i => i.replace(/    - /, "").trim()) ?? []
-      return items.length > 0 ? `[${items.join(", ")}]` : undefined
-    }
-    return undefined
-  }
 
-  const p = kv("pass")
-  const f = kv("fail")
-  const b = kv("blocker")
-  if (p) def.pass = p
-  if (f) def.fail = f
-  if (b) def.blocker = b
-  return def
-}
-
-function buildRoutingInventory(skillDirs: string[]): string {
-  const rows: string[] = []
-  for (const dir of skillDirs) {
-    let entries: string[] = []
-    try { entries = fs.readdirSync(dir).filter(e => fs.statSync(path.join(dir, e)).isDirectory()) } catch { continue }
-    for (const name of entries.sort()) {
-      const skPath = path.join(dir, name, "SKILL.md")
-      if (!fs.existsSync(skPath)) continue
-      const raw = fs.readFileSync(skPath, "utf8").replace(/\r\n/g, "\n")
-      const fm = raw.match(/^---\n([\s\S]*?)\n---/)
-      if (!fm) continue
-      const route = parseRouteYaml(fm[1])
-      rows.push(`| **${name}** | ${route.pass} | ${route.fail} | ${route.blocker} |`)
-    }
-  }
-  if (rows.length === 0) return ""
-  const header = "## Dynamic Routing Inventory\n\nAll skills and their routes:\n\n| Skill | pass | fail | blocker |\n|---|---|---|---|\n"
-  return header + rows.join("\n")
-}
-
-function buildBootstrapContent(hDir: string, extraDirs: string[] = []): string {
-  const parts = [
-    `<${BOOTSTRAP_MARKER}>`,
-    `You are OpenHermes.`,
-    `OpenHermes is OpenCode-native: load skills on demand, always delegate, never execute tasks directly, and keep the surface small.`,
-    `Durable state is removed for now. Do not invent a persistence layer unless the user explicitly asks for one later.`,
-  ]
-
-  const autopilot = readText(path.join(hDir, "codex", "AUTOPILOT.md"))
-  const constitution = readText(path.join(hDir, "codex", "CONSTITUTION.md"))
-  const runtime = readText(path.join(hDir, "instructions", "RUNTIME.md"))
-  const context = readText(path.join(__dirname, "CONTEXT.md"))
-  const ethos = readText(path.join(__dirname, "ETHOS.md"))
-
-  if (autopilot) parts.push(`<AUTOPILOT>\n${autopilot}\n</AUTOPILOT>`)
-  if (constitution) parts.push(`<CONSTITUTION>\n${constitution}\n</CONSTITUTION>`)
-  if (runtime) parts.push(`<RUNTIME>\n${runtime}\n</RUNTIME>`)
-  if (context) parts.push(`<CONTEXT>\n${context}\n</CONTEXT>`)
-  if (ethos) parts.push(`<ETHOS>\n${ethos}\n</ETHOS>`)
-
-  // Dynamic routing inventory: built-in skills + user skills
-  const allSkillDirs = [path.join(hDir, "skills"), ...extraDirs.filter(Boolean)]
-  const inventory = buildRoutingInventory(allSkillDirs)
-  if (inventory) parts.push(inventory)
-
-  parts.push(`</${BOOTSTRAP_MARKER}>`)
-
-  return parts.join("\n\n")
-}
 
 interface OpenHermesConfig {
   skills?: { paths?: string[] }
@@ -378,8 +298,8 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
   const skillsDir = path.join(hDir, "skills")
   const commandsDir = path.join(hDir, "commands")
   const agentsDir = path.join(hDir, "agents")
+
   // Auto-detect and wire user skills from ~/.agents/skills and ~/.config/opencode/skills
-  // (Must happen before bootstrapContent is built so routing inventory includes user skills)
   const userSkillPaths: string[] = []
   for (const userDir of USER_SKILL_DIRS) {
     ensureDir(userDir)
@@ -390,7 +310,6 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
     }
   }
 
-  const bootstrapContent = buildBootstrapContent(hDir, userSkillPaths)
   const compactionContext = buildCompactionContext(ctx.directory)
   const builtInCount = countSkills(skillsDir)
   const userCount = userSkillPaths.reduce((sum, d) => sum + countSkills(d), 0)
@@ -451,16 +370,5 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
       output.context.push(...compactionContext)
     },
 
-    "experimental.chat.messages.transform": async (_input: unknown, output: { messages?: Array<{ info?: { role?: string }; parts?: Array<{ text?: string; type?: string }> }> }) => {
-      try {
-        if (!output.messages?.length) return
-        const firstUser = output.messages.find(m => m?.info?.role === "user")
-        if (!firstUser?.parts?.length) return
-        if (firstUser.parts.some(p => p.text?.includes(BOOTSTRAP_MARKER))) return
-        firstUser.parts.unshift({ type: "text", text: bootstrapContent })
-      } catch (err: unknown) {
-        log.error("transform error:", (err as Error)?.message)
-      }
-    },
   }
 }

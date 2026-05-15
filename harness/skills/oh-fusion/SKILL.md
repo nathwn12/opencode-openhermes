@@ -29,286 +29,149 @@ route:
 
 # oh-fusion
 
-The skill ingestion pipeline: discover external skills, evaluate signal quality, filter out noise, adapt to OH conventions, fuse multiple into one, and integrate into the harness.
-
-Every skill you run through `oh-fusion` becomes part of the closed loop — wired into AUTOPILOT, ROUTING.md, AGENTS.md, and the self-driving engine.
-
-## When to Use
-
-- The user points at a skill in `.agents/skills` and says "make this OH-native"
-- The user has a skill from `npx skills` ecosystem they want integrated
-- The user provides raw skill content and asks "is this worth keeping?"
-- Multiple skills need fusing into one (like the `oh-facade` fusion in this session)
-- Any external capability needs to become an `oh-*` skill with full wiring
-
-## Pipeline
-
-6-phase closed loop:
-
-```
-Discovery → Analysis → Decision → Adaptation → Fusion (opt) → Integration
-                                                                      ↓
-                                                            oh-skills-link (verify)
-```
+Skill ingestion pipeline: Discover → Analyze → Decide → Adapt → Fuse (opt) → Integrate. Every fused skill wires into AUTOPILOT, ROUTING, and the self-driving engine.
 
 ---
 
 ## Phase 1: Discovery
 
-Input: user's skill source
-Output: raw skill content loaded for analysis
+Input: user's skill source. Output: raw content loaded.
 
-### Sources
+| Source | Access |
+|--------|--------|
+| `.agents/skills/<name>/SKILL.md` | Read file |
+| `npx skills` package | `npx skills find <query>` |
+| URL | Fetch content |
+| User path | Resolve and read |
+| Inline text | Capture raw |
 
-| Source | How to access |
-|---|---|
-| `.agents/skills/<name>/SKILL.md` | Read the file directly |
-| `npx skills` package | Run `npx skills find <query>` or check `skills.sh` |
-| URL to a skill | Fetch the content via web fetch |
-| User-provided path | Resolve and read |
-| User-provided content inline | Capture the raw text |
-| Multiple skills (for fusion) | Load all, enter Phase 2 on each |
-
-### Discovery Checklist
-
-Before proceeding, confirm:
-- [ ] Skill content is loaded and readable
-- [ ] Frontmatter is present (name, description)
-- [ ] There are no access restrictions or permissions needed
-- [ ] For multiple skills: all are loaded and ready for comparison
+Confirm: content loaded, frontmatter present, no access restrictions. For multiple: all loaded.
 
 ---
 
 ## Phase 2: Analysis
 
-Input: raw skill content
-Output: structured analysis report with signal score
+Input: raw skill. Output: structured report with signal score.
 
-### 2a. Depth Scoring
+### Depth Scoring
+| Metric | Assessment |
+|--------|-----------|
+| Lines | SKILL.md length |
+| Concrete rules | "must/never/always/banned" count |
+| Examples | Before/after or usage code blocks |
+| Anti-patterns | Explicit "don't" sections |
+| Workflow steps | Sequential, actionable steps |
+| Routing table | pass/fail/blocker defined |
 
-Measure the skill's substantive content:
+**Score:** High (70-100) = concrete + examples + routing. Medium (30-69) = some structure. Low (0-29) = vague, no rules.
 
-| Metric | How to assess |
-|---|---|
-| Total lines | SKILL.md length |
-| Concrete rules count | Number of "must", "never", "always", "banned" directives |
-| Example count | Number of code blocks showing before/after or usage |
-| Anti-patterns listed | Explicit "don't do this" sections |
-| Workflow steps | Number of sequential, actionable steps |
-| Routing table | Does it define pass/fail/blocker routing? |
+### Overlap Detection
+Compare against existing `harness/skills/oh-*` skills. Overlap: none / partial (complementary) / complete (redundant).
 
-**Scoring:**
-- **High signal** (70-100): Multiple concrete rules, examples, anti-patterns, workflow steps, routing
-- **Medium signal** (30-69): Some structure but thin on specifics, few examples
-- **Low signal** (0-29): Vague descriptions, no concrete rules, no anti-patterns, "be creative" level
+### Convention Check
+- Clear description for triggering? Actionable instructions? Anti-patterns? Examples? Measurable outcomes? No time-sensitive refs? No platform assumptions?
 
-### 2b. Overlap Detection
-
-Compare against all existing OH skills (`harness/skills/oh-*/SKILL.md`):
-
-- Does any existing OH skill cover the same domain?
-- Is the overlap partial (complementary) or complete (redundant)?
-- Does the external skill have unique content OH lacks?
-
-### 2c. Convention Check
-
-Does the skill follow good practices?
-
-- [ ] Has clear description for triggering
-- [ ] Has concrete, actionable instructions (not just philosophy)
-- [ ] Has anti-patterns or failure modes documented
-- [ ] Has examples or code blocks
-- [ ] Has measurable outcomes (not subjective "make it good")
-- [ ] Avoids time-sensitive references (dates, version numbers)
-- [ ] Avoids platform-specific assumptions that don't apply
-
-### 2d. Report
-
-Output a structured report:
-
+### Report Template
 ```markdown
-## Analysis: <skill-name>
-
-**Source:** <path or origin>
-**Depth score:** <0-100> — <High/Medium/Low>
-**Total lines:** <N>  |  Concrete rules: <N>  |  Examples: <N>  |  Anti-patterns: <N>
-**Overlap:** <existing OH skill> — <none/partial/complete>
+**Depth:** <0-100> — <High/Medium/Low>
+**Overlap:** <existing skill> — <none/partial/complete>
 **Verdict:** <keep / fuse / discard / ask>
-
-**Strengths:**
-- <what this skill does well>
-
-**Weaknesses:**
-- <what is missing or weak>
-
-**Recommended action:** <port directly / fuse with X > / discard>
+**Action:** <port directly / fuse with X / discard>
 ```
 
 ---
 
 ## Phase 3: Decision
 
-Based on the analysis, decide what to do:
-
 | Verdict | Action |
-|---|---|
-| **Keep** | High signal, no overlap, OH conventions missing. Port directly to `oh-<name>`. |
-| **Fuse** | Medium-high signal, partial overlap with existing OH skill(s). Merge complementary DNA. |
-| **Discard** | Low signal, complete overlap, too niche, or no actionable content. Surface reasoning. |
-| **Ask** | Ambiguous quality, unclear domain fit, or user needs to choose between approaches. Surface findings. |
+|---------|--------|
+| Keep | High signal, no overlap. Port to `oh-<name>`. |
+| Fuse | Partial overlap with existing. Merge complementary DNA. |
+| Discard | Low signal or complete overlap. Surface reasoning. |
+| Ask | Ambiguous quality. Surface findings. |
 
-**Decision principles:**
-- When in doubt between keep and fuse, prefer fuse — conserves routing slots and reduces surface area
-- When in doubt between keep and discard, prefer keep if there is ANY unique signal — the autopilot won't load it unless triggered
-- Never fuse incompatible domains (e.g., UI design into a security skill) — the result is confusing
+When in doubt: prefer fuse over keep, keep over discard if ANY unique signal.
 
 ---
 
 ## Phase 4: Adaptation
 
-Input: raw skill content to keep/fuse
-Output: OH-native SKILL.md
+Input: content to keep/fuse. Output: OH-native SKILL.md.
 
-### 4a. Rewrite Frontmatter
-
-```markdown
----
-name: oh-<new-name>
-description: "Adapted from <source>. <Core function>. Use when <triggers>."
+### Frontmatter
+```yaml
+name: oh-<name>
+description: "Adapted from <source>. Core function. Use when ..."
 tier: <2|3|4>
-benefits-from: [<relevant oh- skills this depends on>]
-triggers:
-  - "<trigger phrase from original, adapted>"
-  - "<new trigger phrases for OH context>"
----
 ```
 
-### 4b. Structure the Body
-
-OH skill structure:
-1. **Summary** — one paragraph of what the skill does
+### Body Structure
+1. **Summary** — one-paragraph of what the skill does
 2. **When to Use** — clear triggering context
-3. **Workflow** — numbered steps (the core of the skill)
+3. **Workflow** — numbered steps (the core)
 4. **Anti-patterns** — what NOT to do
 5. **Routing** — pass/fail/blocker table
 
-Adaptation rules:
-- Remove all emojis from content
-- Replace ecosystem-specific terminology with OH equivalents
-- Convert relative paths to OH harness conventions
-- Add routing table based on skill's purpose
-- Keep all concrete rules, examples, and anti-patterns from the original
-- Discard fluff, philosophy, and motivational language
-- Preserve the original's unique signal — that's why you're importing it
+### Adaptation Rules
+- Remove emojis. Replace ecosystem terms with OH equivalents.
+- Convert relative paths to OH harness conventions.
+- Add routing table based on the skill's purpose.
+- Keep all concrete rules, examples, and anti-patterns from the original.
+- Discard fluff, philosophy, and motivational language.
+- Preserve the original's unique signal — that's why you're importing it.
 
-### 4c. Naming
-
-- Name must match `^[a-z0-9]+(-[a-z0-9]+)*$`
-- Prefix with `oh-`
-- Use the original name if it maps well, adapt if not
-- For fusions: invent a new name that captures the combined purpose
+### Naming
+Match `^[a-z0-9]+(-[a-z0-9]+)*$`, prefix `oh-`. Original name if good fit, adapt if not. Fusion names signal combined purpose.
 
 ---
 
-## Phase 5: Fusion (optional — skip for single-skill imports)
-
-Input: 2+ analyzed skill contents with "fuse" verdict
-Output: one unified skill that merges complementary DNA
-
-### 5a. Identify Complementary DNA
+## Phase 5: Fusion (opt — skip for single imports)
 
 For each skill being fused, identify:
-- **Unique rules/concepts** — content that only this skill has
+- **Unique concepts** — content only this skill has
 - **Overlapping content** — same idea expressed differently (keep the better version)
 - **Conflicting directives** — skills that say opposite things (surface to user)
 
-### 5b. Merge Architecture
-
-Structure the fused skill so each source contributes its strength:
+### Merge Architecture
+Structure so each source contributes its strength. Do NOT concatenate — must read as one coherent workflow, not three documents glued together.
 
 ```markdown
-## <Combined Workflow>
-
+## Combined Workflow
 ### Phase A: <from skill 1>
-<what skill 1 contributes>
-
 ### Phase B: <from skill 2>
-<what skill 2 contributes>
-
-### Phase C: <from skill 3>
-<what skill 3 contributes>
 ```
 
-Do NOT just concatenate. The fused skill must read as a single coherent workflow, not three documents glued together.
-
-### 5c. Name the Fusion
-
-The name should signal the combined purpose, not the individual sources.
-- `oh-facade` (from redesign + design-taste + high-end-visual) — not `oh-redesign-plus-taste`
-- Apply the same principle here
+### Naming
+Name signals combined purpose, not individual sources. E.g., `oh-facade` from redesign + design-taste + high-end-visual, not `oh-redesign-plus-taste`.
 
 ---
 
 ## Phase 6: Integration
 
-Input: OH-native SKILL.md
-Output: skill fully wired into the harness
-
-### 6a. Create the Skill File
-
-Write to `~/.config/opencode/skills/oh-<name>/SKILL.md` (user dir, survives npm updates).
-If the user has an alternative preference (`~/.agents/skills/`), use that instead.
-The file structure follows the standard OH skill template.
-
-### 6b. Wire into AUTOPILOT
-
-Add an entry to the auto-classify matrix in `harness/codex/AUTOPILOT.md`:
-- Signal keywords that should trigger this skill
-- Classification label
-- Action: "Load **oh-<name>**. Do not ask."
-
-### 6c. Wire routing into frontmatter
-
-Add `route:` frontmatter to the skill — no ROUTING.md edit needed. The dynamic routing system reads `route.pass`, `route.fail`, and `route.blocker` directly from the skill's own `SKILL.md`. The skill becomes routable automatically:
-
-```yaml
-route:
-  pass: <next skill or done>
-  fail: <fallback skill or surface>
-  blocker: surface
-```
-
-### 6d. Wire into AGENTS.md
-
-Add to the skills table in `AGENTS.md`:
-- Skill, tier, purpose
-- Increment the total count
-
-### 6e. Wire into openhermes.md
-
-Add to the orchestrator's skill list in `harness/agents/openhermes.md`.
-
-### 6f. Verify Discovery
-
-Route to `oh-skills-link` to confirm the skill is discoverable by OpenCode.
+1. **Create file** → user dir (`~/.config/opencode/skills/oh-<name>/SKILL.md`)
+2. **Wire AUTOPILOT** → add to auto-classify matrix in `harness/codex/AUTOPILOT.md`: signal keywords → classification → "Load **oh-<name>**. Do not ask."
+3. **Wire routing** → add `route:` frontmatter in the skill. Dynamic loading reads `route.pass`, `route.fail`, `route.blocker` directly from `SKILL.md` — no ROUTING.md edit needed. Skill becomes routable automatically.
+4. **Wire AGENTS.md** → add to skills table with tier and purpose. Increment total count.
+5. **Wire openhermes.md** → add to orchestrator's skill list in `harness/agents/openhermes.md`.
+6. **Verify** → route to `oh-skills-link` to confirm OpenCode discovers it.
 
 ---
+
+## Anti-Patterns
+
+- Importing without analysis (always run Phase 2)
+- Keeping everything — ~50% of external skills is fluff
+- Fusing incompatible domains (confusing to model and user)
+- Naming after source ("oh-tailwind-v2") instead of capability ("oh-styles")
+- Skipping route frontmatter — without it, autopilot can't route
+- Overwriting existing routing without checking for collisions
 
 ## Routing
 
 | Outcome | Route |
-|---|---|
-| integration complete | -> oh-skills-link (verify discovery) |
-| fusion with iteration needed | -> oh-skill-craft (optimize via eval loop) |
-| analysis: discard | -> surface findings to user |
-| analysis: ask | -> surface findings + recommendations to user |
-| blocker | -> surface to user |
-
-## Anti-patterns
-
-- Importing a skill without analyzing it first — always run Phase 2
-- Keeping everything from the source — 50% of most external skills is fluff. Be ruthless.
-- Fusing incompatible domains — the result confuses both the model and the user
-- Naming after the source ("oh-tailwind-v2") instead of the capability ("oh-styles")
-- Skipping route frontmatter — a skill without `route.pass`/`route.fail`/`route.blocker` won't auto-route
-- Overwriting existing routing entries without checking for collisions
+|---------|-------|
+| Integration complete | → oh-skills-link (verify discovery) |
+| Fusion needs iteration | → oh-skill-craft |
+| Analysis: discard | → surface |
+| Analysis: ask | → surface with recs |
+| Blocker | → surface |

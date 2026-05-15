@@ -4,8 +4,8 @@ description: "List all available oh-* skills with descriptions"
 tier: 2
 triggers:
   - "list skills"
-  - "show skills"
-  - "what skills"
+  - "what skills exist"
+  - "available skills"
 route:
   pass: done
   fail: surface
@@ -15,26 +15,21 @@ route:
 # oh-skills-list
 
 ## When to Use
-To discover what skills are available. Lists every skill with its name, description, and category.
+User wants to see available skills. Lists all oh-* skills with tier and description.
 
 ## Output
-Markdown table of skills:
-
-| Skill | Description | Category |
-|-------|-------------|----------|
-| oh-plan | Strategy + architecture review | Orchestration |
-| oh-qa | Full QA workflow | Quality |
-| ... | ... | ... |
+| Skill | Tier | Purpose |
+|-------|------|---------|
+| oh-<name> | 2/3/4 | <description> |
 
 ## Anti-patterns
-- Listing "all available" but missing recently installed skills
-- Showing skill file paths instead of human-readable descriptions
-- Not categorising skills (flat list is hard to scan)
+- Filtering skills (show everything — let user decide)
+- Including non-OH skills in the output
 
 ## Routing
 
 | Outcome | Route |
 |---------|-------|
-| pass | → [done — read-only report] |
-| fail | → [surface issue to user] |
-| blocker | → surface to user |
+| pass | done |
+| fail | surface |
+| blocker | surface |

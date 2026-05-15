@@ -15,21 +15,17 @@ route:
 # oh-caveman
 
 ## When to Use
-When context is tight, tokens are precious, or user says "caveman mode." Drops filler, articles, and pleasantries while keeping full technical accuracy.
+Tight context, precious tokens, or user says "caveman mode." Drops filler while keeping full technical accuracy.
 
 ## Mode
-- No pleasantries, no hedging, no transitions
+- No pleasantries, hedging, transitions
 - Fragments OK. One word when enough.
 - Short synonyms. Drop articles.
-- Code unchanged — only prose compresses.
-- Technical accuracy preserved at all costs.
-
-## Example
-Normal: "I think we should probably look at the authentication module because there might be an issue with the token refresh logic."
-Caveman: "Check auth module — token refresh likely broken."
+- Code unchanged. Prose only.
+- Accuracy preserved at all costs.
 
 ## Anti-patterns
-- Compressing code (code is already dense)
+- Compressing code (already dense)
 - Omitting critical context to save tokens
 - Being unclear to be brief (accuracy > brevity)
 
@@ -37,6 +33,6 @@ Caveman: "Check auth module — token refresh likely broken."
 
 | Outcome | Route |
 |---------|-------|
-| pass | → [return to prior skill — mode active] |
-| fail | → [fallback to normal communication mode] |
-| blocker | → surface to user |
+| pass | → [return to prior skill] |
+| fail | → [fallback to normal mode] |
+| blocker | → surface |

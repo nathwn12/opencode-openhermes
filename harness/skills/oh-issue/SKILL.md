@@ -15,31 +15,31 @@ route:
 # oh-issue
 
 ## When to Use
-When a plan exists and needs to be broken into actionable issues. Uses tracer-bullet vertical slices for independent work items.
+Plan/PRD needs breaking into actionable issues. Vertical tracer-bullet slices.
 
 ## Workflow
-1. Read the plan or PRD
-2. Identify vertical slices — self-contained features that ship independently
-3. Write each issue with: clear title, acceptance criteria, implementation notes, dependencies
-4. Use `gh issue create` to publish each issue
-5. Label and milestone each issue appropriately
+1. Read plan or PRD
+2. Identify vertical slices — self-contained, independently shippable
+3. Write each issue: title, acceptance criteria, implementation notes, dependencies
+4. `gh issue create` to publish
+5. Label + milestone appropriately
 
 ## Issue Structure
-- **Title**: action-oriented ("Add user authentication API")
-- **Acceptance criteria**: concrete, testable ("User can sign up with email + password")
-- **Implementation notes**: pointers for the implementer
-- **Dependencies**: what must be done first
+- **Title**: action-oriented ("Add user auth API")
+- **AC**: concrete, testable ("User signs up with email + password")
+- **Notes**: pointers for implementer
+- **Deps**: what must come first
 - **Labels**: type, priority, area
 
 ## Anti-patterns
-- Horizontal slicing (DB layer / API layer / UI layer — no one ships a layer)
-- Issues too large (3+ days) or too small (< 1 hour)
-- Writing issues without acceptance criteria
+- Horizontal slicing (no one ships "DB layer" alone)
+- Issues too large (3+ days) or too small (<1 hour)
+- Missing acceptance criteria
 
 ## Routing
 
 | Outcome | Route |
 |---------|-------|
-| pass | → [done — issues published to tracker] |
+| pass | done (issues published) |
 | fail | → oh-planner (re-spec unclear slices) |
-| blocker | → surface to user |
+| blocker | → surface |

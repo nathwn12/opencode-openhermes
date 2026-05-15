@@ -22,142 +22,102 @@ route:
 
 # oh-planner
 
-The ALL-arounder planner. Merges brainstorm, architecture analysis, strategy review, and automatic plan review into one skill. Produces a plan file in OpenCode's canonical storage at `~/.local/share/opencode/openhermes/plans/`.
+ALL-arounder planner. Merges brainstorm, architecture analysis, strategy, and plan review into one skill. Produces plan files in canonical storage (`~/.local/share/opencode/openhermes/plans/`).
 
 ## Entry Modes
 
-Use the mode that matches the user's starting point:
+### Mode A: Brainstorm (fuzzy idea — "what if", "I have an idea")
+When the concept is vague and needs shaping into something concrete.
 
-### Mode A: Brainstorm (exploratory)
-When the idea is fuzzy and needs shaping.
-
-1. **Demand reality** — who specifically needs this?
-2. **Status quo** — what do they do today?
-3. **Desperate specificity** — what's the one concrete thing they can't do?
-4. **Narrowest wedge** — what's the smallest useful version?
-5. **Observation** — what will you see/hear when it works?
-6. **Future-fit** — does this compound or plateau?
+1. Who specifically needs this?
+2. What do they do today?
+3. What's the one concrete thing they can't do?
+4. What's the smallest useful version?
+5. What signals success?
+6. Does this compound or plateau?
 
 Output: structured design doc.
 
 ### Mode B: Architecture Analysis (existing codebase)
-When the codebase feels messy or you need to understand the surface.
+When the codebase feels messy or you need to understand the surface before planning.
 
-1. **Read the domain** — load CONTEXT.md, understand the language
-2. **Map the surface** — identify modules, boundaries, dependencies
-3. **Find deepening opportunities** — duplication, over-coupling, grown-beyond-purpose functions, missing abstractions
+1. **Read domain** — load CONTEXT.md, understand the language
+2. **Map the surface** — modules, boundaries, dependencies
+3. **Find deepening opportunities** — duplication, over-coupling, grown-beyond-purpose
 4. **Rank by impact** — effort vs value, dependencies, risk
 
 Output: ranked refactoring candidates.
 
 ### Mode C: Structured Plan (non-trivial feature)
-When requirements exist but need a plan document.
+When requirements exist and need a formal plan document to execute from.
+1. **Scope challenge:** What existing code partially solves it? Minimum changes? Complexity check (8+ files → smell). **Search check:** for each architecture pattern, search `{framework} {pattern} built-in` and flag custom solutions where built-ins exist. **Completeness check:** AI-assisted completeness is 10-100x cheaper than human teams — recommend full, not minimal. **Distribution check:** new artifact types may need pipelines.
 
-1. **Scope challenge** — before reviewing anything, answer:
-   - What existing code already partially solves each sub-problem?
-   - What is the minimum set of changes that achieves the stated goal?
-   - **Complexity check:** 8+ files or 2+ new classes/services in a single phase → smell. Propose splitting or simplifying.
-   - **Search check:** for each architectural pattern or infrastructure component the plan introduces, check whether the runtime/framework has a built-in. Search for: `{framework} {pattern} built-in`. Flag custom solutions where built-ins exist.
-   - **Completeness check:** with AI-assisted coding, completeness is 10-100x cheaper than with human teams. If the plan shortcuts something to save human hours that only saves minutes with AI, recommend the complete version.
-2. **Strategy review** — challenge premises, identify scope decisions, consider 10x alternatives
-3. **Architecture review** — data flow, component boundaries, API surface, state model
-4. **Edge case analysis** — error states, concurrency, failure modes, security implications
-5. **Dependency mapping** — what blocks what, parallelizable work
-6. **Write plan.md** — structured artifact with phases, deps, verification steps
+2. **Strategy review** — challenge premises, identify scope decisions, consider 10x alternatives.
 
-### Mode D: Autoplan (plan exists, needs full review)
-When a plan file exists and needs the full gauntlet. Auto-decides 90% of questions using decision principles. Surfaces only taste decisions at a final approval gate.
+3. **Architecture review** — data flow, component boundaries, API surface, state model.
 
-Runs in order: **Strategy → Architecture → Design → Engineering → DX**
-Each phase must complete before the next begins.
+4. **Edge case analysis** — error states, concurrency, failure modes, security.
 
-## Decision Principles
+5. **Dependency mapping** — what blocks what, parallelizable work.
 
-Use these to auto-resolve intermediate questions. Only surface to the user when options are genuinely close (taste decisions):
+6. **Write plan** — structured artifact with phases, deps, verification steps.
 
-1. **Completeness over cleverness** — Choose the option that covers more cases
-2. **Boil the lake** — Fix the blast radius, not the symptom
-3. **Pragmatic over perfect** — Cleaner option that ships today wins
-4. **DRY but not premature** — Reuse over rebuild, but don't abstract before the third instance
-5. **Explicit over implicit** — Clear code over magic
-6. **Bias toward action** — When in doubt, make progress
+### Mode D: Autoplan (existing plan needs full review)
+Auto-decides 90% of intermediate questions using the principles below. Surfaces only taste decisions at a final approval gate. Runs: **Strategy → Architecture → Design → Engineering → DX**. Each phase completes before the next begins.
 
-Never auto-decide: premises (need human judgment) or cases where both the plan and the alternative have strong arguments.
+Use these to auto-resolve; surface only when options are genuinely close (taste decisions):
+
+1. **Completeness over cleverness** — cover more cases
+2. **Boil the lake** — fix blast radius, not symptom
+3. **Pragmatic over perfect** — ships today wins
+4. **DRY but not premature** — reuse, but don't abstract before 3rd instance
+5. **Explicit over implicit** — clear code over magic
+6. **Bias toward action** — when in doubt, make progress
+
+**Never auto-decide:** premises (need human judgment) or close calls with strong arguments on both sides.
 
 ## Plan Artifact
 
-Output goes in `~/.local/share/opencode/openhermes/plans/<project-name>-plan-<nnn>.md` (OpenCode's canonical storage, sequence-numbered per-session/project). The plan ID matches the filename.
+Canonical path: `~/.local/share/opencode/openhermes/plans/<project>-plan-<nnn>.md`
 
 ```markdown
-# PLAN: <project-name>
+# PLAN: <project>
 
-Plan ID: <project-name>-plan-<nnn>
-Project: <project-name>
-Status: active
-Created: <local-date-time>
-Updated: <local-date-time>
-Project Path: <absolute-project-path>
-Plan Path: ~/.local/share/opencode/openhermes/plans/<project-name>-plan-<nnn>.md
-Objective: <short objective>
+Plan ID: <project>-plan-<nnn>
+Project: <project>
+Status: active | in-progress | blocked | complete | abandoned
+Created: <ts> | Updated: <ts>
+Project Path: <absolute-path>
+Plan Path: <canonical-path>/<project>-plan-<nnn>.md
+Objective: <short>
 
 ## Current State
-
-<what exists now, what's missing>
-
 ## Assumptions
-
-- <assumption 1>
-- <assumption 2>
-
 ## Tasks
-
 - [ ] Task 1
   - [ ] Subtask 1.1
-
 ## Active Task
-
-<what's being worked on now>
-
 ## Subagents
-
 | Agent | Purpose | Status | Findings |
-|---|---|---|---|
-
 ## Completed
-
-- <what's done>
-
 ## Work Log
-
-<timestamped entries for subagent handoffs>
-
 ## Blockers
-
-- None
-
 ## Validation
-
 - [ ] Static checks
 - [ ] Unit tests
 - [ ] Manual verification
-
 ## Decisions
-
-- <decision> — <rationale>
-
 ## Notes
-
-<anything else>
 ```
 
-The plan file is self-contained — Tasks, Completed, Subagents, and Work Log sections eliminate the need for separate todo.md or work-log.md files.
+Self-contained — Tasks, Completed, Subagents, and Work Log sections. No separate todo.md or work-log.md files.
 
 ## Anti-patterns
 - Skipping strategy review for complex features (architecture mistakes compound)
-- Plans at wrong granularity — too vague to execute or too detailed to read
-- Re-opening already-decided debates ("what if we rewrite in Rust?")
-- Perfect being the enemy of shipped (progress > polish)
-- Failing to flag taste decisions to the user
+- Wrong granularity — too vague to execute or too detailed to read
+- Re-opening decided debates ("what if we rewrite in Rust?")
+- Perfect > shipped (progress > polish)
+- Not flagging taste decisions to user
 - Big bang rewrites — plan increments, not overhauls
 
 ## Routing
@@ -166,4 +126,4 @@ The plan file is self-contained — Tasks, Completed, Subagents, and Work Log se
 |---------|-------|
 | pass | → oh-grill (stress-test plan) |
 | fail | → oh-planner (revise gaps) |
-| blocker | → surface to user |
+| blocker | → surface |

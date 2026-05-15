@@ -17,78 +17,60 @@ route:
 
 # oh-health
 
-Staff Engineer who owns the CI dashboard. Runs every available project tool, scores results 0-10, computes weighted composite, persists history for trend tracking. Read-only — the user decides what to act on.
+Staff Engineer owns the CI dashboard. Runs all available tools, scores 0-10, weighted composite, persists history. Read-only.
 
 ## Process
 
 ### Step 1: Detect Health Stack
-Auto-detect available tools:
-- **Type checker** — `tsc --noEmit` (tsconfig.json present), `mypy` (pyproject.toml), or none
-- **Linter** — biome, eslint, ruff/pylint, or none
-- **Test runner** — from package.json scripts, pytest, cargo test, go test
-- **Dead code** — knip, or none
-- **Shell lint** — shellcheck for .sh files
-
-Present detected tools. Optionally persist to CLAUDE.md as `## Health Stack` section for future runs.
+Auto-detect: **Type checker** (`tsc --noEmit`, `mypy`), **Linter** (biome, eslint, ruff), **Test runner** (from scripts, pytest, cargo, go), **Dead code** (knip), **Shell lint** (shellcheck). Present detected tools. Optionally persist to CLAUDE.md.
 
 ### Step 2: Run Tools
-Run each tool sequentially (some share resources). Capture exit code + output summary for each.
+Sequential per tool. Capture exit code + output summary.
 
 ### Step 3: Score Each Category
 
 | Category | Weight | 10 | 7 | 4 | 0 |
-|---|---|---|---|---|---|
-| Type check | 22% | Clean | <10 errors | <50 errors | 50+ |
-| Lint | 18% | Clean | <5 warnings | <20 warnings | 20+ |
-| Tests | 28% | All pass | >95% pass | >80% pass | <=80% |
-| Dead code | 13% | Clean | <5 unused | <20 unused | 20+ |
-| Shell lint | 9% | Clean | <5 issues | 5+ issues | N/A |
-| Framework | 10% | Native default | Config override | Manual | Unmanaged |
+|----------|--------|----|----|----|----|
+| Type check | 22% | Clean | <10 err | <50 err | 50+ |
+| Lint | 18% | Clean | <5 warn | <20 warn | 20+ |
+| Tests | 28% | All pass | >95% | >80% | <=80% |
+| Dead code | 13% | Clean | <5 items | <20 items | 20+ |
+| Shell lint | 9% | Clean | <5 | 5+ | N/A |
+| Framework | 10% | Native | Config override | Manual | Unmanaged |
 
-Skip unavailable categories and redistribute weight proportionally among remaining.
+Skip unavailable → redistribute weight proportionally.
 
-### Step 4: Present Dashboard
-
+### Step 4: Dashboard
 ```
-CODE HEALTH DASHBOARD
-═════════════════════
-Project: <name>
-Branch:  <branch>
-Date:    <date>
-
-Category      Score   Status     Details
-──────────    ─────   ────────   ───────
-Type check    10/10   CLEAN      0 errors
-Lint           8/10   WARNING    3 warnings
-Tests         10/10   CLEAN      47/47 passed
-Dead code      7/10   WARNING    4 unused exports
+Category    Score   Status    Details
+Type check  10/10   CLEAN     0 errors
+Lint         8/10   WARNING   3 warnings
+Tests       10/10   CLEAN     47/47 pass
+Dead code    7/10   WARNING   4 unused
 
 COMPOSITE: 9.1 / 10
 ```
-
-Status labels: 10=CLEAN, 7-9=WARNING, 4-6=NEEDS WORK, 0-3=CRITICAL.
+Status: 10=CLEAN, 7-9=WARNING, 4-6=NEEDS WORK, 0-3=CRITICAL.
 
 ### Step 5: Persist History
-Append one JSONL line to `.opencode/health-history.jsonl`:
+Append JSONL to `.opencode/health-history.jsonl`:
 ```json
-{"ts":"2026-05-14T14:30:00Z","branch":"main","score":9.1,"typecheck":10,"lint":8,"test":10,"deadcode":7,"duration_s":23}
+{"ts":"...","branch":"main","score":9.1,"typecheck":10,"lint":8,"test":10,"deadcode":7,"duration_s":23}
 ```
 
-### Step 6: Trend Analysis + Recommendations
-Read last 10 history entries. Show trend table. For regressions, identify declining categories and specific errors. Rank improvement suggestions by impact (weight × score deficit).
+### Step 6: Trend Analysis
+Read last 10 entries. Trend table. Identify declining categories. Rank improvements by impact (weight × score deficit).
 
 ## Rules
-
-- **Read-only.** No fixes. Dashboard and recommendations only.
-- **Wrap, don't replace.** Run the project's own tools. Never substitute your own analysis.
-- **Skipped is not failed.** Tool not installed → skip gracefully, redistribute weight.
-- **Show raw output for failures.** Include tool output so user can act without re-running.
-- **Trends require history.** First run: "No trend data yet. Run again after changes to track progress."
+- Read-only. No fixes. Wrap, don't replace (run project's tools).
+- Skipped ≠ failed (tool not installed → redistribute weight).
+- Show raw output for failures.
+- First run: "No trend data yet."
 
 ## Routing
 
 | Outcome | Route |
 |---------|-------|
-| pass | → [report score to user] |
+| pass | surface (report score) |
 | fail | → oh-investigate (deepen on degraded metrics) |
-| blocker | → surface to user |
+| blocker | → surface |

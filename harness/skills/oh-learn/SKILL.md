@@ -14,88 +14,43 @@ route:
 
 # oh-learn
 
-Learning engine for the harness. Distills patterns from sessions into **instincts** (trigger-action pairs with confidence), clusters them into skill candidates, and graduates high-signal patterns from project to global scope.
+Distills session patterns into **instincts** (trigger-action pairs with confidence), clusters into skill candidates, promotes high-signal patterns from project to global scope.
 
 ## Instinct Data Model
 
-Every learning stored as one JSONL line in `~/.local/share/opencode/openhermes/plans/<project-name>-instincts.jsonl`:
-
+JSONL at `~/.local/share/opencode/openhermes/plans/<project>-instincts.jsonl`:
 ```json
-{ "trigger": "situation pattern", "action": "recommended response", "confidence": 0.5, "applications": 1, "successes": 1, "category": "coding", "source": "oh-learn:extract", "ts": "2026-05-15T12:00:00Z" }
+{"trigger": "specific situation", "action": "recommended response", "confidence": 0.5, "applications": 1, "successes": 1, "category": "coding", "source": "oh-learn:extract", "ts": "2026-05-15T12:00:00Z"}
 ```
 
-**Rules:**
-- **Trigger** — specific, matchable situation. *Not* general advice.
-- **Action** — executable response. *Not* a belief.
-- **Confidence** — starts at 0.5, increments +0.05 per successful application, decays -0.02 per day without use.
-- **Category** — one of: `coding`, `testing`, `security`, `git`, `planning`, `orchestration`, `debugging`, `ux`.
-
-## When to Use
-
-After completing a significant piece of work, at session handoff, or when you notice the same pattern repeat 2+ times in one session. Also on explicit user request.
+**Trigger:** specific, matchable (not general advice). **Action:** executable (not belief). **Confidence:** starts 0.5, +0.05 per success, -0.02/day decay. **Category:** coding, testing, security, git, planning, orchestration, debugging, ux.
 
 ## Workflows
 
 ### Extract
-Mine the current session for reusable patterns.
-
-1. Scan recent conversation + code changes for repeated decision patterns
-2. For each distinct pattern write an instinct: trigger, action, confidence=0.5, category
-3. Read existing `~/.local/share/opencode/openhermes/plans/<project-name>-instincts.jsonl`, check for near-duplicate triggers
-4. If duplicate found: merge — `confidence = max(existing, 0.8 × new)`, increment applications
-5. If new: append line to file
-
-**Good instinct:** trigger=`"tsc --noEmit shows 10+ errors after batch edit"`, action=`"Fix errors one at a time, re-running tsc after each, rather than batch-fixing"`, category=`"debugging"`
-
-**Bad instinct:** `"Write clean code"` — too vague to trigger on.
+Scan session for repeated decisions. For each: write instinct. Check existing file for near-duplicates. Merge (max confidence, increment applications) or append.
 
 ### Evolve
-Cluster related instincts into skill/command/agent candidates.
-
-1. Read all instincts from `~/.local/share/opencode/openhermes/plans/<project-name>-instincts.jsonl`
-2. Group by `category`, then by trigger topic similarity
-3. **If cluster ≥ 5 instincts AND avg confidence ≥ 0.7** → generate `oh-skill-craft` spec for a new skill
-4. **If cluster 3-4 instincts with confidence ≥ 0.8** → suggest update to existing skill
-5. Output candidate summary with trigger list and extracted core pattern
+Read all instincts. Group by category then topic. ≥5 instincts with avg confidence ≥ 0.7 → oh-skill-craft spec. 3-4 with confidence ≥ 0.8 → suggest update to existing skill.
 
 ### Promote
-Graduate high-confidence instincts from project to global scope.
+Instincts with confidence ≥ 0.85 AND applications ≥ 10 → filter project-specific → append to global `%USERPROFILE%\.config\opencode\instincts.jsonl`. Tag promoted.
 
-1. Scan `~/.local/share/opencode/openhermes/plans/<project-name>-instincts.jsonl` for instincts with `confidence >= 0.85 AND applications >= 10`
-2. Filter out project-specific patterns (reference paths, local APIs, domain terms)
-3. Append filtered candidates to `%USERPROFILE%\.config\opencode\instincts.jsonl` (global)
-4. Tag promoted instincts with `"promoted": true` in project file
-5. Report: "Promoted N instincts to global scope"
-
-### Review
-Show instinct summary: total count, confidence distribution, category breakdown, recently promoted.
-
-### Search
-Find instincts by topic, trigger fragment, category, or confidence range.
-
-### Prune
-Remove instincts stale for 30+ days with confidence < 0.3, or superseded by a higher-confidence instinct covering the same trigger.
-
-### Export
-Serialize instincts to portable JSON for sharing across projects or teams:
-
-```json
-{ "version": 1, "exported": "2026-05-15T12:00:00Z", "instincts": [...] }
-```
+### Review / Search / Prune / Export
+Review: totals + distributions. Search: by topic, trigger, category, confidence. Prune: stale >30d with confidence < 0.3. Export: portable JSON.
 
 ## Anti-patterns
-
-- Hoarding every observation (most things aren't learnings)
-- Never pruning (stale knowledge is worse than no knowledge)
-- Storing what, not why (context-less facts are forgettable)
-- Over-promoting: not every pattern is globally useful
-- Extracting without applying: instincts that never trigger are noise
-- Ignoring confidence: treating all instincts as equally reliable
+- Hoarding every observation (most aren't learnings)
+- Never pruning
+- Storing what not why
+- Over-promoting to global
+- Extracting without applying
+- Ignoring confidence
 
 ## Routing
 
 | Outcome | Route |
 |---------|-------|
-| pass | → [done — report summary] |
-| fail | → [surface gaps to user] |
-| blocker | → surface to user |
+| pass | done (report summary) |
+| fail | surface |
+| blocker | surface |

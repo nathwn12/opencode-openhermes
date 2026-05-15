@@ -16,28 +16,23 @@ route:
 # oh-ship
 
 ## When to Use
-When code is ready to ship. Runs the full release pipeline from test to PR to deploy verification.
+Code ready to ship. Full release pipeline: test → PR → deploy → verify.
 
 ## Workflow
-1. **Pre-flight** — run test suite, lint, typecheck
-2. **Version bump** — read VERSION file or package.json, bump according to semver
-3. **Changelog** — generate from commit history since last tag. Polish voice: consistent tense, group by type (features, fixes, breaking)
-4. **Commit + push** — create release commit with changelog
-5. **PR** — create GitHub PR with summary, test evidence, deploy plan
-6. **Merge** — merge PR after CI passes
+1. **Pre-flight** — run tests, lint, typecheck
+2. **Version bump** — read VERSION/package.json, semver bump
+3. **Changelog** — generate from commits since last tag. Polish: consistent tense, group by type (features, fixes, breaking)
+4. **Commit + push** — release commit with changelog
+5. **PR** — create PR with summary, test evidence, deploy plan
+6. **Merge** — after CI passes
 7. **Deploy** — trigger deploy (platform-specific)
 8. **Verify** — canary check, health endpoints, smoke tests
-9. **Post-ship docs sync** — read all project docs (README, ARCHITECTURE.md, CONTRIBUTING.md), cross-reference the diff, update to match what shipped:
-   - README: new features, changed APIs, updated examples
-   - CHANGELOG: verify polish against what actually merged
-   - ARCHITECTURE.md / CONTRIBUTING.md: reflect any structural or workflow changes
-   - TODOS.md: remove completed items, add any new deferred items discovered during ship
-   - VERSION file: bump if not already done
+9. **Post-ship docs sync** — cross-reference diff against README, CHANGELOG, ARCHITECTURE.md, CONTRIBUTING.md, TODOS.md. Update to match what shipped.
 
 ## Anti-patterns
-- Skipping pre-flight checks ("just a quick fix")
-- Bumping version without changelog
-- Deploying without post-deploy verification
+- Skipping pre-flight ("just a quick fix")
+- Version bump without changelog
+- Deploy without post-deploy verification
 - Not tagging releases
 
 ## Routing
@@ -45,5 +40,5 @@ When code is ready to ship. Runs the full release pipeline from test to PR to de
 | Outcome | Route |
 |---------|-------|
 | pass | → oh-retro (post-ship review) |
-| fail | → oh-expert (diagnose deployment failure) |
-| blocker | → surface to user |
+| fail | → oh-expert (diagnose) |
+| blocker | → surface |

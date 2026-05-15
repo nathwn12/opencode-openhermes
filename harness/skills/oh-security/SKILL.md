@@ -19,96 +19,66 @@ route:
 
 # oh-security
 
-Security audit that finds the doors that are actually unlocked. Two modes: **daily** (8/10 confidence gate — low noise, high signal) and **comprehensive** (2/10 bar — casts a wider net, more findings). Output is a Security Posture Report with severity ratings and remediation plans. Does NOT make code changes — diagnosis only.
+Security audit. Two modes: **Daily** (8/10 confidence — low noise, high signal) and **Comprehensive** (2/10 bar — wider net). Output: Security Posture Report. Read-only — diagnosis only.
 
-## Mode Selection
-
-- **Daily** (default) — 8/10 confidence gate. Only flag findings with strong evidence. Skips speculative or trace-only checks. Runs all phases but reports only clear findings.
-- **Comprehensive** (`--comprehensive`) — 2/10 bar. Surfaces more. Includes trace-only flags, speculative dependency issues, and historical pattern matching.
+## Modes
+- **Daily** (default) — only flag findings with strong evidence. Skips speculative checks.
+- **Comprehensive** (`--comprehensive`) — surface everything plausible. User decides.
 
 ## Phases
 
-### Phase 0: Stack Detection + Architecture Mental Model
-Detect the project's language stack and framework. Build an explicit mental model: what are the components, trust boundaries, data flows, and attack surface.
+### Phase 0: Stack + Architecture Mental Model
+Detect language, framework, components, trust boundaries, data flows, attack surface.
 
 ### Phase 1: Attack Surface Census
-Map what an attacker sees:
-- Public vs authenticated vs admin endpoints
-- File upload points, external integrations, background jobs
-- WebSocket channels, webhook receivers
-- CI/CD workflows, container configs, IaC, deploy targets
+Public vs authed vs admin endpoints. File uploads, external integrations, WebSocket, webhooks. CI/CD workflows, containers, IaC, deploy targets.
 
 ### Phase 2: Secrets Archaeology
-Scan git history for leaked credentials (AWS keys, OpenAI keys, GitHub tokens, Slack tokens, generic secrets). Check `.env` tracking status. Scan CI configs for inline secrets.
+Git history for leaked credentials (AWS, OpenAI, GitHub, Slack, generic). .env tracking status. CI inline secrets.
 
 ### Phase 3: Dependency Supply Chain
-Check beyond `npm audit`: known CVEs in direct deps, install scripts in production deps, lockfile integrity, abandoned packages. Diff-mode limits to changed deps.
+CVEs in direct deps, install scripts in production deps, lockfile integrity, abandoned packages. Diff-mode limits to changed deps.
 
-### Phase 4: CI/CD Pipeline Security
-Check for unpinned third-party actions, `pull_request_target` misuse, script injection via `${{ github.event.* }}`, secrets exposed as env vars, CODEOWNERS protection on workflow files.
+### Phase 4: CI/CD Security
+Unpinned third-party actions, `pull_request_target` misuse, script injection via `${{ github.event.* }}`, secrets as env vars, CODEOWNERS on workflows.
 
-### Phase 5: Infrastructure Shadow Surface
-Dockerfiles (root user, secrets in ARG, missing USER), config files with prod DB URLs, IaC (overly permissive IAM, privileged K8s). Staging configs referencing prod.
+### Phase 5: Infrastructure Shadow
+Dockerfiles (root, secrets in ARG, missing USER), configs with prod DB URLs, IaC (overly permissive IAM, privileged K8s). Staging → prod refs.
 
-### Phase 6: Webhook & Integration Audit
-Webhook endpoints without signature verification, TLS verification disabled in prod, overly broad OAuth scopes.
+### Phase 6: Webhooks
+Endpoints without signature verification, TLS verification disabled, overly broad OAuth scopes.
 
-### Phase 7: LLM & AI Security
-Prompt injection vectors (user input flowing into system prompts), unsanitized LLM output rendered in UI, tool/function calling without validation, hardcoded AI API keys.
+### Phase 7: LLM Security
+Prompt injection (user input → system prompts), unsanitized LLM output in UI, tool calls without validation, hardcoded AI keys.
 
-### Phase 8: OWASP Top 10 + STRIDE
-Map findings to OWASP Top 10 categories and STRIDE threat model. Identify gaps in coverage across categories.
+### Phase 8: OWASP + STRIDE
+Map findings to OWASP Top 10 and STRIDE. Coverage gaps identified.
 
-## Output Format
+## Output
 
 ```
 Security Posture Report
-══════════════════════
-Project: <name>
-Branch:  <branch>
-Mode:    daily | comprehensive
-Date:    <date>
-
-Critical (n):
-  - <finding> — <file:line> — <remediation>
-
+Critical (n): finding — file:line — remediation
 High (n):
-  - <finding> — <file:line> — <remediation>
-
 Medium (n):
-  - <finding> — <file:line> — <remediation>
-
 Low (n):
-  - <finding> — <file:line> — <remediation>
-
-OWASP Coverage:
-  A01:Broken Access Control — n findings
-  A02:Cryptographic Failures — n findings
-  ...
-
-STRIDE:
-  Spoofing — n
-  Tampering — n
-  Repudiation — n
-  Info Disclosure — n
-  Denial of Service — n
-  Elevation of Privilege — n
+OWASP Coverage: A01-A10
+STRIDE: Spoofing..Elevation of Privilege
 ```
 
 ## Rules
-
-- **Read-only.** No fixes. Diagnosis only, except for auto-fixable low-severity findings when explicitly asked.
-- **Daily mode** gates findings at 8/10 confidence. If you would not stake your reputation on it, skip it in daily mode.
-- **Comprehensive mode** gates at 2/10. Surface everything plausible. The user decides.
-- **No false positives on git history.** Placeholder values ("your_", "changeme") excluded. Rotated secrets still flagged (they were exposed).
-- **Prioritize by blast radius.** Remote code execution > credential exposure > info leak > best-practice gap.
-- **Always distinguish direct vs transitive** dependencies in supply chain findings.
-- **Use Grep/Glob tools** for searches, not bash grep. The bash blocks below show WHAT to search, not HOW.
+- Read-only (diagnosis only). Auto-fix low severity only if explicitly asked.
+- Daily: 8/10 gate. Would you stake reputation on it?
+- Comprehensive: 2/10 gate. Surface everything.
+- No false positives on git history. Placeholder values excluded. Rotated secrets still flagged.
+- Prioritize by blast radius: RCE > credential exposure > info leak > best-practice.
+- Distinguish direct vs transitive dependency findings.
+- Use Grep/Glob tools, not bash grep.
 
 ## Routing
 
 | Outcome | Route |
 |---------|-------|
-| pass | → [report findings to user] |
-| fail | → oh-investigate (deepen on findings) |
-| blocker | → surface to user |
+| pass | surface (report findings) |
+| fail | → oh-investigate (deepen) |
+| blocker | → surface |
