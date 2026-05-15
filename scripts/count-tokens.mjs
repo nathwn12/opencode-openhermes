@@ -120,7 +120,7 @@ for (const [category, files] of Object.entries(categories)) {
 }
 
 // Available skills XML cost (OH built-in only — user skills no longer registered)
-console.log(`\n--- available_skills XML Block (OH only, 30 skills) ---`);
+console.log(`\n--- available_skills XML Block (OH only, 29 skills) ---`);
 const xmlContent = buildAvailableSkillsXml(false);
 const xmlTokens = encode(xmlContent).length;
 console.log(`  Total: ${xmlTokens} tokens  (${xmlContent.length.toLocaleString()} bytes)`);

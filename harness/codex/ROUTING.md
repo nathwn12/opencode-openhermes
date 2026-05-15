@@ -51,7 +51,7 @@ oh-facade:
 1. Every skill routes somewhere — no leaf nodes (except handoff which is intentional terminal)
 2. Route by outcome, not by convention — different results go different places
 3. Default fallback if no match: **surface to user**
-4. Mode skills (caveman, freeze, guard) return to the skill that invoked them after toggling state
+4. Mode skills (freeze, guard) return to the skill that invoked them after toggling state
 5. The graph must have no dead ends — the only true terminal is `oh-handoff` (session end)
 
 ## OptiRoute Protocol

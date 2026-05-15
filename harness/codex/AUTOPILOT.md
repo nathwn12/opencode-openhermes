@@ -30,12 +30,12 @@ Before any substantive response, classify the task using this decision matrix:
 | Full pipeline with UI components | PIPELINE + UI | Load **oh-manifest**. It delegates UI work to **oh-facade** internally. |
 | Code review, design review, PR review | REVIEW NEEDED | Load **oh-review**. Do not ask. |
 | Plan review, architecture review | PLAN REVIEW | Load **oh-plan-review**. Do not ask. |
-| Single concrete request with clear scope (rename, format, simple edit) | DIRECT EXECUTION | Execute directly or load **oh-builder**. Do not ask. |
+| Single concrete request with clear scope (rename, format, simple edit) | BUILDER NEEDED | Load **oh-builder**. Do not ask. |
 | Session ending, handoff, context switch | HANDOFF | Load **oh-handoff**. Do not ask. |
 | Skill import, ingestion, fusion, porting, "make this OH-native", "add this skill" | SKILL INGESTION NEEDED | Load **oh-fusion** (6-phase: Discovery → Analysis → Decision → Adaptation → Fusion → Integration). Do not ask. |
 | Diagnostic of own behavior (sycophancy, hallucination check) | SELF-DIAGNOSIS | Load **oh-expert**. Do not ask. |
 
-**When in doubt between two classifications, choose the more structured one.** If a task could be direct execution OR planning needed, load oh-planner. The planner can always determine that the task is simpler than expected and route back.
+**When in doubt between two classifications, choose the more structured one.** If a task could be simple work OR planning needed, load oh-planner. The planner can always determine that the task is simpler than expected and route back.
 
 ## Auto-Route
 

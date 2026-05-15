@@ -37,10 +37,9 @@ const ENTRY_POINTS = new Set([
  * Direct-user-request skills — invoked by name or trigger keywords,
  * not through the routing graph. Not reachable from any entry point
  * via routes; not in the classify matrix. This is an intentional pattern:
- * the user speaks "compress my output" → oh-caveman, "list skills" → oh-skills-list, etc.
+ * the user speaks "list skills" → oh-skills-list, etc.
  */
 const DIRECT_USER_SKILLS = new Set([
-  "oh-caveman",     // "compress", "caveman mode"
   "oh-freeze",      // "freeze editing", "restrict to"
   "oh-full-output", // "full output", "complete code"
   "oh-guard",       // "confirm", "safety check"
@@ -206,8 +205,8 @@ describe("routing graph", () => {
   }
 
   // ---- 1: Parse sanity ------------------------------------------------
-  it("parses all 30 skill files", () => {
-    assert.ok(skills.size >= 30, `Expected >= 30 skills, got ${skills.size}`)
+  it("parses all 29 skill files", () => {
+    assert.ok(skills.size >= 29, `Expected >= 29 skills, got ${skills.size}`)
   })
 
   it("all expected entry points exist", () => {
@@ -357,7 +356,7 @@ describe("routing graph", () => {
 
   // ---- 6: Mode skill validation ---------------------------------------
   it("mode skills route correctly (pass=mode, fail=mode, blocker=surface)", () => {
-    for (const name of ["oh-caveman", "oh-freeze", "oh-guard"]) {
+    for (const name of ["oh-freeze", "oh-guard"]) {
       const meta = skills.get(name)
       assert.ok(meta, `${name} not found`)
       for (const target of meta!.route.pass) {

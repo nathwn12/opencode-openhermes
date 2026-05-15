@@ -1,7 +1,7 @@
 <p align="center">
   <h1 align="center">⟳ OpenHermes</h1>
-  <p align="center"><b>Closed loop. Zero permission.</b><br>
-  <i>The AI orchestrator that never asks "should I continue?" — it just routes.</i></p>
+  <p align="center"><b>Pragmatic. Task-focused. Concise.</b><br>
+  <i>The AI orchestrator that never stalls — it classifies, delegates, and routes.</i></p>
 </p>
 
 <p align="center">
@@ -17,7 +17,7 @@
 
 OpenHermes doesn't.
 
-Drop it into OpenCode. Get a self-driving pipeline: auto-classify every request, delegate to specialists, route results automatically. No "can I?", no "shall I?", no "what next?" — just execution until the job is done.
+Drop it into OpenCode. Get a closed-loop pipeline: auto-classify every request, delegate to specialists, route results automatically. No "can I?", no "shall I?", no "what next?" — just concise execution until the job is done.
 
 ```json
 { "plugin": ["openhermes@git+https://github.com/nathwn12/openhermes.git"] }
@@ -69,15 +69,15 @@ The loop runs unsupervised because these never turn off:
 
 | Capability | Why it matters |
 |---|---|
-| **Self-driving loop** | Type once. OpenHermes classifies, delegates, and routes — no pauses, no asking permission. |
-| **30 specialist skills** | Planning → building → testing → security → review → shipping → retro. Every dev cycle phase. |
+| **Self-driving loop** | Type once. OpenHermes classifies, delegates, and routes — no pauses, no asking permission, no verbosity. |
+| **29 specialist skills** | Planning → building → testing → security → review → shipping → retro. Every dev cycle phase. |
 | **Auto-detected user skills** | Drop a skill in `~/.agents/skills/`. OpenHermes finds it. Same name as a built-in? Your version wins. Survives `npm update`. |
 | **`/oh-doctor`** | Verify plugin load, skill discovery, command registration, config safety. |
 | **`/oh-log`** | Session log — routing hops, skill loads, compaction events. |
 | **Shared operating model** | CONSTITUTION + RUNTIME + CONTEXT + ETHOS injected every session. Every interaction grounded in the same rules. |
 | **Plan file storage** | `~/.local/share/opencode/openhermes/plans/`. Survives `npm update`. |
 
-## 30 skills — three tiers
+## 29 skills — three tiers
 
 ### Tier 4 — Pipeline orchestrators
 Full multi-phase workflows:
@@ -120,7 +120,6 @@ Single-purpose, one thing well:
 | **oh-triage** | Issue triage state machine — classify, prioritise, assign |
 | **oh-issue** | Break a plan/spec/PRD into independently-grabbable issues |
 | **oh-prd** | Conversation → PRD → GitHub issue |
-| **oh-caveman** | Ultra-compressed mode — cut token usage ~75% |
 | **oh-freeze** | Restrict file edits to a specific directory |
 | **oh-learn** | Extract, evolve, promote session learnings as instincts |
 | **oh-guard** | Safety confirmation — warn before destructive operations |
@@ -144,7 +143,7 @@ openhermes-pkg/
 │   ├── codex/             # CONSTITUTION, AUTOPILOT, ROUTING
 │   ├── commands/          # Slash commands (/oh-doctor, /oh-log)
 │   ├── instructions/      # RUNTIME.md
-│   └── skills/            # 30 skill SKILL.md files
+│   └── skills/            # 29 skill SKILL.md files
 └── test/
 ```
 

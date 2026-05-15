@@ -64,7 +64,7 @@ describe("BootstrapPlugin behavior", () => {
     assert.equal(logCmd.agent, "OpenHermes")
 
     const agentEntry = config.agent as Record<string, { prompt: string; mode: string }>
-    assert.match(agentEntry.OpenHermes.prompt, /You are OpenHermes, an OpenCode-native orchestration layer/)
+    assert.match(agentEntry.OpenHermes.prompt, /You are OpenHermes, an OpenCode-native orchestrator/)
     assert.equal(agentEntry.OpenHermes.mode, "primary")
   })
 
