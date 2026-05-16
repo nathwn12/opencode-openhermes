@@ -147,8 +147,8 @@ if (Test-Path $pkgPath) {
 # Hardcode the exact known paths — no array gymnastics
 $hDir = Join-Path $PackageRoot "harness"
 $requiredFiles = @(
-    ,@("codex", "CONSTITUTION.md")
-    ,@("instructions", "RUNTIME.md")
+    ,@("codex", "CHARTER.md")
+    ,@("instructions", "SHELL.md")
     ,@("skills", "oh-planner", "SKILL.md")
 )
 $allOk = $true

@@ -12,8 +12,8 @@ const ROOT = path.resolve("Q:/PROJECTS/PERSONAL/openhermes-pkg");
 const categories = {
   "OH Bootstrap Docs (on disk, NOT injected)": [
     path.join(ROOT, "harness/codex/AUTOPILOT.md"),
-    path.join(ROOT, "harness/codex/CONSTITUTION.md"),
-    path.join(ROOT, "harness/instructions/RUNTIME.md"),
+    path.join(ROOT, "harness/codex/CHARTER.md"),
+    path.join(ROOT, "harness/instructions/SHELL.md"),
     path.join(ROOT, "CONTEXT.md"),
     path.join(ROOT, "ETHOS.md"),
   ],
@@ -33,7 +33,7 @@ const categories = {
 const skillsDir = path.join(ROOT, "harness/skills");
 for (const entry of fs.readdirSync(skillsDir)) {
   const skPath = path.join(skillsDir, entry, "SKILL.md");
-  if (fs.existsSync(skPath)) categories["OH Built-in Skills (30, registered)"].push(skPath);
+  if (fs.existsSync(skPath)) categories["OH Built-in Skills (31, registered)"].push(skPath);
 }
 
 // Discover user skills
@@ -143,7 +143,7 @@ const agentPromptTotal = categories["OH Agent Prompt (injected as system prompt)
 }, 0);
 
 console.log(`\n${"=".repeat(80)}`);
-console.log(`TOTAL ALL SKILL FILES: ${categories["OH Built-in Skills (30, registered)"].reduce((s, f) => s + encode(fs.readFileSync(f, "utf8")).length, 0)} tokens`);
+console.log(`TOTAL ALL SKILL FILES: ${categories["OH Built-in Skills (31, registered)"].reduce((s, f) => s + encode(fs.readFileSync(f, "utf8")).length, 0)} tokens`);
 console.log(`TOTAL USER SKILL FILES: ${categories["User Skills (.agents/skills) — on disk, NOT registered"].reduce((s, f) => s + encode(fs.readFileSync(f, "utf8")).length, 0)} tokens`);
 console.log(`TOTAL CONFIG SKILLS: ${categories["User Skills (.config/opencode/skills) — on disk, NOT registered"].reduce((s, f) => s + encode(fs.readFileSync(f, "utf8")).length, 0)} tokens`);
 console.log(`TOTAL INSTRUCTIONS: ${instructionsTotal} tokens`);

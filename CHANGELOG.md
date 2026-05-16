@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.9.1] - 2026-05-17
+
+### Fixed
+
+- **Stale script references:** Updated CONSTITUTION.md→CHARTER.md and RUNTIME.md→SHELL.md references in count-tokens.mjs and oh-doctor.ps1.
+- **Plan storage alignment:** Added canonical plan storage path to openhermes.md agent prompt. Added `*plan*.md` to .gitignore.
+
 ## [4.8.0] - 2026-05-17
 
 ### Added
