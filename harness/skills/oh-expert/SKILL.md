@@ -1,16 +1,7 @@
 ---
 name: oh-expert
-description: "Use when the agent is getting things wrong, reversing answers under pushback, hallucinating, drifting from instructions, or showing signs of attention degradation. Shared vocabulary for self-diagnosis, failure modes, and working patterns."
+description: "Self-diagnose agent failure modes: sycophancy, hallucination, attention degradation"
 tier: 2
-triggers:
-  - "why did you get that wrong"
-  - "diagnose yourself"
-  - "are you sure"
-  - "stop agreeing with me"
-  - "sycophancy"
-  - "hallucination"
-  - "attention"
-  - "smart zone"
 route:
   pass:
     - oh-builder
@@ -21,73 +12,18 @@ route:
 
 # oh-expert
 
-Shared vocabulary for agent self-diagnosis. Every failure mode maps to a specific cause and fix. "Hallucination" alone has no diagnostic value.
+Self-diagnose and fix agent failure modes (sycophancy, hallucination, attention degradation).
 
-## Failure Modes
+## Steps
 
-### Sycophancy
-Model favors agreeable answers — agreement rewarded even when wrong.
-
-**Signals:** Caves under pushback ("are you sure?" → reverses correct answer). Praises bad input. Framing skews positive when you signal authorship. Mimics your mistakes as confirmation.
-
-**Diagnostic test:** "Would I say this without user steer?" If tone/framing shaped the answer → sycophancy.
-
-**Fix:** Hide preferences. Re-ask neutrally.
-
-### Hallucination (two flavors)
-- **Factuality** — invented facts (fake functions, wrong API, fake citations). Cause: parametric knowledge gap. Fix: read current docs/files.
-- **Faithfulness** — drifts from loaded context/user instructions. Cause: attention degradation. Fix: clear or compact.
-
-### Attention Degradation
-As session grows, token attention spreads across more competitors. Signal shrinks, noise crowds in.
-
-**Signals:** Smart → dumb zone drift. Invents generics not in types. Ignores schema pasted at top.
-
-**Fix:** Clear and reload. Do NOT add more docs — problem is buried signal, not missing info.
-
-### Smart Zone / Dumb Zone
-Sharp (early session) → sloppy (~100k tokens, frontier models). Self-diagnosis: "nailed the first three, butchered the fourth" = out of smart zone.
-
-**Fix:** Clear or compact. Do not push through.
-
-### Non-determinism
-Same input, different output. Normal. No setting to disable.
-
-**Signal:** "Model has been awful today" — probably distribution, not a worse version.
-
-### Knowledge Cutoff
-No parametric knowledge past cutoff date. Post-cutoff APIs → fabrication traps.
-
-**Signal:** "Keeps writing v3 SDK — we're on v5." Fix: load current docs.
-
-## Working Patterns
-- **Progressive Disclosure** — AGENTS.md costs tokens every turn. Infrequent instructions behind skills.
-- **Handoff** — structured artifact for session transfer (no return path).
-- **Compaction** — in-memory handoff. Lossy but frees headroom.
-- **Subagent** — spawned agent in own session. One level deep. Reports one result.
-- **Skill vs Tool** — Skill = instructions (loaded on demand). Tool = function (always available).
-
-## Diagnostic Map
-
-| Symptom | Cause | First Move |
-|---------|-------|------------|
-| Reverses answer under pushback | Sycophancy | Re-ask neutrally |
-| Invents things in loaded doc | Faithfulness hallucination | Clear or compact |
-| Invents things not in any doc | Factuality hallucination | Load relevant docs |
-| Sharp early, sloppy late | Smart zone drift | Compact |
-| Different results same input | Non-determinism | Try again |
-| Writes old API syntax | Knowledge cutoff | Load current docs |
-| Ignores top-of-window context | Attention exhausted | Clear or move context closer |
-
-## Avoid These Terms
-
-| Instead of | Use |
-|------------|-----|
-| "Hallucination" alone | Factuality or faithfulness hallucination |
-| "Sycophancy" for any pleasing wrong | Only when diagnostic test confirms |
-| "Tool" for a skill | Skill = instructions; Tool = function |
-| "Memory" (context window) | Context window |
-| "Background agent" | AFK |
+1. Classify the symptom using the diagnostic map
+2. Identify the specific failure mode
+3. Apply the appropriate fix from the map
+4. If sycophancy suspected, re-ask neutrally without user steer
+5. If hallucination suspected, load current docs or compact context
+6. If attention degraded, clear and reload
+7. If non-determinism, try again
+8. If smart zone drift detected, compact — do not push through
 
 ## Routing
 

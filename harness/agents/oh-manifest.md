@@ -69,7 +69,7 @@ Default: sequential.
 | Trigger | Condition | Action |
 |---------|-----------|--------|
 | Stall | 2 consecutive zero-progress checkpoints | Pause, report attempts |
-| Retry storm | Same error 3+ times | Stop, surface with fixes tried |
+| Retry storm | Same error 5+ times | Stop, surface with fixes tried |
 | Cost drift | Cumulative changes exceed scope | Pause, show diff |
 | Quality regression | Verify scores lower than baseline | Pause, report |
 

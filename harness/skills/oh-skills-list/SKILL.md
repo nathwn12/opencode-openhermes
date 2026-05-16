@@ -2,10 +2,6 @@
 name: oh-skills-list
 description: "Use when the user wants to see available OH skills. Lists all oh-* skills with descriptions."
 tier: 2
-triggers:
-  - "list skills"
-  - "what skills exist"
-  - "available skills"
 route:
   pass: done
   fail: surface
@@ -14,24 +10,18 @@ route:
 
 # oh-skills-list
 
-**Example:** User asks "what skills do you have?" → outputs a table of all oh-* skills with tier and purpose.
+List all available oh-* skills with tier and description.
 
-## When to Use
-User wants to see available skills. Lists all oh-* skills with tier and description.
+## Steps
 
-## Output
-| Skill | Tier | Purpose |
-|-------|------|---------|
-| oh-<name> | 2/3/4 | <description> |
-
-## Anti-patterns
-- Filtering skills (show everything — let user decide)
-- Including non-OH skills in the output
+1. Gather all oh-* skills from the harness
+2. Format as a table: Skill | Tier | Purpose
+3. Output the table to the user
 
 ## Routing
 
 | Outcome | Route |
 |---------|-------|
-| pass | done |
-| fail | surface |
-| blocker | surface |
+| pass | → done |
+| fail | → surface |
+| blocker | → surface |

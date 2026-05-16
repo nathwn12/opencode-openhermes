@@ -2,10 +2,6 @@
 name: oh-skills-link
 description: "Use after installing or updating skills to verify OpenCode discovers the package-local skills directory."
 tier: 2
-triggers:
-  - "verify skills"
-  - "check skill discovery"
-  - "link skills"
 route:
   pass: surface
   fail: oh-skill-craft
@@ -14,27 +10,19 @@ route:
 
 # oh-skills-link
 
-**Example:** After running npm update, run oh-skills-link. It reads harness/skills/, confirms config paths, reports any missing or new skills.
+Verify OpenCode discovers the package-local skills directory after install/update.
 
-## When to Use
-After installing or updating skills. Verify OpenCode discovers the package-local directory.
+## Steps
 
-## Workflow
-1. Read `harness/skills/`
+1. Read `harness/skills/` directory listing
 2. Confirm `config.skills.paths` points at harness path
-3. Skip unchanged skills
-4. Log missing, invalid, or newly added
-
-## Anti-patterns
-- Linking without verifying files exist
-- Copying to global config during normal operation
-- Overwriting user-modified skills without intent
-- Linking broken/incomplete skills
+3. Skip skills that are unchanged
+4. Log missing, invalid, or newly added skills
 
 ## Routing
 
 | Outcome | Route |
 |---------|-------|
-| pass | surface (report status) |
-| fail | → oh-skill-craft (fix broken skill) |
+| pass | → surface |
+| fail | → oh-skill-craft |
 | blocker | → surface |

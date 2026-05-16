@@ -1,7 +1,7 @@
 {
   "name": "openhermes",
-  "version": "4.8.0",
-  "description": "OpenCode-native orchestration for packaged skills, commands, and agents.",
+  "version": "4.9.0",
+  "description": "Autonomous agent orchestration for OpenCode.",
   "type": "module",
   "license": "MIT",
   "engines": {

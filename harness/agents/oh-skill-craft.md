@@ -32,7 +32,7 @@ Create new agent skills for the OpenHermes harness. Skills load on demand — th
 
 | # | Section | Load When |
 |---|---------|-----------|
-| 01 | [Structure and Template](../skills/oh-skill-craft/sections/01-structure-and-template.md) | Writing a new SKILL.md — directory layout, frontmatter fields, template structure, field guide |
-| 02 | [Output Location and Review Checklist](../skills/oh-skill-craft/sections/02-output-and-review.md) | Placing the skill file, handling name conflicts, verifying completeness before shipping |
-| 03 | [Eval-Driven Iteration](../skills/oh-skill-craft/sections/03-eval-iteration.md) | Iterating on a skill draft — create evals, run with-skill vs baseline comparisons, grade assertions, improve, loop |
-| 04 | [Description Optimization](../skills/oh-skill-craft/sections/04-description-optimization.md) | Tuning the description field — create 20 eval queries, test precision/recall, select winner |
+| 01 | [Structure and Template](../skills/oh-skill-craft/DEEP.md#skill-structure-and-template) | Writing a new SKILL.md — directory layout, frontmatter fields, template structure, field guide |
+| 02 | [Output Location and Review Checklist](../skills/oh-skill-craft/DEEP.md#output-location-and-review-checklist) | Placing the skill file, handling name conflicts, verifying completeness before shipping |
+| 03 | [Eval-Driven Iteration](../skills/oh-skill-craft/DEEP.md#eval-driven-iteration) | Iterating on a skill draft — create evals, run with-skill vs baseline comparisons, grade assertions, improve, loop |
+| 04 | [Description Optimization](../skills/oh-skill-craft/DEEP.md) | Tuning the description field — create 20 eval queries, test precision/recall, select winner |

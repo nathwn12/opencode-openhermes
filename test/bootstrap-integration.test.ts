@@ -26,9 +26,9 @@ describe("bootstrap integration", () => {
 
     // Minimal harness
     fs.mkdirSync(path.join(harnessDir, "codex"), { recursive: true })
-    fs.writeFileSync(path.join(harnessDir, "codex", "CONSTITUTION.md"), "# Test Constitution\n")
+    fs.writeFileSync(path.join(harnessDir, "codex", "CHARTER.md"), "# Test Charter\n")
     fs.mkdirSync(path.join(harnessDir, "instructions"), { recursive: true })
-    fs.writeFileSync(path.join(harnessDir, "instructions", "RUNTIME.md"), "# Test Runtime\n")
+    fs.writeFileSync(path.join(harnessDir, "instructions", "AUTOPILOT.md"), "# Test Autopilot\n")
     fs.mkdirSync(path.join(harnessDir, "commands"), { recursive: true })
 
     // Agents dir

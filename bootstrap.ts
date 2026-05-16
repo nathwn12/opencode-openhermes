@@ -373,7 +373,7 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
           ...openHermesAgent,
           description: openHermesAgent.description || "OpenHermes primary orchestrator",
           mode: "primary",
-          steps: 10,                     // Max agentic iterations — prevents runaway loops
+          steps: 15,                     // Max agentic iterations — prevents runaway loops
           permission: {
             bash: { "*": "deny" },       // CANNOT execute commands
             edit: "deny",                // CANNOT write/edit files
@@ -423,12 +423,12 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
         const currentDepth = (delegationDepths.get(depthKey) ?? 0) + 1
         delegationDepths.set(depthKey, currentDepth)
 
-        if (currentDepth >= 5) {
+        if (currentDepth >= 10) {
           const errOutput = output as { args: unknown; isError?: boolean; content?: unknown[] }
           errOutput.isError = true
           errOutput.content = [{
             type: "text",
-            text: "LOOP GUARD: Delegation depth exceeded (max 5). " +
+            text: "LOOP GUARD: Delegation depth exceeded (max 10). " +
                   "Surface to orchestrator with findings and stop delegating."
           }]
         }

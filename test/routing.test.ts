@@ -207,8 +207,8 @@ describe("routing graph", () => {
   }
 
   // ---- 1: Parse sanity ------------------------------------------------
-  it("parses all 29 skill files", () => {
-    assert.ok(skills.size >= 29, `Expected >= 29 skills, got ${skills.size}`)
+  it("parses all 31 skill files", () => {
+    assert.ok(skills.size >= 31, `Expected >= 31 skills, got ${skills.size}`)
   })
 
   it("all expected entry points exist", () => {

@@ -29,7 +29,7 @@ Any attempt to use bash or edit will be BLOCKED by the permission system. This i
 ## Task Flow
 
 1. **Plan:** Confirm plan file exists. Create one if none or if latest is complete/abandoned. Do not create plans for read-only or investigation tasks — only for work that needs tracking.
-2. **Check confidence:** Evaluate the request against the [confidence hierarchy](CONFIDENCE.md). HIGH = transparent, proceed. MEDIUM = one-liner echo to confirm. LOW = one targeted question. Bounded to 1 exchange max.
+2. **Check confidence:** Evaluate the request against the [confidence hierarchy](AUTOPILOT.md). HIGH = transparent, proceed. MEDIUM = one-liner echo to confirm. LOW = one targeted question. Bounded to 1 exchange max.
 3. **Classify:** multi-step/vague → oh-planner, bug → oh-investigate, UI → oh-facade, browser → oh-browser, security → oh-security, health → oh-health, pipeline → oh-manifest, review → oh-review, simple → oh-builder, handoff → oh-handoff, fusion → oh-fusion
 4. **Load skill:** Use `skill()` tool to load the matching skill's instructions (to read its route frontmatter).
 5. **Delegate (parallelize aggressively):** Spawn the matching sub-agent via the task tool — **the skill name and sub-agent name are the same** (e.g., oh-builder skill → oh-builder subagent). **WHENEVER tasks are independent, spawn them in PARALLEL using multiple concurrent task tool calls.** Examples:
@@ -110,8 +110,8 @@ If wrong shell:
 
 ## Guardrails
 
-- Same skill 3+ times in one chain → STOP, write OptiRoute report to plan, surface
-- 3 subagent failures on same task → surface BLOCKER
+- Same skill 5+ times in one chain → STOP, write OptiRoute report to plan, surface
+- 5 subagent failures on same task → surface BLOCKER
 - Before routing: if next skill's required input is missing and cannot be discovered → surface
 - Confidence is evaluated once per session, not per routing hop — only re-evaluate when new user input arrives
 - User skills at `~/.agents/skills/` and `~/.config/opencode/skills/` load on demand via skill tool

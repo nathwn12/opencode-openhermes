@@ -1,11 +1,7 @@
 ---
 name: oh-freeze
-description: "Use when the user says 'don't touch anything outside [path]' or 'only edit files in [dir]'. Restricts file edits to a specific directory for the session."
+description: "Restricts file edits to a specific directory for the session."
 tier: 2
-triggers:
-  - "freeze directory"
-  - "only edit in"
-  - "dont touch other files"
 route:
   pass: mode
   fail: mode
@@ -14,24 +10,19 @@ route:
 
 # oh-freeze
 
-## When to Use
-When the user says "don't touch anything outside [path]" or "only edit files in [dir]." Prevents accidental edits to configuration, infrastructure, or unrelated modules.
+Restrict write operations to one allowed directory.
 
-## Mode
-- Allowed paths: only the specified directory and its children
-- If you need to edit outside: state the reason and ask
-- Read operations unrestricted anywhere
-- File creation restricted to allowed paths
+## Steps
 
-## Anti-patterns
-- Editing outside allowed path without asking
-- Reading unrelated files for context and using that to justify edits
-- "Just this one file outside" — ask first
+1. Identify the allowed directory from user instructions
+2. Restrict all write/edit/create operations to the allowed path
+3. Allow read operations unrestricted anywhere
+4. If a write outside the allowed path is required, state the reason and ask before proceeding
 
 ## Routing
 
 | Outcome | Route |
 |---------|-------|
-| pass | → [return to prior skill — freeze active] |
-| fail | → [return to prior skill — reverting to unfrozen] |
+| pass | → mode |
+| fail | → mode |
 | blocker | → surface |

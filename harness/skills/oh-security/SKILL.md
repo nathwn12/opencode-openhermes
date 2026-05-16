@@ -1,16 +1,7 @@
 ---
 name: oh-security
-description: "Use when the codebase needs a security audit — secrets scanning, dependency checks, CI/CD review, and threat modeling. Two modes: daily (fast) and comprehensive (deep)."
+description: "Security audit — secrets, dependencies, CI/CD, threat modeling"
 tier: 3
-benefits-from: [oh-expert]
-triggers:
-  - "security audit"
-  - "threat model"
-  - "check for vulnerabilities"
-  - "owasp review"
-  - "pentest"
-  - "security review"
-  - "cso"
 route:
   pass: surface
   fail: oh-investigate
@@ -19,67 +10,18 @@ route:
 
 # oh-security
 
-Security audit. Two modes: **Daily** (8/10 confidence — low noise, high signal) and **Comprehensive** (2/10 bar — wider net). Output: Security Posture Report. Read-only — diagnosis only.
+Security audit: secrets scanning, dependency checks, CI/CD review, threat modeling. Read-only — diagnosis only.
 
-## Modes
-- **Daily** (default) — only flag findings with strong evidence. Skips speculative checks.
-- **Comprehensive** (`--comprehensive`) — surface everything plausible. User decides.
+## Steps
 
-## Phases
-
-### Phase 0: Stack + Architecture Mental Model
-Detect language, framework, components, trust boundaries, data flows, attack surface.
-
-### Phase 1: Attack Surface Census
-Public vs authed vs admin endpoints. File uploads, external integrations, WebSocket, webhooks. CI/CD workflows, containers, IaC, deploy targets.
-
-### Phase 2: Secrets Archaeology
-Git history for leaked credentials (AWS, OpenAI, GitHub, Slack, generic). .env tracking status. CI inline secrets.
-
-### Phase 3: Dependency Supply Chain
-CVEs in direct deps, install scripts in production deps, lockfile integrity, abandoned packages. Diff-mode limits to changed deps.
-
-### Phase 4: CI/CD Security
-Unpinned third-party actions, `pull_request_target` misuse, script injection via `${{ github.event.* }}`, secrets as env vars, CODEOWNERS on workflows.
-
-### Phase 5: Infrastructure Shadow
-Dockerfiles (root, secrets in ARG, missing USER), configs with prod DB URLs, IaC (overly permissive IAM, privileged K8s). Staging → prod refs.
-
-### Phase 6: Webhooks
-Endpoints without signature verification, TLS verification disabled, overly broad OAuth scopes.
-
-### Phase 7: LLM Security
-Prompt injection (user input → system prompts), unsanitized LLM output in UI, tool calls without validation, hardcoded AI keys.
-
-### Phase 8: OWASP + STRIDE
-Map findings to OWASP Top 10 and STRIDE. Coverage gaps identified.
-
-## Anti-patterns
-- Running daily mode for comprehensive needs (misses deep issues)
-- Skipping secrets archaeology in git history
-- Relying only on automated scanners without manual review
-- Not updating after dependencies change
-
-## Output
-
-```
-Security Posture Report
-Critical (n): finding — file:line — remediation
-High (n):
-Medium (n):
-Low (n):
-OWASP Coverage: A01-A10
-STRIDE: Spoofing..Elevation of Privilege
-```
-
-## Rules
-- Read-only (diagnosis only). Auto-fix low severity only if explicitly asked.
-- Daily: 8/10 gate. Would you stake reputation on it?
-- Comprehensive: 2/10 gate. Surface everything.
-- No false positives on git history. Placeholder values excluded. Rotated secrets still flagged.
-- Prioritize by blast radius: RCE > credential exposure > info leak > best-practice.
-- Distinguish direct vs transitive dependency findings.
-- Use Grep/Glob tools, not bash grep.
+1. Detect mode: daily (default, 8/10 confidence gate) or comprehensive (`--comprehensive`, 2/10 gate)
+2. Map stack, architecture, trust boundaries, data flows, and attack surface
+3. Scan git history, .env files, and CI inline configs for leaked secrets
+4. Audit dependencies for CVEs, install scripts, lockfile integrity, and abandoned packages
+5. Review CI/CD security — pinned actions, pull_request_target misuse, script injection, secrets exposure
+6. Check infrastructure — Dockerfiles, IaC, prod DB URLs, staging-to-prod references
+7. Assess OWASP Top 10 and STRIDE coverage gaps
+8. Produce Security Posture Report with criticality-ranked findings and route
 
 ## Routing
 

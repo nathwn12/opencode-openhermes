@@ -211,7 +211,7 @@ describe("BootstrapPlugin behavior", () => {
     assert.ok(!context.some(line => line.includes("Active plan:")), "should NOT include plan summary when no plan exists")
   })
 
-  it("delegation depth guard blocks at depth >= 5", async () => {
+  it("delegation depth guard blocks at depth >= 10", async () => {
     // BootstrapPlugin with a clean directory so delegation depth starts at 0
     const uniqueDir = fs.mkdtempSync(path.join(os.tmpdir(), "oh-depth-test-"))
     tmpDirs.push(uniqueDir)
@@ -231,17 +231,17 @@ describe("BootstrapPlugin behavior", () => {
     await plugin["tool.execute.before"](nonTaskInput, nonTaskOutput)
     assert.equal(nonTaskOutput.isError, undefined, "non-task tool never blocked")
 
-    // Call task hook 4 times — should NOT block
-    for (let i = 0; i < 4; i++) {
+    // Call task hook 9 times — should NOT block
+    for (let i = 0; i < 9; i++) {
       const result = await callTaskHook()
       assert.equal(result.blocked, false, `task call ${i + 1} should not block`)
     }
 
-    // 5th call should BLOCK
-    const fifth = await callTaskHook()
-    assert.equal(fifth.blocked, true, "5th task call should be blocked")
-    assert.ok(fifth.errorMsg?.includes("LOOP GUARD"), "block message should include LOOP GUARD")
-    assert.ok(fifth.errorMsg?.includes("Delegation depth exceeded"), "block message should mention depth exceeded")
+    // 10th call should BLOCK
+    const tenth = await callTaskHook()
+    assert.equal(tenth.blocked, true, "10th task call should be blocked")
+    assert.ok(tenth.errorMsg?.includes("LOOP GUARD"), "block message should include LOOP GUARD")
+    assert.ok(tenth.errorMsg?.includes("Delegation depth exceeded"), "block message should mention depth exceeded")
   })
 
   it("registers user skill paths in config.skills.paths", async () => {

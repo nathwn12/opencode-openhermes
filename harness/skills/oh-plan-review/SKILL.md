@@ -2,24 +2,6 @@
 name: oh-plan-review
 description: "Use when a plan needs multi-perspective review before execution. Choose Engineering, Design, DX, or Strategy lens — walks through findings one section at a time."
 tier: 3
-benefits-from: [oh-planner, oh-expert]
-format: chunked
-sections:
-  01-lens-selection: "Keyword-to-lens routing table mapping terms (architecture, UI, CLI, product) to four review lenses (Engineering, Design, DX, Strategy)"
-  02-engineering-lens: "Engineering scope challenge (existing code reuse, minimum changes, smell detection), Architecture Review procedure (8 issues max per section, anti-skip), cognitive patterns (Larson state diagnosis, blast radius, boring by default, reversibility, essential vs accidental complexity)"
-  03-design-dx-lenses: "Design lens criteria (empty states, visual hierarchy, edge cases, AI slop detection, responsive, a11y with specificity rule) and DX lens evaluation (time to Hello World, error quality, progressive disclosure, Pit of Success, three modes: Expansion/Polish/Triage)"
-  04-strategy-rules-routing: "Strategy lens scope modes (Expansion/Selective/Hold/Reduction), patterns (Bezos one-way/two-way doors, Munger inversion, Jobs focus, proxy skepticism, temporal depth), prime directives (failure visibility, named errors, shadow paths, observability), interactive rules, output format, and pass/fail/blocker routing"
-triggers:
-  - "review this plan"
-  - "review the plan file"
-  - "architecture review of"
-  - "design review the plan"
-  - "ux review this plan"
-  - "dx review the plan"
-  - "strategy review"
-  - "engineering review"
-  - "ceo review"
-  - "review plan from"
 route:
   pass:
     - oh-grill
@@ -30,26 +12,17 @@ route:
 
 # oh-plan-review
 
-Four lenses in one skill. Interactive — walk findings one section at a time. Read-only — output is a better plan, not a document about the plan.
+Four-lens plan review. Interactive — walk findings one section at a time.
 
-**Example:** User asks "review my plan." You present: "Which lens? Engineering (architecture/scope), Design (UX/interaction), DX (API/CLI), or Strategy (product/CEO)?" Then walk through findings.
+## Steps
 
-**This skill is chunked.** Read this index, pick the section you need, and `read()` only that section file.
-
-## Section Index
-
-| # | Section | Covers |
-|---|---------|--------|
-| 1 | [Lens Selection](./sections/01-lens-selection.md) | Keyword-to-lens routing table mapping terms (architecture, UI, CLI, product) to four review lenses |
-| 2 | [Engineering Lens](./sections/02-engineering-lens.md) | Scope challenge, Architecture Review procedure (8 issues max, anti-skip), cognitive patterns |
-| 3 | [Design & DX Lenses](./sections/03-design-dx-lenses.md) | Design criteria (empty states, hierarchy, AI slop, a11y) and DX evaluation (Hello World time, error quality, modes) |
-| 4 | [Strategy, Rules & Routing](./sections/04-strategy-rules-routing.md) | Strategy scope modes, patterns (Bezos/Munger/Jobs), prime directives, interactive rules, output, routing |
-
-## Anti-patterns
-- Using the wrong lens for the question
-- Reviewing without reading the full plan first
-- Merging concerns across lenses
-- Skipping the interactive walkthrough
+1. Select lens — match keywords to lens using routing table (architecture → Engineering, UI → Design, CLI → DX, product → Strategy).
+2. Read the full plan before reviewing. Understand scope before evaluating.
+3. Walk through sections one at a time — interactive via AskUserQuestion.
+4. Apply lens-specific criteria — scope challenge, architecture review, cognitive patterns for Engineering; empty states, hierarchy, a11y for Design; Hello World time, error quality for DX; scope modes, prime directives for Strategy.
+5. Surface findings per section — max 8 issues per section. Zero findings → say so. Anti-skip: evaluate every section.
+6. Update plan file — record findings and decisions in canonical plan storage.
+7. Route result — pass to execution or stress-testing, fail back to revision.
 
 ## Routing
 

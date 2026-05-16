@@ -20,7 +20,7 @@ const categories = {
   "OH Agent Prompt (injected as system prompt)": [
     path.join(ROOT, "harness/agents/openhermes.md"),
   ],
-  "OH Built-in Skills (30, registered)": [],
+  "OH Built-in Skills (31, registered)": [],
   "User Skills (.agents/skills) — on disk, NOT registered": [],
   "User Skills (.config/opencode/skills) — on disk, NOT registered": [],
   "Instructions": [
@@ -120,7 +120,7 @@ for (const [category, files] of Object.entries(categories)) {
 }
 
 // Available skills XML cost (OH built-in only — user skills no longer registered)
-console.log(`\n--- available_skills XML Block (OH only, 29 skills) ---`);
+console.log(`\n--- available_skills XML Block (OH only, 31 skills) ---`);
 const xmlContent = buildAvailableSkillsXml(false);
 const xmlTokens = encode(xmlContent).length;
 console.log(`  Total: ${xmlTokens} tokens  (${xmlContent.length.toLocaleString()} bytes)`);

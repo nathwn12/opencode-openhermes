@@ -1,14 +1,7 @@
 ---
 name: oh-handoff
-description: "Use when ending a session, handing off to another agent, or documenting progress for later. Compacts session state into a structured handoff document."
+description: "Compact session state into a structured handoff document for transfer"
 tier: 2
-triggers:
-  - "handoff"
-  - "context switch"
-  - "session end"
-  - "document session state"
-  - "summarize session"
-  - "pass this to another agent"
 route:
   pass: done
   fail: surface
@@ -17,54 +10,23 @@ route:
 
 # oh-handoff
 
-## When to Use
-Session ending, context switch, passing work to another agent, or user says "handoff." Produces a structured document the next session/agent can consume without re-reading the conversation.
+Compact session state into a structured handoff document the next agent can consume without replay.
 
-## Output Structure
+## Steps
 
-```markdown
-## Goal
-<what this session was trying to achieve>
-
-## Progress
-### Done
-- <completed items>
-
-### In Progress
-- <current work>
-
-### Blocked
-- <blockers>
-
-## Key Decisions
-- <decision> — <rationale>
-
-## Critical Context
-<bare essentials the next session MUST know>
-
-## Relevant Files
-- <file> — <why it matters>
-
-## Next Steps
-- <immediate next action>
-```
-
-## Rules
-- Keep under 500 tokens if possible
-- Only what the next session needs to continue — not a transcript
-- Reference plan files by path, don't duplicate content
-- If blockers exist, state what's needed to resolve
-
-## Anti-patterns
-- Writing a transcript instead of a structured summary
-- Including irrelevant context or raw logs
-- Omitting key decisions or blockers
-- Over 500 tokens (handoff must be compact)
+1. Identify session goal and current progress
+2. List completed items
+3. List in-progress items
+4. List blockers with what's needed to resolve
+5. Document key decisions with rationale
+6. Extract critical context — bare essentials only
+7. List relevant files with why they matter
+8. Write immediate next steps
 
 ## Routing
 
 | Outcome | Route |
 |---------|-------|
-| pass | → [done — session end] |
-| fail | → [surface gaps to user] |
+| pass | → done — session end |
+| fail | → surface gaps to user |
 | blocker | → surface to user |

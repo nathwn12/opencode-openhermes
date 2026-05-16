@@ -41,11 +41,11 @@ describe("bootstrap helpers", () => {
     const goodRoot = path.join(tmpRoot, "good")
 
     fs.mkdirSync(path.join(badRoot, "codex"), { recursive: true })
-    fs.writeFileSync(path.join(badRoot, "codex", "CONSTITUTION.md"), "# incomplete\n")
+    fs.writeFileSync(path.join(badRoot, "codex", "CHARTER.md"), "# incomplete\n")
 
     const requiredFiles: ReadonlyArray<readonly string[]> = [
-      ["codex", "CONSTITUTION.md"],
-      ["instructions", "RUNTIME.md"],
+      ["codex", "CHARTER.md"],
+      ["codex", "AUTOPILOT.md"],
       ["skills", "oh-planner", "SKILL.md"],
     ]
 

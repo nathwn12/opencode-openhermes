@@ -22,12 +22,12 @@ Run a structured 8-category diagnostic. For each check, inspect the actual files
 ## 2. Skills discovery
 
 **What to check:**
-- Count directories in `harness/skills/` — expect exactly 30.
+- Count directories in `harness/skills/` — expect exactly 31.
 - Spot-check 3 SKILL.md files for valid YAML frontmatter (must have `name`, `description`, `route`, `tier`, `triggers`).
 - Verify bootstrap.ts injects `config.skills.paths` with two sources: the built-in skills dir AND user skill dirs (`~/.agents/skills/`, `~/.config/opencode/skills/`, `~/.claude/skills/`).
 - Verify NO symlinks are required — discovery uses the plugin API `config.skills.paths` mechanism.
 
-**Expected current count:** 30 (confirmed directories match filesystem)
+**Expected current count:** 31 (confirmed directories match filesystem)
 
 ---
 
@@ -43,26 +43,23 @@ Run a structured 8-category diagnostic. For each check, inspect the actual files
 ## 4. Agent registration
 
 **What to check:**
-- List `harness/agents/` — expect exactly 16 `.md` files (1 primary + 15 subagents).
+- List `harness/agents/` — expect exactly 17 `.md` files (1 primary + 16 subagents).
 - Read `openhermes.md` frontmatter — must have `mode: primary`.
 - Verify primary agent permissions in bootstrap.ts (lines 370-391): `bash: deny`, `edit: deny`, `task: allow`.
-- Verify 14 subagents have explicit permissions in `SUBAGENT_PERMISSIONS` (lines 335-350): `bash: allow`, `edit: allow`, `task: { "oh-*": "deny" }`.
-- Verify delegation loop guard (line 424): max depth = 5.
-- Verify `oh-planner` + `oh-grill` are hidden from @-menu (line 366).
+- Verify 16 subagents have explicit permissions in `SUBAGENT_PERMISSIONS` (lines 335-350): `bash: allow`, `edit: allow`, `task: { "oh-*": "deny" }`.
+- Verify delegation loop guard (line 424): max depth = 10.
+- Verify `oh-planner` + `oh-grill` + `oh-skill-craft` are hidden from @-menu (line 366).
 
-**Expected:** 16 entries, no missing agent definitions, all permissions assigned.
+**Expected:** 17 entries, no missing agent definitions, all permissions assigned.
 
 ---
 
 ## 5. Instruction injection
 
 **What to check:**
-- Verify all 6 files exist:
-  - `harness/codex/CONSTITUTION.md` (81 lines)
-  - `harness/codex/CONFIDENCE.md` (230 lines)
-  - `harness/codex/AUTOPILOT.md` (155 lines)
-  - `harness/codex/ROUTING.md` (118 lines)
-  - `harness/instructions/RUNTIME.md` (56 lines)
+- Verify all 3 files exist:
+  - `harness/codex/CHARTER.md` (target: ~80 lines)
+  - `harness/codex/AUTOPILOT.md` (target: ~200 lines)
   - `harness/instructions/SHELL.md` (76 lines)
 - Each file must be > 0 bytes and not a placeholder/stub.
 - Verify bootstrap.ts injects both `harness/codex/` and `harness/instructions/` directories via `config.instructions`.
@@ -78,7 +75,7 @@ Run a structured 8-category diagnostic. For each check, inspect the actual files
   - `exports: { ".": "./index.ts", "./bootstrap": "./bootstrap.ts" }`
   - `files` — all 11 entries must resolve to real files/dirs on disk
 - Read `tsconfig.json` — must have: `strict: true`, `target: ESNext`, `module: ESNext`, `moduleResolution: bundler`.
-- Verify `lib/harness-resolver.ts` — check its `REQUIRED_HARNESS_FILES` (CONSTITUTION.md, RUNTIME.md, oh-planner/SKILL.md) all resolve from the harness root.
+- Verify `lib/harness-resolver.ts` — check its `REQUIRED_HARNESS_FILES` (CHARTER.md, AUTOPILOT.md, oh-planner/SKILL.md) all resolve from the harness root.
 - Check `scripts/` directory — no `.ps1` files exist. This is the current state. If some are expected, note absence.
 - Run `bun test` if available — note any failures.
 
@@ -103,8 +100,8 @@ Read `AGENTS.md` and compare its claims against the actual filesystem. Known dis
 
 | Claim | Actual | Status |
 |---|---|---|
-| Line 22: "29 skills (see below)" | Directory has 30 skills | Stale count |
-| Line 19: `harness/instructions/ — RUNTIME.md` | Directory also has `SHELL.md` | Missing file |
+| Line 22: "31 skills (see below)" | Directory has 31 skills | Up to date |
+| Line 19: \`harness/instructions/ — SHELL.md\` | Directory only has SHELL.md | Up to date |
 | Line 23: `lib/ — harness-resolver.ts, logger.ts` | Only `harness-resolver.ts` exists | `logger.ts` removed |
 
 ---
@@ -120,9 +117,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/oh-doctor.ps1 -SkipO
 
 This script checks:
 
-1. **AGENTS.md accuracy** — skill count (expects 30) and file references
+1. **AGENTS.md accuracy** — skill count (expects 31) and file references
 2. **Package files field** — all `package.json` `files` entries exist on disk
-3. **Harness prerequisites** — CONSTITUTION.md, RUNTIME.md, oh-planner/SKILL.md resolve
+3. **Harness prerequisites** — CHARTER.md, AUTOPILOT.md, oh-planner/SKILL.md resolve
 4. **Test health** — `bun test` pass/fail counts
 5. **TypeScript compilation** — `bunx tsc --noEmit` clean check
 6. **Secrets scan** — .env, *.key, credentials, auth.json in repo

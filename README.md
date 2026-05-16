@@ -59,7 +59,7 @@ One sentence. Nine automated steps. Each skill loaded on demand, executed in iso
 
 The loop runs unsupervised because these never turn off:
 
-- **🔁 Loop Guard** — stops if the same skill fires 3+ times or 5+ hops produce no progress
+- **🔁 Loop Guard** — stops if the same skill fires 5+ times or 8+ hops produce no progress
 - **❓ Question Gate** — never routes into uncertainty; surfaces if input is missing
 - **💬 Confidence Gate** — calibrates whether to skip, echo, or ask before classifying
 
@@ -73,86 +73,6 @@ The loop runs unsupervised because these never turn off:
 
 ---
 
-## 🧠 SkillSlice — Chunked Skill Architecture
-
-> **90% token savings, verified with `gpt-tokenizer`.**
-> One benchmark, seven shipped skills. Real measurements, not estimates.
-
----
-
-### 🔬 The Benchmark
-
-A 1,248-line reference skill was built to validate the architecture end-to-end.
-[`gpt-tokenizer`](https://npmjs.com/package/gpt-tokenizer) measured the exact
-cost of loading it as a monolithic file vs. loading only the stub + one section:
-
-| Metric | Monolithic | SkillSlice | Savings |
-|---|---|---|---|
-| Per trigger | 8,031 tokens | 804 tokens | **90.0%** |
-| Lines loaded | 1,248 | ~63 | **~95%** |
-
-> 🔬 **oh-powershell** was a bulk PowerShell reference used ONLY to benchmark
-> the SkillSlice pattern. It is NOT a shipped OpenHermes skill.
-> All token counts were computed by `gpt-tokenizer` (exact, not estimated).
-
----
-
-### 📊 Shipped Skills (estimated)
-
-14 skills use the SkillSlice pattern in production. Their savings are estimated
-by comparing stub line counts to the original monolithic line counts:
-
-| Skill | Stub (lines) | Sections | Est. savings |
-|---|---|---|---|
-| oh-investigate | 39 | 6 | ~80% |
-| oh-ship | 41 | 5 | ~76% |
-| oh-gauntlet | 40 | 4 | ~75% |
-| oh-manifest | 42 | 4 | ~74% |
-| oh-review | 46 | 4 | ~73% |
-| oh-fusion | 49 | 6 | ~72% |
-| oh-skill-craft | 47 | 5 | ~72% |
-| oh-plan-review | 60 | 4 | ~71% |
-| oh-planner | 65 | 5 | ~70% |
-| oh-worktree | 66 | 4 | ~66% |
-| oh-facade | 79 | 5 | ~65% |
-| oh-ascii | 58 | 4 | ~64% |
-| oh-refactor | 44 | 5 | ~63% |
-| oh-init | 47 | 4 | ~61% |
-
----
-
-### ⚙️ How It Works
-
-Every chunked skill follows the same structure:
-
-```
-any-chunked-skill/
-├── SKILL.md                  # Stub: frontmatter + section index (~50 lines)
-└── sections/
-    ├── section-1.md           # Agent reads ONLY what it needs
-    ├── section-2.md
-    └── section-3.md
-```
-
-The stub's section index uses **specific content keywords** so the agent knows
-exactly which chunk to load:
-
-| Section entry in stub | Agent reads | Misses entirely |
-|---|---|---|
-| `Az 14.5, Microsoft.Graph 2.32, PnP, AWS Tools` | `modules.md` | Security, CI/CD, performance |
-| `GitHub Actions, Azure DevOps, Bitbucket YAML` | `cicd.md` | Language syntax, module management |
-
----
-
-### 📈 Impact
-
-**31 skills total** — 14 SkillSliced, 17 monolithic (<100 lines).
-Every SkillSliced skill saves 60–80% of its original token cost per trigger.
-
-The architecture costs nothing to maintain: no tooling, no plugins, no runtime
-overhead. Just a convention — a section index table in the stub, and the actual
-content in `sections/*.md`.
-
 ## What you get
 
 | Capability | Why it matters |
@@ -162,7 +82,8 @@ content in `sections/*.md`.
 | **Auto-detected user skills** | Drop a skill in `~/.agents/skills/`. OpenHermes finds it. Same name as a built-in? Your version wins. Survives `npm update`. |
 | **`/oh-doctor`** | Verify plugin load, skill discovery, command registration, config safety. |
 | **`/oh-log`** | Session log — routing hops, skill loads, compaction events. |
-| **Shared operating model** | CONSTITUTION + RUNTIME + CONTEXT + ETHOS injected every session. Every interaction grounded in the same rules. |
+| **Shared operating model** | CHARTER + AUTOPILOT + CONTEXT + ETHOS injected every session. Every interaction grounded in the same rules. |
+| **CORE/DEEP skill format** | Every skill is a two-file system: CORE (SKILL.md) handles 80% of passes in one read. DEEP.md loads on demand for hard cases. |
 | **Plan file storage** | `~/.local/share/opencode/openhermes/plans/`. Survives `npm update`. |
 
 ## 31 skills — three tiers
@@ -227,13 +148,13 @@ openhermes-pkg/
 ├── ETHOS.md               # Operating principles
 ├── bootstrap.ts           # Plugin entry — registers everything
 ├── index.ts               # Package entrypoint
-├── lib/                   # harness-resolver.ts, logger.ts
+├── lib/                   # harness-resolver.ts
 ├── harness/
 │   ├── agents/            # Agent manifests (OpenHermes primary)
-│   ├── codex/             # CONSTITUTION, CONFIDENCE, AUTOPILOT, ROUTING
+│   ├── codex/             # CHARTER, AUTOPILOT
 │   ├── commands/          # Slash commands (/oh-doctor, /oh-log)
-│   ├── instructions/      # RUNTIME.md
-│   └── skills/            # 31 skill SKILL.md files (+ sections/ for chunked skills)
+│   ├── instructions/      # SHELL.md
+│   └── skills/            # 31 skill SKILL.md files (CORE/DEEP format)
 └── test/
 ```
 
