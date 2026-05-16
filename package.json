@@ -23,6 +23,7 @@
     "ETHOS.md",
     "CONTEXT.md",
     "lib/",
+    "scripts/",
     "harness/codex/",
     "harness/instructions/",
     "harness/skills/",

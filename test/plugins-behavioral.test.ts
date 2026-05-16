@@ -56,7 +56,7 @@ describe("BootstrapPlugin behavior", () => {
     await plugin.config(config)
 
     const cmd = (config.command as Record<string, { template: string; agent: string }>)["oh-doctor"]
-    assert.match(cmd.template, /Inspect the current OpenHermes\/OpenCode setup/)
+    assert.match(cmd.template, /Run a structured 8-category diagnostic/)
     assert.equal(cmd.agent, "OpenHermes")
 
     const logCmd = (config.command as Record<string, { template: string; agent: string }>)["oh-log"]
