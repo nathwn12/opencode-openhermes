@@ -55,12 +55,20 @@ One sentence. Nine automated steps. Each skill loaded on demand, executed in iso
 
 ---
 
-### Three safety layers
+### Four safety layers
 
 The loop runs unsupervised because these never turn off:
 
 - **🔁 Loop Guard** — stops if the same skill fires 3+ times or 5+ hops produce no progress
 - **❓ Question Gate** — never routes into uncertainty; surfaces if input is missing
+- **💬 Confidence Gate** — calibrates whether to skip, echo, or ask before classifying
+
+```
+  HIGH  ──→ classify silently (transparent gate)
+  MEDIUM ──→ echo + confirm, then classify
+  LOW   ──→ ask + classify (defaults to oh-planner)
+```
+
 - **📋 Auto-Handoff** — writes a structured session artifact before context switches
 
 ---
@@ -214,7 +222,7 @@ openhermes-pkg/
 ├── lib/                   # harness-resolver.ts, logger.ts
 ├── harness/
 │   ├── agents/            # Agent manifests (OpenHermes primary)
-│   ├── codex/             # CONSTITUTION, AUTOPILOT, ROUTING
+│   ├── codex/             # CONSTITUTION, CONFIDENCE, AUTOPILOT, ROUTING
 │   ├── commands/          # Slash commands (/oh-doctor, /oh-log)
 │   ├── instructions/      # RUNTIME.md
 │   └── skills/            # 30 skill SKILL.md files (+ sections/ for chunked skills)

@@ -25,27 +25,48 @@ This is not a blocker — all shells can start work. But the detected shell MUST
 
 The classification decision matrix below uses the detected shell to issue context-appropriate commands when spawning subagents.
 
+## Phase 0.5: Confidence Gate (Before Classification)
+
+Before classifying, evaluate how well you understand the user's request using the confidence hierarchy:
+
+| Confidence | Behavior | Latency |
+|---|---|---|
+| **HIGH** | Transparent gate — proceed directly to Auto-Classify | Zero |
+| **MEDIUM** | Echo understanding, confirm with user, then classify | 1 exchange |
+| **LOW** | Ask one targeted question, then classify | 1 exchange |
+
+The full protocol, signal detection rules, and conversation templates are defined in [CONFIDENCE.md](CONFIDENCE.md).
+
+**Rules:**
+1. HIGH confidence → classify immediately (same behavior as existing flow)
+2. MEDIUM confidence → one confirmation exchange → classify
+3. LOW confidence → one question → classify (default to oh-planner if unanswered)
+4. The gate is bounded to 1 exchange max — do not start a discussion
+5. When uncertain between two levels, choose the lower confidence
+
+See `CONFIDENCE.md` for detailed signal detection tables, conversation templates, and fallback rules.
+
 ## Auto-Classify
 
 Before any substantive response, classify the task using this decision matrix:
 
 | Signal | Classification | Action |
 |---|---|---|
-| Multi-step, vague, aimless, "improve", "make better", "fix up", "clean up", "organize", "I have an idea", no clear deliverable | PLANNING NEEDED | Load **oh-planner** (Mode A brainstorm or Mode C structured plan). Do not ask. |
-| Bug, crash, regression, unexpected behavior, "why is X broken" | INVESTIGATION NEEDED | Load **oh-investigate**. Do not ask. |
-| UI, frontend, design system, page, component, dashboard, visual, redesign, theme, layout, "make it look good", "janky", "laggy", "slow UI", UI quality complaint | UI PIPELINE NEEDED | Load **oh-facade** (5-phase: Concept → Design System → Build → Audit → Iterate). Do not ask. |
-| Security concern, vulnerability, threat model | SECURITY NEEDED | Load **oh-security**. Do not ask. |
-| Code quality, performance, linting, dead code | HEALTH CHECK | Load **oh-health**. Do not ask. |
-| ASCII diagram, box drawing, diagram alignment, architecture diagram, PlantUML, "make a diagram", diagram validation | ASCII DIAGRAM NEEDED | Load **oh-ascii** (Design + Generate + Validate). Do not ask. |
-| Browser, website interaction, form fill, click, screenshot, scrape data, "open a website", "test web app", "login to a site", "automate browser", "check slack" | BROWSER AUTOMATION NEEDED | Load **oh-browser** (CLI-based browser automation via agent-browser). Do not ask. |
-| Full pipeline: plan+implement+test+ship | PIPELINE NEEDED | Load **oh-manifest**. Do not ask. |
+| Multi-step, vague, aimless, "improve", "make better", "fix up", "clean up", "organize", "I have an idea", no clear deliverable | PLANNING NEEDED | Load **oh-planner** (Mode A brainstorm or Mode C structured plan). |
+| Bug, crash, regression, unexpected behavior, "why is X broken" | INVESTIGATION NEEDED | Load **oh-investigate**. |
+| UI, frontend, design system, page, component, dashboard, visual, redesign, theme, layout, "make it look good", "janky", "laggy", "slow UI", UI quality complaint | UI PIPELINE NEEDED | Load **oh-facade** (5-phase: Concept → Design System → Build → Audit → Iterate). |
+| Security concern, vulnerability, threat model | SECURITY NEEDED | Load **oh-security**. |
+| Code quality, performance, linting, dead code | HEALTH CHECK | Load **oh-health**. |
+| ASCII diagram, box drawing, diagram alignment, architecture diagram, PlantUML, "make a diagram", diagram validation | ASCII DIAGRAM NEEDED | Load **oh-ascii** (Design + Generate + Validate). |
+| Browser, website interaction, form fill, click, screenshot, scrape data, "open a website", "test web app", "login to a site", "automate browser", "check slack" | BROWSER AUTOMATION NEEDED | Load **oh-browser** (CLI-based browser automation via agent-browser). |
+| Full pipeline: plan+implement+test+ship | PIPELINE NEEDED | Load **oh-manifest**. |
 | Full pipeline with UI components | PIPELINE + UI | Load **oh-manifest**. It delegates UI work to **oh-facade** internally. |
-| Code review, design review, PR review | REVIEW NEEDED | Load **oh-review**. Do not ask. |
-| Plan review, architecture review | PLAN REVIEW | Load **oh-plan-review**. Do not ask. |
-| Single concrete request with clear scope (rename, format, simple edit) | BUILDER NEEDED | Load **oh-builder**. Do not ask. |
-| Session ending, handoff, context switch | HANDOFF | Load **oh-handoff**. Do not ask. |
-| Skill import, ingestion, fusion, porting, "make this OH-native", "add this skill" | SKILL INGESTION NEEDED | Load **oh-fusion** (6-phase: Discovery → Analysis → Decision → Adaptation → Fusion → Integration). Do not ask. |
-| Diagnostic of own behavior (sycophancy, hallucination check) | SELF-DIAGNOSIS | Load **oh-expert**. Do not ask. |
+| Code review, design review, PR review | REVIEW NEEDED | Load **oh-review**. |
+| Plan review, architecture review | PLAN REVIEW | Load **oh-plan-review**. |
+| Single concrete request with clear scope (rename, format, simple edit) | BUILDER NEEDED | Load **oh-builder**. |
+| Session ending, handoff, context switch | HANDOFF | Load **oh-handoff**. |
+| Skill import, ingestion, fusion, porting, "make this OH-native", "add this skill" | SKILL INGESTION NEEDED | Load **oh-fusion** (6-phase: Discovery → Analysis → Decision → Adaptation → Fusion → Integration). |
+| Diagnostic of own behavior (sycophancy, hallucination check) | SELF-DIAGNOSIS | Load **oh-expert**. |
 
 **When in doubt between two classifications, choose the more structured one.** If a task could be simple work OR planning needed, load oh-planner. The planner can always determine that the task is simpler than expected and route back.
 
@@ -75,12 +96,13 @@ Every skill's `route:` frontmatter uses these value types:
 ### Routing Flow (per step)
 
 1. Verify plan exists (create if needed)
-2. Classify task using decision matrix
-3. Load best matching skill
-4. Execute the skill
-5. Read the skill's `route:` frontmatter (pass/fail/blocker)
-6. Route by outcome → go to step 3, or surface/done/blocker
-7. Report to user
+2. Evaluate confidence using [CONFIDENCE.md](CONFIDENCE.md) (HIGH/MEDIUM/LOW)
+3. Classify task using decision matrix
+4. Load best matching skill
+5. Execute the skill
+6. Read the skill's `route:` frontmatter (pass/fail/blocker)
+7. Route by outcome → go to step 3, or surface/done/blocker
+8. Report to user
 
 User skills participate identically: their `route:` frontmatter drives routing the same way. No registration needed.
 

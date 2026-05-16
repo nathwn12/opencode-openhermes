@@ -35,6 +35,30 @@ oh-facade ─── Concept → Design System → Build → Audit → Iterate (l
                 audit fail──→ Iterate (fix priority order)
 ```
 
+## Confidence Gate Phase
+
+The confidence gate is Phase 0.5 in the autopilot flow, inserted between Shell Pre-Flight and Auto-Classify.
+
+```
+User input
+    │
+    ▼
+Phase 0: Shell Pre-Flight
+    │
+    ▼
+Phase 0.5: Confidence Gate ── HIGH ──→ Auto-Classify
+                   │                  
+                   ├── MEDIUM ── Echo → Confirm → Auto-Classify
+                   │
+                   └── LOW ──── Question → Answer? → Auto-Classify
+                                               └→ No → oh-planner
+    │
+    ▼
+Auto-Classify → Load Skill → Delegate
+```
+
+See [CONFIDENCE.md](CONFIDENCE.md) for the full signal detection protocol, conversation templates, and fallback rules.
+
 ## oh-facade Pipeline Detail
 
 ```
@@ -74,8 +98,9 @@ Tracks routing depth per chain. Two thresholds:
 Before each routing hop, evaluate in order:
 
 1. **Does a valid plan file exist?** (Status is active or in-progress. If complete/abandoned, create the next sequential plan first. If none exists, create one.)
-2. **Is the next skill's input fully satisfied?** (plan file exists for builder, code exists for gauntlet, etc.)
-3. **Is there any ambiguity that requires user clarification?**
+2. **Has the Confidence Gate fired?** (See [CONFIDENCE.md](CONFIDENCE.md) — HIGH/MEDIUM/LOW should be determined before the first routing hop. If not yet evaluated, check confidence now.)
+3. **Is the next skill's input fully satisfied?** (plan file exists for builder, code exists for gauntlet, etc.)
+4. **Is there any ambiguity that requires user clarification that the confidence gate didn't catch?**
 
 If any answer is no: **do not route. Do not guess.** Surface what you have, what is missing, and what you need. For plan issues, create the plan yourself — do not ask the user to do it.
 
