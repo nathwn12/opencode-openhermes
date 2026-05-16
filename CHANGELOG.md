@@ -1,5 +1,17 @@
 # Changelog
 
+## [4.8.0] - 2026-05-17
+
+### Added
+
+- **oh-investigate agent:** New subagent for systematic bug diagnosis with root cause investigation workflow.
+- **oh-skill-craft subagent:** Hidden from @-menu, registered with proper permissions in bootstrap.
+- **oh-worktree routing test:** Added to routing test coverage for DIRECT_USER_SKILLS.
+
+### Changed
+
+- **oh-ship routing:** Pass route changed from `surface` to `oh-retro` — completing a ship session now routes to retrospective automatically.
+
 ## [4.7.0] - 2026-05-16
 
 ### Added
