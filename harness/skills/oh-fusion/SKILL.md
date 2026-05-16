@@ -1,6 +1,6 @@
 ---
 name: oh-fusion
-description: "Skill ingestion pipeline: discover, analyze, filter, adapt, fuse, and integrate external skills into the OH harness. Use when the user has an existing skill, finds a skill in their .agents/skills, or wants to bring an external capability into OH."
+description: "Use when the user has an existing skill, finds a skill in their .agents/skills, or wants to bring an external capability into OH as a skill."
 tier: 3
 benefits-from: [oh-skill-craft, oh-skills-link, oh-expert]
 format: chunked

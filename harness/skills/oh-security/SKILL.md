@@ -1,6 +1,6 @@
 ---
 name: oh-security
-description: "Security audit: secrets archaeology, dependency supply chain, CI/CD security, OWASP Top 10, STRIDE threat modeling, LLM security. Two modes: daily (8/10 confidence gate) and comprehensive (2/10 bar)."
+description: "Use when the codebase needs a security audit — secrets scanning, dependency checks, CI/CD review, and threat modeling. Two modes: daily (fast) and comprehensive (deep)."
 tier: 3
 benefits-from: [oh-expert]
 triggers:
@@ -53,6 +53,12 @@ Prompt injection (user input → system prompts), unsanitized LLM output in UI, 
 
 ### Phase 8: OWASP + STRIDE
 Map findings to OWASP Top 10 and STRIDE. Coverage gaps identified.
+
+## Anti-patterns
+- Running daily mode for comprehensive needs (misses deep issues)
+- Skipping secrets archaeology in git history
+- Relying only on automated scanners without manual review
+- Not updating after dependencies change
 
 ## Output
 

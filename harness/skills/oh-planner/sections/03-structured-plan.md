@@ -2,7 +2,7 @@
 
 Use when requirements exist and need a formal plan document to execute from.
 
-## Process — 6 Steps
+## Process — 7 Steps
 
 ### 1. Scope Challenge
 
@@ -49,6 +49,16 @@ Map what blocks what:
 ### 6. Write Plan
 
 Produce a structured artifact with: phases, dependencies, verification steps per phase, and exit criteria. Use the Plan Artifact format (see `05-plan-artifact.md`).
+
+### 7. Self-Review Checklist
+
+After writing the plan but before delivering it, run a quick inline self-review:
+
+1. **Spec coverage** — Skim each requirement from the original request. Can you point to a task that implements it? List any gaps and add missing tasks.
+2. **Placeholder scan** — Search the plan for banned patterns: "TBD", "TODO", "implement later", "handle edge cases", "fill in details". Replace every instance with concrete content.
+3. **Type consistency** — Do types, method signatures, and property names match across tasks? A function called `clearLayers()` in Task 3 but `clearFullLayers()` in Task 7 is a bug. Fix cross-references.
+
+Fix any issues inline — no need to re-review, just fix and move on. If a spec requirement has no task, add the task.
 
 ## Output
 

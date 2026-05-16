@@ -99,18 +99,25 @@ cost of loading it as a monolithic file vs. loading only the stub + one section:
 
 ### 📊 Shipped Skills (estimated)
 
-7 skills use the SkillSlice pattern in production. Their savings are estimated
+14 skills use the SkillSlice pattern in production. Their savings are estimated
 by comparing stub line counts to the original monolithic line counts:
 
-| Skill | Lines (mono) | Stub (tokens) | Est. monolithic | Est. savings |
-|---|---|---|---|---|
-| oh-ascii | 313 | ~350 | ~2,000 | **~82%** |
-| oh-facade | 245 | ~500 | ~1,600 | **~69%** |
-| oh-fusion | 177 | ~300 | ~1,100 | **~73%** |
-| oh-refactor | 167 | ~230 | ~1,050 | **~78%** |
-| oh-planner | 129 | ~370 | ~820 | **~55%** |
-| oh-skill-craft | 121 | ~280 | ~760 | **~63%** |
-| oh-plan-review | 114 | ~330 | ~720 | **~54%** |
+| Skill | Stub (lines) | Sections | Est. savings |
+|---|---|---|---|
+| oh-investigate | 39 | 6 | ~80% |
+| oh-ship | 41 | 5 | ~76% |
+| oh-gauntlet | 40 | 4 | ~75% |
+| oh-manifest | 42 | 4 | ~74% |
+| oh-review | 46 | 4 | ~73% |
+| oh-fusion | 49 | 6 | ~72% |
+| oh-skill-craft | 47 | 5 | ~72% |
+| oh-plan-review | 60 | 4 | ~71% |
+| oh-planner | 65 | 5 | ~70% |
+| oh-worktree | 66 | 4 | ~66% |
+| oh-facade | 79 | 5 | ~65% |
+| oh-ascii | 58 | 4 | ~64% |
+| oh-refactor | 44 | 5 | ~63% |
+| oh-init | 47 | 4 | ~61% |
 
 ---
 
@@ -139,8 +146,8 @@ exactly which chunk to load:
 
 ### 📈 Impact
 
-**30 skills total** — 7 SkillSliced (≥100 lines), 23 monolithic (<80 lines).
-Every SkillSliced skill saves 70–90% of its original token cost per trigger.
+**31 skills total** — 14 SkillSliced, 17 monolithic (<100 lines).
+Every SkillSliced skill saves 60–80% of its original token cost per trigger.
 
 The architecture costs nothing to maintain: no tooling, no plugins, no runtime
 overhead. Just a convention — a section index table in the stub, and the actual
@@ -151,14 +158,14 @@ content in `sections/*.md`.
 | Capability | Why it matters |
 |---|---|
 | **Self-driving loop** | Type once. OpenHermes classifies, delegates, and routes — no pauses, no asking permission, no verbosity. |
-| **30 specialist skills** | Planning → building → testing → browser → security → review → shipping → retro. Every dev cycle phase. |
+| **31 specialist skills** | Planning → building → testing → browser → security → review → shipping → retro. Every dev cycle phase. |
 | **Auto-detected user skills** | Drop a skill in `~/.agents/skills/`. OpenHermes finds it. Same name as a built-in? Your version wins. Survives `npm update`. |
 | **`/oh-doctor`** | Verify plugin load, skill discovery, command registration, config safety. |
 | **`/oh-log`** | Session log — routing hops, skill loads, compaction events. |
 | **Shared operating model** | CONSTITUTION + RUNTIME + CONTEXT + ETHOS injected every session. Every interaction grounded in the same rules. |
 | **Plan file storage** | `~/.local/share/opencode/openhermes/plans/`. Survives `npm update`. |
 
-## 30 skills — three tiers
+## 31 skills — three tiers
 
 ### Tier 4 — Pipeline orchestrators
 Full multi-phase workflows:
@@ -185,6 +192,7 @@ Span multiple phases and coordinate other skills:
 | **oh-review** | Two-axis review (Standards + Spec) in parallel sub-agents |
 | **oh-fusion** | Skill ingestion pipeline: discover → analyze → adapt → fuse → integrate |
 | **oh-retro** | Weekly retrospective — analyze commit history and patterns |
+| **oh-worktree** | Workspace isolation via git worktrees. Detect existing isolation, create isolated workspaces, run project setup, verify clean baseline. |
 
 ### Tier 2 — Focused skills
 Single-purpose, one thing well:
@@ -225,7 +233,7 @@ openhermes-pkg/
 │   ├── codex/             # CONSTITUTION, CONFIDENCE, AUTOPILOT, ROUTING
 │   ├── commands/          # Slash commands (/oh-doctor, /oh-log)
 │   ├── instructions/      # RUNTIME.md
-│   └── skills/            # 30 skill SKILL.md files (+ sections/ for chunked skills)
+│   └── skills/            # 31 skill SKILL.md files (+ sections/ for chunked skills)
 └── test/
 ```
 

@@ -1,6 +1,6 @@
 ---
 name: oh-init
-description: "Initialize project for OpenHermes: wire AGENTS.md, configure domain docs, issue tracker, and triage labels. Does NOT create .opencode/ directory."
+description: "Use when setting up a new project for OpenHermes. Initializes AGENTS.md, domain docs, issue tracker, and triage labels."
 tier: 2
 format: chunked
 sections:
@@ -24,6 +24,8 @@ route:
 # oh-init
 
 Per-repo OpenHermes setup. Wires AGENTS.md, domain docs, issue tracker, triage labels. One-time. Complements OpenCode's `/init` (run after or instead).
+
+**Example:** "Set up this repo for OpenHermes" → wires AGENTS.md, scaffolds CONTEXT.md, configures triage labels.
 
 **This skill is chunked.** Read this index, pick the section you need, and `read()` only that section file.
 

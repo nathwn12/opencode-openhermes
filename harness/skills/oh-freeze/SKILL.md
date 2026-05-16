@@ -1,6 +1,6 @@
 ---
 name: oh-freeze
-description: "Restrict file edits to a specific directory for the session"
+description: "Use when the user says 'don't touch anything outside [path]' or 'only edit files in [dir]'. Restricts file edits to a specific directory for the session."
 tier: 2
 triggers:
   - "freeze directory"

@@ -1,6 +1,6 @@
 ---
 name: oh-skills-link
-description: "Verify that OpenCode can discover the package-local skills directory"
+description: "Use after installing or updating skills to verify OpenCode discovers the package-local skills directory."
 tier: 2
 triggers:
   - "verify skills"
@@ -13,6 +13,8 @@ route:
 ---
 
 # oh-skills-link
+
+**Example:** After running npm update, run oh-skills-link. It reads harness/skills/, confirms config paths, reports any missing or new skills.
 
 ## When to Use
 After installing or updating skills. Verify OpenCode discovers the package-local directory.

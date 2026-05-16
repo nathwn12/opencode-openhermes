@@ -1,6 +1,6 @@
 ---
 name: oh-learn
-description: "Extract, evolve, and promote session learnings as instincts. Review, search, prune, export."
+description: "Use when session learnings should be captured, reviewed, or promoted as reusable instincts for future work."
 tier: 2
 triggers:
   - "learn from session"

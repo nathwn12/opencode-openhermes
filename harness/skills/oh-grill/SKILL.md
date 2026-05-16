@@ -1,6 +1,6 @@
 ---
 name: oh-grill
-description: "Stress-test plans and designs through relentless Socratic questioning. Sharpens assumptions, flags blind spots, updates domain docs."
+description: "Use when a plan or design needs stress-testing before implementation. Sharpens assumptions and flags blind spots through Socratic questioning."
 tier: 3
 benefits-from: [oh-expert, oh-planner]
 triggers:
@@ -22,6 +22,8 @@ Stress-tests plans through relentless Socratic questioning. Two modes.
 
 ## When to Use
 Before committing to a plan. "Writing exactly what I asked for and it's still wrong" = design concept not shared. Cheaper in conversation than in code.
+
+**Example:** User shares a plan. You respond with: "Have you considered the failure mode where X happens?" — then walk through the grill modes.
 
 ## Modes
 

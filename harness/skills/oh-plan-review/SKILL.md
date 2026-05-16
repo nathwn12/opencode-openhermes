@@ -1,6 +1,6 @@
 ---
 name: oh-plan-review
-description: "Multi-lens plan review: 4 perspectives in one skill. Choose Engineering (architecture/scope), Design (UX/interaction), DX (API/CLI ergonomics), or Strategy (product/CEO). Interactive — walks through findings one section at a time."
+description: "Use when a plan needs multi-perspective review before execution. Choose Engineering, Design, DX, or Strategy lens — walks through findings one section at a time."
 tier: 3
 benefits-from: [oh-planner, oh-expert]
 format: chunked
@@ -32,6 +32,8 @@ route:
 
 Four lenses in one skill. Interactive — walk findings one section at a time. Read-only — output is a better plan, not a document about the plan.
 
+**Example:** User asks "review my plan." You present: "Which lens? Engineering (architecture/scope), Design (UX/interaction), DX (API/CLI), or Strategy (product/CEO)?" Then walk through findings.
+
 **This skill is chunked.** Read this index, pick the section you need, and `read()` only that section file.
 
 ## Section Index
@@ -42,6 +44,12 @@ Four lenses in one skill. Interactive — walk findings one section at a time. R
 | 2 | [Engineering Lens](./sections/02-engineering-lens.md) | Scope challenge, Architecture Review procedure (8 issues max, anti-skip), cognitive patterns |
 | 3 | [Design & DX Lenses](./sections/03-design-dx-lenses.md) | Design criteria (empty states, hierarchy, AI slop, a11y) and DX evaluation (Hello World time, error quality, modes) |
 | 4 | [Strategy, Rules & Routing](./sections/04-strategy-rules-routing.md) | Strategy scope modes, patterns (Bezos/Munger/Jobs), prime directives, interactive rules, output, routing |
+
+## Anti-patterns
+- Using the wrong lens for the question
+- Reviewing without reading the full plan first
+- Merging concerns across lenses
+- Skipping the interactive walkthrough
 
 ## Routing
 

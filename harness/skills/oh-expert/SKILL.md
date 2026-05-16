@@ -1,6 +1,6 @@
 ---
 name: oh-expert
-description: "AI-expert built-in: shared vocabulary for self-diagnosis, failure modes, attention dynamics, and working patterns"
+description: "Use when the agent is getting things wrong, reversing answers under pushback, hallucinating, drifting from instructions, or showing signs of attention degradation. Shared vocabulary for self-diagnosis, failure modes, and working patterns."
 tier: 2
 triggers:
   - "why did you get that wrong"

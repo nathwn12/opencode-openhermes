@@ -1,6 +1,6 @@
 ---
 name: oh-issue
-description: "Break a plan, spec, or PRD into independently-grabbable GitHub issues"
+description: "Use when a plan, spec, or PRD needs to be broken into independently-grabbable GitHub issues for team execution."
 tier: 2
 triggers:
   - "break into issues"

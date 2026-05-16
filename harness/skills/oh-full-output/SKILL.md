@@ -23,7 +23,7 @@ triggers:
   - "stop truncating"
 route:
   pass: done
-  fail: surface
+  fail: [surface, oh-expert]
   blocker: surface
 ---
 

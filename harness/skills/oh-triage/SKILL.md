@@ -1,6 +1,6 @@
 ---
 name: oh-triage
-description: "Issue triage state machine — classify, prioritise, assign"
+description: "Use when new issues need triage — classify, prioritise, and assign through the triage state machine."
 tier: 2
 triggers:
   - "triage this issue"
@@ -15,6 +15,8 @@ route:
 ---
 
 # oh-triage
+
+**Example:** New issues appear with needs-triage label. Read issue, classify as bug/feature/enhancement, assess severity, assign state (ready-for-agent / ready-for-human / needs-info).
 
 ## When to Use
 New issues or backlog review. Drives through triage state machine.

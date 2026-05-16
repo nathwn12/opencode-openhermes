@@ -1,6 +1,6 @@
 ---
 name: oh-skills-list
-description: "List all available oh-* skills with descriptions"
+description: "Use when the user wants to see available OH skills. Lists all oh-* skills with descriptions."
 tier: 2
 triggers:
   - "list skills"
@@ -13,6 +13,8 @@ route:
 ---
 
 # oh-skills-list
+
+**Example:** User asks "what skills do you have?" → outputs a table of all oh-* skills with tier and purpose.
 
 ## When to Use
 User wants to see available skills. Lists all oh-* skills with tier and description.

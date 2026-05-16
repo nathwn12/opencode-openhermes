@@ -1,6 +1,6 @@
 ---
 name: oh-prd
-description: "Turn conversation context into a PRD and publish as GitHub issue"
+description: "Use when a feature or product idea needs a structured Product Requirements Document. Turns conversation context into a PRD and publishes as GitHub issue."
 tier: 2
 triggers:
   - "write a prd"

@@ -1,6 +1,6 @@
 ---
 name: oh-retro
-description: "Weekly engineering retrospective — analyze commit history and work patterns"
+description: "Use at the end of a sprint or milestone to analyze commit history, work patterns, and extract actionable insights for the next cycle."
 tier: 3
 triggers:
   - "retrospective"
@@ -27,6 +27,8 @@ End of sprint or work week. Analyze shipped work, how it went, what to improve.
 
 ## Output
 Structured retro: shipped items, metrics, praise, growth areas, action items.
+
+**Example:** End of sprint. Read git log → categorize (features, fixes, refactors) → pattern analysis → praise → growth areas → action items.
 
 ## Anti-patterns
 - Blame-focused (process, not people)

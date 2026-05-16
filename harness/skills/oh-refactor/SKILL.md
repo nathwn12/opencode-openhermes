@@ -1,6 +1,6 @@
 ---
 name: oh-refactor
-description: "Surgical, behavior-preserving code refactoring. Extract functions, eliminate duplication, improve type safety, remove dead code, simplify conditionals. Use when code is hard to maintain, functions are too long, code smells accumulate, or user asks to clean up/improve/refactor code."
+description: "Use when code is hard to maintain, functions are too long, code smells accumulate, or the user asks to clean up, improve, or refactor code. Behavior-preserving refactoring — extract, deduplicate, simplify, improve types."
 tier: 3
 benefits-from: [oh-investigate, oh-review]
 format: chunked
@@ -13,7 +13,7 @@ sections:
 triggers: ["refactor", "clean up", "improve this code", "code smell", "make this better", "extract method", "reduce duplication", "fix this mess", "technical debt", "god function", "long method", "nested conditionals"]
 route:
   pass: oh-gauntlet
-  fail: oh-planner
+  fail: [oh-planner, oh-investigate, oh-builder]
   blocker: surface
 ---
 
@@ -28,6 +28,13 @@ Improve code structure without changing external behavior. Gradual evolution, no
 | 03 | Code Smells | Six code smell patterns with before/after diff examples |
 | 04 | Operations | Common refactoring operations reference table |
 | 05 | Checklist | Quality checklist: function size, duplication, naming, dead code, module boundaries, types, tests |
+
+## Anti-patterns
+- Refactoring without tests (behavior preservation is unverifiable)
+- Mixing behavior changes with refactoring
+- "While I'm here" scope creep
+- Large batch refactors (commit between safe states)
+
 ## Routing
 | Outcome | Route |
 |---------|-------|

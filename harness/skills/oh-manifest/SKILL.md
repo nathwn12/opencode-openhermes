@@ -1,8 +1,14 @@
 ---
 name: oh-manifest
-description: "Full build loop: plan → build → verify → loop until done or blocker. Orchestrates oh-planner + oh-builder with auto-decisions."
+description: "Use when running a complete implementation pipeline from plan through verification. Orchestrates oh-planner + oh-builder with auto-decisions."
 tier: 4
 benefits-from: [oh-planner, oh-builder, oh-expert]
+format: chunked
+sections:
+  01-pre-flight: "Phase 0: Pre-Flight — quality baseline, rollback path, branch isolation, scope check. All must pass before any work."
+  02-pipeline: "Steps 1-4: Plan (load or oh-planner), Build (dispatch oh-builder, two-stage review, implementer status protocol), Verify, Loop"
+  03-patterns-and-decisions: "Loop patterns (sequential, continuous-pr, infinite, rfc-dag), escalation triggers (stall, retry storm, cost drift, quality regression), decision principles"
+  04-reference: "Blocker protocol, anti-patterns, routing"
 triggers:
   - "run the full build"
   - "full build pipeline"
@@ -20,78 +26,17 @@ route:
 
 # oh-manifest
 
-Full build orchestration loop: pre-flight → plan → build → verify → repeat until done or blocker.
+Full build orchestration loop: pre-flight → plan → build → verify → repeat until done or blocker. Consumes or creates a plan, dispatches builder for each phase, verifies, loops.
 
-## Phase 0: Pre-Flight
+**Example:** User says "build this feature." Manifest loads/creates plan, dispatches builder for each phase, verifies, loops until done or blocked.
 
-ALL must pass before any work:
+**This skill is chunked.** Read this index, pick the section you need, and `read()` only that section file.
 
-- ☐ **Quality baseline** — existing tests pass. Capture before/after.
-- ☐ **Rollback path** — clean `git stash` or committed state to return to.
-- ☐ **Branch isolation** — working branch, not main/master.
-- ☐ **Scope documented** — plan exists and unambiguous.
+## Section Index
 
-Any check fails → STOP. Report which. Do not proceed until resolved.
-
-## Pipeline
-
-### Step 1: Plan
-If plan exists, load. If not, run oh-planner. Auto-decide minor scope via decision principles. Surface only: premises needing human judgment, or plan/alternative conflicts.
-
-### Step 2: Build
-Run oh-builder for each plan phase in dependency order. Parallelizable phases → sub-agents. Auto-decide implementation choices.
-
-### Step 3: Verify
-Check each phase against verification criteria. Tests pass → mark complete. Fail → diagnose (oh-expert), fix, re-verify.
-
-### Step 4: Loop
-All done → DONE. Phase fails → BLOCKER (surface). New work discovered → add to plan, continue.
-
-## Loop Patterns
-
-| Pattern | Use | Behavior |
-|---------|-----|----------|
-| sequential | Normal features | One phase at a time, verify each |
-| continuous-pr | Multi-step refactors | Per-phase PRs |
-| infinite | Watch mode, CI repair | Continue until stop signal |
-| rfc-dag | Complex deps | DAG resolution, parallelize independent branches |
-
-Default: sequential.
-
-## Escalation Triggers
-
-| Trigger | Condition | Action |
-|---------|-----------|--------|
-| Stall | 2 consecutive zero-progress checkpoints | Pause, report attempts |
-| Retry storm | Same error 3+ times | Stop, surface with fixes tried |
-| Cost drift | Cumulative changes exceed scope | Pause, show diff |
-| Quality regression | Verify scores lower than baseline | Pause, report |
-
-These are not optional. When triggered, loop **must** pause.
-
-## Decision Principles
-
-Auto-resolve: completeness > cleverness, boil the lake, pragmatic > perfect, DRY at 3rd instance, explicit > implicit, bias toward action.
-
-Surface only: premises, dead ends, cross-model disagreement.
-
-## Blocker Protocol
-
-`BLOCKER: <what> | Options: A, B, C` → wait for decision.
-
-## Anti-patterns
-- Skipping pre-flight
-- Auto-deciding premises
-- Pushing through blockers without surfacing
-- Skipping verification
-- Parallelizing dependent phases
-- Not updating plan file
-- Ignoring escalation triggers
-
-## Routing
-
-| Outcome | Route |
-|---------|-------|
-| pass | → pipeline continues (planner→builder→gauntlet→ship) |
-| fail | → oh-expert (diagnose loop failure) |
-| blocker | → surface with context and options |
+| # | Section | Covers |
+|---|---------|--------|
+| 1 | [Pre-Flight](./sections/01-pre-flight.md) | Quality baseline, rollback path, branch isolation, scope check |
+| 2 | [Pipeline](./sections/02-pipeline.md) | Plan (load/oh-planner), Build (dispatch, two-stage review, implementer status), Verify, Loop |
+| 3 | [Patterns & Decisions](./sections/03-patterns-and-decisions.md) | Loop patterns, escalation triggers, decision principles, model selection |
+| 4 | [Reference](./sections/04-reference.md) | Blocker protocol, anti-patterns, routing |

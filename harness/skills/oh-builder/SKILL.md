@@ -1,6 +1,6 @@
 ---
 name: oh-builder
-description: "ALL-arounder builder — prototype, TDD, implement from plan, design interfaces. Consumes the plan file, produces working code."
+description: "Use when you need to build something from a plan, prototype an idea, implement code via TDD, or design an interface. Consumes plan artifacts and produces working code."
 tier: 4
 benefits-from: [oh-planner, oh-expert]
 triggers:

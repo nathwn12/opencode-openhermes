@@ -1,6 +1,6 @@
 ---
 name: oh-health
-description: "Code quality dashboard: runs project tools (typecheck, lint, test, dead code detection), computes weighted composite 0-10 score, persists history, shows trend. Read-only — no fixes."
+description: "Use when you need a code quality health check — runs all project tools, scores 0-10, and shows trends. Read-only dashboard — no fixes."
 tier: 2
 triggers:
   - "health check the codebase"
@@ -18,6 +18,25 @@ route:
 # oh-health
 
 Staff Engineer owns the CI dashboard. Runs all available tools, scores 0-10, weighted composite, persists history. Read-only.
+
+## Verification Discipline
+
+Before making any completion claim based on health results, run the Gate:
+
+1. **IDENTIFY** — What specific command/check proves this claim?
+2. **RUN** — Execute the full command fresh
+3. **READ** — Full output, exit code, failure count
+4. **VERIFY** — Does output confirm the claim?
+5. **CLAIM** — Only after verification
+
+No completion claims without fresh verification evidence.
+
+| Claim | Requires | Not Sufficient |
+|-------|----------|----------------|
+| Tests pass | Test command output: 0 failures | Previous run, "should pass" |
+| Linter clean | Linter output: 0 errors | Partial check |
+| Build succeeds | Build command: exit 0 | Linter passing |
+| All checks pass | Each tool run fresh | Aggregated from memory |
 
 ## Process
 
@@ -66,6 +85,10 @@ Read last 10 entries. Trend table. Identify declining categories. Rank improveme
 - Skipped ≠ failed (tool not installed → redistribute weight).
 - Show raw output for failures.
 - First run: "No trend data yet."
+
+## Anti-patterns
+- Claiming results without re-running checks.
+- Aggregating from memory instead of running fresh.
 
 ## Routing
 

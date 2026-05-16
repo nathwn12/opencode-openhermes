@@ -1,6 +1,6 @@
 ---
 name: oh-planner
-description: "ALL-arounder planner — brainstorm, architect, autoplan, decision pipeline. Produces a consumable plan artifact."
+description: "Use when a feature, architecture, or idea needs structured planning — from brainstorming through formal plan artifact. Produces consumable plan documents."
 tier: 3
 benefits-from: [oh-expert, oh-grill]
 format: chunked
@@ -31,6 +31,8 @@ route:
 
 ALL-arounder planner. Merges brainstorm, architecture analysis, strategy, and plan review into one skill. Produces plan files in canonical storage (`~/.local/share/opencode/openhermes/plans/`).
 
+**Example:** User says "I have an idea for the app." Run Mode A (brainstorm), shape into a plan with Mode C, save artifact.
+
 ## Sections
 
 | # | Section | Content |
@@ -49,6 +51,10 @@ ALL-arounder planner. Merges brainstorm, architecture analysis, strategy, and pl
 - Perfect > shipped (progress > polish)
 - Not flagging taste decisions to user
 - Big bang rewrites — plan increments, not overhauls
+- Skipping the user-approval gate — implementing before the user has reviewed and approved the design document
+- Placeholders in plan tasks (TBD, TODO, "implement later" — makes plan unexecutable)
+- Wrong granularity — tasks too large (>15 min) or too vague to execute
+- Missing expected output in test steps
 
 ## Routing
 

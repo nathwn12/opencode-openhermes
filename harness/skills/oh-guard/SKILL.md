@@ -1,6 +1,6 @@
 ---
 name: oh-guard
-description: "Safety confirmation mode — warn before destructive operations"
+description: "Use when performing destructive operations that need confirmation before proceeding. Safety confirmation mode that warns before destructive operations."
 tier: 2
 triggers:
   - "be careful"
