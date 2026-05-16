@@ -43,6 +43,7 @@ The full protocol, signal detection rules, and conversation templates are define
 3. LOW confidence → one question → classify (default to oh-planner if unanswered)
 4. The gate is bounded to 1 exchange max — do not start a discussion
 5. When uncertain between two levels, choose the lower confidence
+6. Confidence is scoped per session — evaluate once on first user input. Re-evaluate only when new user input arrives (not per routing hop).
 
 See `CONFIDENCE.md` for detailed signal detection tables, conversation templates, and fallback rules.
 

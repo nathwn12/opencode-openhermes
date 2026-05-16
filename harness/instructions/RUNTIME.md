@@ -10,7 +10,7 @@ Root: package-local harness plus repo AGENTS.md. The autopilot engine (`harness/
 
 3. **Close the loop.** Every skill routes somewhere. No dead ends. If the last skill in a chain completes and the objective is met, summarize and stop. If more work remains, auto-classify the next unit.
 
-4. **Only stop for blockers.** Not for ambiguity. Not for confirmation. Not for "is this OK?" Only stop when: (a) task is complete, (b) unrecoverable error, (c) genuinely ambiguous architecture decision that changes the outcome.
+4. **Only stop for blockers.** Not for ambiguity. Not for confirmation. Not for "is this OK?" (The sole exception is the Confidence Gate — 1 exchange max for MEDIUM/LOW confidence, then resume.) Only stop when: (a) task is complete, (b) unrecoverable error, (c) genuinely ambiguous architecture decision that changes the outcome.
 
 ## Shared state
 
