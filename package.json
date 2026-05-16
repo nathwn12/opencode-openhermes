@@ -1,6 +1,6 @@
 {
   "name": "openhermes",
-  "version": "4.9.1",
+  "version": "4.9.2",
   "description": "Autonomous agent orchestration for OpenCode.",
   "type": "module",
   "license": "MIT",

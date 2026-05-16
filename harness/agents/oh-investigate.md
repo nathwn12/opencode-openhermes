@@ -1,5 +1,6 @@
 ---
 description: Systematic bug diagnosis — root cause investigation, pattern analysis, hypothesis testing, minimal fix
+name: oh-investigate
 mode: subagent
 ---
 

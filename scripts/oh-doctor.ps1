@@ -163,7 +163,7 @@ foreach ($pair in $requiredFiles) {
 if ($allOk) {
     Write-Check -Id "harness.required_files" -Name "Harness resolver prerequisites" -Status PASS `
         -Detail "All 3 required files resolve" `
-        -Evidence @{ root = $hDir; required = @("codex/CONSTITUTION.md","instructions/RUNTIME.md","skills/oh-planner/SKILL.md") }
+        -Evidence @{ root = $hDir; required = @("codex/CHARTER.md","codex/AUTOPILOT.md","skills/oh-planner/SKILL.md") }
 } else {
     Write-Check -Id "harness.required_files" -Name "Harness resolver prerequisites" -Status FAIL `
         -Severity high -Detail "Missing: $($missingReq -join ',')" `
