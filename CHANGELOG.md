@@ -1,5 +1,22 @@
 # Changelog
 
+## [4.7.0] - 2026-05-16
+
+### Added
+
+- **Confidence Gate protocol:** New `CONFIDENCE.md` in `harness/codex/` — Phase 0.5 between Shell Pre-Flight and Auto-Classify. Evaluates signal confidence (HIGH/MEDIUM/LOW) with bounded 1-exchange rule. Transparent (HIGH, zero overhead), Echo (MEDIUM, confirm then classify), or Question (LOW, ask then classify, default to oh-planner).
+- **Confidence Gate Terms section:** `CONTEXT.md` now defines Confidence Gate, Confidence Level, Transparent/Echo/Question Gate, 1 Exchange, and Signal.
+- **Safety layer expansion:** README.md updated from 3 to 4 safety layers — Loop Guard, Question Gate, **Confidence Gate**, Auto-Handoff.
+
+### Changed
+
+- **AUTOPILOT.md:** Added Phase 0.5: Confidence Gate (Before Classification) with HIGH/MEDIUM/LOW routing arms.
+- **CONSTITUTION.md:** Article 15 anchors "Talk before delegate" principle — Confidence Gate takes precedence on LOW/MEDIUM confidence.
+- **ROUTING.md:** Added Confidence Gate Phase section with updated flow diagram. Question Gate updated to check if confidence gate has fired first.
+- **openhermes.md:** Added stop condition (d) for confidence gate exchange (1 round max, then resume). Added Confidence Gate Examples section with HIGH/MEDIUM/LOW conversation samples.
+- **README.md:** Updated `harness/codex/` listing to include CONFIDENCE. Skill count stable at 30.
+- **CONTEXT.md:** Added Confidence Gate domain terms and definitions.
+
 ## [4.6.2] - 2026-05-16
 
 ### Added
