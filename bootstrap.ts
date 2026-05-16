@@ -341,12 +341,14 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
         "oh-ship": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
         "oh-planner": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
         "oh-grill": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
+        "oh-investigate": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
         "oh-plan-review": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
         "oh-security": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
         "oh-refactor": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
         "oh-review": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
         "oh-fusion": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
         "oh-retro": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
+        "oh-skill-craft": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
       }
 
       config.agent = {
@@ -363,7 +365,7 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
                 permission: SUBAGENT_PERMISSIONS[name] ?? { bash: { "*": "deny" }, edit: "deny", read: "allow" },
                 // Hide routing-internal subagents from @-menu
                 // Only agents with existing .md files can be hidden — names without files are no-ops
-                ...(["oh-planner", "oh-grill"].includes(name) ? { hidden: true } : {}),
+                ...(["oh-planner", "oh-grill", "oh-skill-craft"].includes(name) ? { hidden: true } : {}),
               },
             ])
         ),

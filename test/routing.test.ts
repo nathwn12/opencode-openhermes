@@ -51,6 +51,7 @@ const DIRECT_USER_SKILLS = new Set([
   "oh-refactor",    // "refactor", "clean up", "improve code"
   "oh-skills-list", // "list skills", "what can you do"
   "oh-triage",      // "triage", "classify issue"
+  "oh-worktree",    // "worktree", "isolate workspace", "isolated branch"
 ])
 
 // ---------------------------------------------------------------------------

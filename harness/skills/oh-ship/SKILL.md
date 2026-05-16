@@ -16,7 +16,7 @@ triggers:
   - "release"
   - "deploy"
 route:
-  pass: surface
+  pass: oh-retro
   fail: oh-expert
   blocker: surface
 ---
