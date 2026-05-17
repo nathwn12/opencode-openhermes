@@ -10,8 +10,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 // Helper: create a plan file in the canonical storage dir
 function writePlanFile(projectDir: string, content: string, storageDir: string): string {
   const projectName = path.basename(projectDir)
-  const planFile = path.join(storageDir, `${projectName}-plan-001.md`)
-  fs.mkdirSync(storageDir, { recursive: true })
+  const planDir = path.join(storageDir, projectName)
+  const planFile = path.join(planDir, "plan-001.md")
+  fs.mkdirSync(planDir, { recursive: true })
   fs.writeFileSync(planFile, content)
   return planFile
 }
@@ -166,7 +167,8 @@ describe("BootstrapPlugin behavior", () => {
     setPlanStorageDirForTest(undefined)
 
     assert.equal(firstPath, secondPath, "reuses same plan file path when active")
-    assert.equal(path.basename(firstPath), `${path.basename(projectDir)}-plan-001.md`, "plan is 001")
+    assert.equal(path.basename(firstPath), "plan-001.md", "plan basename is 001")
+    assert.equal(path.basename(path.dirname(firstPath)), path.basename(projectDir), "plan is in project directory")
   })
 
   it("ensurePlanFile creates new plan when latest is complete", () => {
@@ -280,13 +282,13 @@ describe("BootstrapPlugin behavior", () => {
     const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), "oh-test-project-"))
 
     const plan1 = ensurePlanFile(projectDir)
-    assert.match(plan1, /-plan-001\.md$/, "first plan is 001")
+    assert.match(plan1, /plan-001\.md$/, "first plan is 001")
 
     // Mark complete, create second
     const content1 = fs.readFileSync(plan1, "utf8").replace("Status: active", "Status: complete")
     fs.writeFileSync(plan1, content1)
     const plan2 = ensurePlanFile(projectDir)
-    assert.match(plan2, /-plan-002\.md$/, "second plan is 002")
+    assert.match(plan2, /plan-002\.md$/, "second plan is 002")
 
     // Mark complete, create third
     const content2 = fs.readFileSync(plan2, "utf8").replace("Status: active", "Status: complete")
@@ -294,7 +296,7 @@ describe("BootstrapPlugin behavior", () => {
     const plan3 = ensurePlanFile(projectDir)
     setPlanStorageDirForTest(undefined)
 
-    assert.match(plan3, /-plan-003\.md$/, "third plan is 003")
+    assert.match(plan3, /plan-003\.md$/, "third plan is 003")
   })
 
 })

@@ -24,7 +24,6 @@ function getProjectName(projectDir: string): string {
   return path.basename(projectDir)
 }
 
-
 export { resolveHarnessRoot, setHarnessRootForTest, getHarnessDir, ensurePlanFile }
 
 function parseFrontmatter(raw: string | undefined): Record<string, string> {
@@ -125,25 +124,21 @@ function uniqueStrings(existing: string[] = [], additions: string[] = []): strin
 }
 
 
-function regexEscape(s: string): string {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-}
-
 function findLatestPlanFile(projectDir: string): string | null {
   const projectName = getProjectName(projectDir)
   const storage = planStorageDir()
-  if (!fs.existsSync(storage)) return null
-  const pattern = new RegExp(`^${regexEscape(projectName)}-plan-(\\d{3})\\.md$`)
+  const projectDirPath = path.join(storage, projectName)
+  if (!fs.existsSync(projectDirPath)) return null
   let latest: string | null = null
   let highest = -1
   try {
-    for (const entry of fs.readdirSync(storage)) {
-      const m = entry.match(pattern)
+    for (const entry of fs.readdirSync(projectDirPath)) {
+      const m = entry.match(/^plan-(\d{3})\.md$/)
       if (m) {
         const n = parseInt(m[1], 10)
         if (n > highest) {
           highest = n
-          latest = path.join(storage, entry)
+          latest = path.join(projectDirPath, entry)
         }
       }
     }
@@ -184,7 +179,8 @@ function ensureDir(dir: string): void {
 function ensurePlanFile(projectDir: string): string {
   const projectName = getProjectName(projectDir)
   const storage = planStorageDir()
-  ensureDir(storage)
+  const projectDirPath = path.join(storage, projectName)
+  ensureDir(projectDirPath)
 
   // Reuse active or in-progress plan
   const latest = findLatestPlanFile(projectDir)
@@ -199,12 +195,13 @@ function ensurePlanFile(projectDir: string): string {
   // Determine next sequence number
   let nextSeq = 1
   if (latest) {
-    const m = path.basename(latest).match(/-plan-(\d{3})\.md$/)
+    const m = path.basename(latest).match(/^plan-(\d{3})\.md$/)
     if (m) nextSeq = parseInt(m[1], 10) + 1
   }
 
-  const planId = `${projectName}-plan-${String(nextSeq).padStart(3, "0")}`
-  const planPath = path.join(storage, `${planId}.md`)
+  const seq = String(nextSeq).padStart(3, "0")
+  const planId = `${projectName}/plan-${seq}.md`
+  const planPath = path.join(projectDirPath, `plan-${seq}.md`)
   const now = new Date().toISOString().replace("T", " ").slice(0, 16)
 
   const content = [
