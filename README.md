@@ -78,7 +78,7 @@ The loop runs unsupervised because these never turn off:
 | Capability | Why it matters |
 |---|---|
 | **Self-driving loop** | Type once. OpenHermes classifies, delegates, and routes — no pauses, no asking permission, no verbosity. |
-| **31 specialist skills** | Planning → building → testing → browser → security → review → shipping → retro. Every dev cycle phase. |
+| **30 specialist skills** | Planning → building → testing → browser → security → review → shipping → retro. Every dev cycle phase. |
 | **Auto-detected user skills** | Drop a skill in `~/.agents/skills/`. OpenHermes finds it. Same name as a built-in? Your version wins. Survives `npm update`. |
 | **`/oh-doctor`** | Verify plugin load, skill discovery, command registration, config safety. |
 | **`/oh-log`** | Session log — routing hops, skill loads, compaction events. |
@@ -86,7 +86,7 @@ The loop runs unsupervised because these never turn off:
 | **CORE/DEEP skill format** | Every skill is a two-file system: CORE (SKILL.md) handles 80% of passes in one read. DEEP.md loads on demand for hard cases. |
 | **Plan file storage** | `~/.local/share/opencode/openhermes/plans/`. Survives `npm update`. |
 
-## 31 skills — three tiers
+## 30 skills — three tiers
 
 ### Tier 4 — Pipeline orchestrators
 Full multi-phase workflows:
@@ -132,7 +132,6 @@ Single-purpose, one thing well:
 | **oh-issue** | Break a plan/spec/PRD into independently-grabbable issues |
 | **oh-prd** | Conversation → PRD → GitHub issue |
 | **oh-freeze** | Restrict file edits to a specific directory |
-| **oh-learn** | Extract, evolve, promote session learnings as instincts |
 | **oh-guard** | Safety confirmation — warn before destructive operations |
 | **oh-skills-link** | Verify OpenCode discovers the skill directory |
 | **oh-skills-list** | List all available `oh-*` skills |
@@ -154,11 +153,11 @@ openhermes-pkg/
 │   ├── codex/             # CHARTER, AUTOPILOT
 │   ├── commands/          # Slash commands (/oh-doctor, /oh-log)
 │   ├── instructions/      # SHELL.md
-│   └── skills/            # 31 skill SKILL.md files (CORE/DEEP format)
+│   └── skills/            # 30 skill SKILL.md files (CORE/DEEP format)
 └── test/
 ```
 
-Plan files: `~/.local/share/opencode/openhermes/plans/<project>-plan-<nnn>.md`
+Plan files: `~/.local/share/opencode/openhermes/plans/<project>/plan-<nnn>.md`
 
 ---
 

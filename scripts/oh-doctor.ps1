@@ -148,7 +148,7 @@ if (Test-Path $pkgPath) {
 $hDir = Join-Path $PackageRoot "harness"
 $requiredFiles = @(
     ,@("codex", "CHARTER.md")
-    ,@("instructions", "SHELL.md")
+    ,@("codex", "AUTOPILOT.md")
     ,@("skills", "oh-planner", "SKILL.md")
 )
 $allOk = $true

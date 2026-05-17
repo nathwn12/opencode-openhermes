@@ -92,18 +92,18 @@ Runs sequentially: **Strategy → Architecture → Design → Engineering → DX
 Every plan written by oh-planner uses this canonical format.
 
 ### Storage
-Canonical path: `~/.local/share/opencode/openhermes/plans/<project>-plan-<nnn>.md`
+Canonical path: `~/.local/share/opencode/openhermes/plans/<project>/plan-<nnn>.md`
 
 ### Template
 ```markdown
 # PLAN: <project>
 
-Plan ID: <project>-plan-<nnn>
+Plan ID: <project>/plan-<nnn>
 Project: <project>
 Status: active | in-progress | blocked | complete | abandoned
 Created: <ts> | Updated: <ts>
 Project Path: <absolute-path>
-Plan Path: <canonical-path>/<project>-plan-<nnn>.md
+Plan Path: <canonical-path>/<project>/plan-<nnn>.md
 Objective: <short>
 
 ## Current State

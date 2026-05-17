@@ -8,7 +8,7 @@ Closed-loop routing engine. Every task auto-classifies, auto-routes, auto-chains
 
 ## Plan Pre-condition
 
-Before any classification, verify plan file at `~/.local/share/opencode/openhermes/plans/<project-name>-plan-<nnn>.md`:
+Before any classification, verify plan file at `~/.local/share/opencode/openhermes/plans/<project-name>/plan-<nnn>.md`:
 - No plan exists → create one (status: `active`)
 - Latest is complete/abandoned → create next sequential plan
 - Latest is active/in-progress → reuse it

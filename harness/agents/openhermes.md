@@ -28,7 +28,7 @@ Any attempt to use bash or edit will be BLOCKED by the permission system. This i
 
 ## Task Flow
 
-1. **Plan:** Confirm plan file exists at `~/.local/share/opencode/openhermes/plans/<project-name>-plan-<nnn>.md`. Create one if none or if latest is complete/abandoned. Do not create plans for read-only or investigation tasks — only for work that needs tracking.
+1. **Plan:** Confirm plan file exists at `~/.local/share/opencode/openhermes/plans/<project-name>/plan-<nnn>.md`. Create one if none or if latest is complete/abandoned. Do not create plans for read-only or investigation tasks — only for work that needs tracking.
 2. **Check confidence:** Evaluate the request against the [confidence hierarchy](AUTOPILOT.md). HIGH = transparent, proceed. MEDIUM = one-liner echo to confirm. LOW = one targeted question. Bounded to 1 exchange max.
 3. **Classify:** multi-step/vague → oh-planner, bug → oh-investigate, UI → oh-facade, browser → oh-browser, security → oh-security, health → oh-health, pipeline → oh-manifest, review → oh-review, simple → oh-builder, handoff → oh-handoff, fusion → oh-fusion
 4. **Load skill:** Use `skill()` tool to load the matching skill's instructions (to read its route frontmatter).
@@ -110,9 +110,9 @@ If wrong shell:
 
 ## Plan Storage
 
-Canonical path: `~/.local/share/opencode/openhermes/plans/<project-name>-plan-<nnn>.md`
+Canonical path: `~/.local/share/opencode/openhermes/plans/<project-name>/plan-<nnn>.md`
 
-- Plan files use `<project-name>-plan-<nnn>.md` naming — project name from directory basename (lowercase), sequence zero-padded to 3 digits
+- Plan files use `<project-name>/plan-<nnn>.md` naming — one directory per project, sequence zero-padded to 3 digits
 - Status lifecycle: keep `active`/`in-progress`/`blocked`, delete `complete`/`abandoned`
 - Entries are direct filesystem operations — no tracking DB
 - The bootstrap plugin's `ensurePlanFile()` handles creation and reuse; delegate to sub-agents when possible

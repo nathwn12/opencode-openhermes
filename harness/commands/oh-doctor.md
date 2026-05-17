@@ -22,12 +22,12 @@ Run a structured 8-category diagnostic. For each check, inspect the actual files
 ## 2. Skills discovery
 
 **What to check:**
-- Count directories in `harness/skills/` — expect exactly 31.
+- Count directories in `harness/skills/` — expect exactly 30.
 - Spot-check 3 SKILL.md files for valid YAML frontmatter (must have `name`, `description`, `route`, `tier`, `triggers`).
 - Verify bootstrap.ts injects `config.skills.paths` with two sources: the built-in skills dir AND user skill dirs (`~/.agents/skills/`, `~/.config/opencode/skills/`, `~/.claude/skills/`).
 - Verify NO symlinks are required — discovery uses the plugin API `config.skills.paths` mechanism.
 
-**Expected current count:** 31 (confirmed directories match filesystem)
+**Expected current count:** 30 (confirmed directories match filesystem)
 
 ---
 
@@ -76,7 +76,7 @@ Run a structured 8-category diagnostic. For each check, inspect the actual files
   - `files` — all 11 entries must resolve to real files/dirs on disk
 - Read `tsconfig.json` — must have: `strict: true`, `target: ESNext`, `module: ESNext`, `moduleResolution: bundler`.
 - Verify `lib/harness-resolver.ts` — check its `REQUIRED_HARNESS_FILES` (CHARTER.md, AUTOPILOT.md, oh-planner/SKILL.md) all resolve from the harness root.
-- Check `scripts/` directory — no `.ps1` files exist. This is the current state. If some are expected, note absence.
+- Check `scripts/` directory — `oh-doctor.ps1` exists. This is the companion diagnostic script.
 - Run `bun test` if available — note any failures.
 
 ---
@@ -100,9 +100,8 @@ Read `AGENTS.md` and compare its claims against the actual filesystem. Known dis
 
 | Claim | Actual | Status |
 |---|---|---|
-| Line 22: "31 skills (see below)" | Directory has 31 skills | Up to date |
+| Line 22: "30 skills (see below)" | Directory has 30 skills | Up to date |
 | Line 19: \`harness/instructions/ — SHELL.md\` | Directory only has SHELL.md | Up to date |
-| Line 23: `lib/ — harness-resolver.ts, logger.ts` | Only `harness-resolver.ts` exists | `logger.ts` removed |
 
 ---
 
@@ -117,7 +116,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/oh-doctor.ps1 -SkipO
 
 This script checks:
 
-1. **AGENTS.md accuracy** — skill count (expects 31) and file references
+1. **AGENTS.md accuracy** — skill count (expects 30) and file references
 2. **Package files field** — all `package.json` `files` entries exist on disk
 3. **Harness prerequisites** — CHARTER.md, AUTOPILOT.md, oh-planner/SKILL.md resolve
 4. **Test health** — `bun test` pass/fail counts

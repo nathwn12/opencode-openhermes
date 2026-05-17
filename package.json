@@ -31,7 +31,7 @@
     "harness/agents/"
   ],
   "scripts": {
-    "test": "bun test test/*.test.ts"
+    "test": "bun test"
   },
   "keywords": [
     "opencode",

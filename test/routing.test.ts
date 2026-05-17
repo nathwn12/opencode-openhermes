@@ -46,7 +46,6 @@ const DIRECT_USER_SKILLS = new Set([
   "oh-guard",       // "confirm", "safety check"
   "oh-init",        // "init project", "initialize"
   "oh-issue",       // "create issue", "break into issues"
-  "oh-learn",       // "learn patterns", "extract"
   "oh-prd",         // "write PRD", "product requirements"
   "oh-refactor",    // "refactor", "clean up", "improve code"
   "oh-skills-list", // "list skills", "what can you do"
@@ -207,8 +206,8 @@ describe("routing graph", () => {
   }
 
   // ---- 1: Parse sanity ------------------------------------------------
-  it("parses all 31 skill files", () => {
-    assert.ok(skills.size >= 31, `Expected >= 31 skills, got ${skills.size}`)
+  it("parses all 30 skill files", () => {
+    assert.ok(skills.size >= 30, `Expected >= 30 skills, got ${skills.size}`)
   })
 
   it("all expected entry points exist", () => {
