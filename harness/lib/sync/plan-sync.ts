@@ -99,6 +99,13 @@ export class PlanSync {
     for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
       const currentState = await this.readPlanState(planFilePath);
       const existing = currentState.entries.get(entry.id);
+
+      // Snapshot all entry versions before any writes (cross-entry conflict detection)
+      const preWriteVersions = new Map<string, number>();
+      for (const [id, e] of currentState.entries) {
+        preWriteVersions.set(id, e.version);
+      }
+
       // Merge incoming fields with existing, bump version
       const merged: SyncPlanEntry = {
         ...existing,
@@ -114,20 +121,30 @@ export class PlanSync {
 
       await this.writePlanState(planFilePath, currentState);
 
-      // Snapshot all entry versions from the state we just wrote
-      const writtenVersions = new Map<string, number>();
-      for (const [id, e] of currentState.entries) {
-        writtenVersions.set(id, e.version);
-      }
-
-      // Verify — re-read and check NO entry regressed below what we wrote
-      const verifyState = await this.readPlanState(planFilePath);
+      // Re-read and verify ALL pre-existing entries have the same version
+      // (catches cross-entry conflicts where a concurrent writer modified
+      // a different entry between our read and write).
+      const verifiedState = await this.readPlanState(planFilePath);
       let allConsistent = true;
-      for (const [id, writtenVersion] of writtenVersions) {
-        const ve = verifyState.entries.get(id);
-        if (!ve || ve.version < writtenVersion) {
+
+      for (const [id, version] of preWriteVersions) {
+        // Skip the entry we just wrote — its version was intentionally bumped
+        if (id === entry.id) continue;
+        const current = verifiedState.entries.get(id);
+        if (!current || current.version !== version) {
           allConsistent = false;
           break;
+        }
+      }
+
+      // Also check no unexpected new entries appeared (concurrent writer
+      // adding an entry we don't know about would lose their data on write).
+      if (allConsistent) {
+        for (const [id] of verifiedState.entries) {
+          if (!preWriteVersions.has(id) && id !== entry.id) {
+            allConsistent = false;
+            break;
+          }
         }
       }
 
@@ -493,7 +510,7 @@ export class PlanSync {
     const dir = path.dirname(filePath);
     const base = path.basename(filePath);
     // Unique suffix per write to avoid temp-file races between concurrent writers
-    const suffix = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const suffix = `${process.pid}_${Date.now()}`;
     const tmpPath = path.join(dir, `.${base}.${suffix}.tmp`);
 
     await fs.promises.writeFile(tmpPath, content, "utf8");
@@ -505,8 +522,10 @@ export class PlanSync {
     try {
       await fs.promises.rename(tmpPath, filePath);
     } catch {
-      // copyFile with COPYFILE_FICLONE is a good fallback
-      await fs.promises.copyFile(tmpPath, filePath);
+      // On Windows, rename may fail cross-device. Fall back to read + write
+      // (not perfectly atomic but avoids orphaned temp files)
+      const content = await fs.promises.readFile(tmpPath, "utf8");
+      await fs.promises.writeFile(filePath, content, "utf8");
       await fs.promises.unlink(tmpPath).catch(() => {});
     }
   }

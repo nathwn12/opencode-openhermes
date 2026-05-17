@@ -181,8 +181,14 @@ function readPlanSummary(projectDir: string): string | null {
 }
 
 function ensureDir(dir: string): void {
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true })
+  try {
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true })
+    }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error(`[openhermes] Failed to create directory ${dir}: ${msg}`)
+    // Don't throw — let the plan system degrade gracefully
   }
 }
 
@@ -238,7 +244,13 @@ function ensurePlanFile(projectDir: string): string {
     "",
   ].join("\n")
 
-  fs.writeFileSync(planPath, content, "utf8")
+  try {
+    fs.writeFileSync(planPath, content, "utf8")
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error(`[openhermes] Failed to write plan file ${planPath}: ${msg}`)
+    // Don't throw — let the plan system degrade gracefully
+  }
   return planPath
 }
 
@@ -312,14 +324,14 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
   // Auto-detect and wire user skills from ~/.agents/skills and ~/.config/opencode/skills
   const userSkillPaths: string[] = []
   for (const userDir of USER_SKILL_DIRS) {
-    ensureDir(userDir)
+    try { ensureDir(userDir) } catch {}
     userSkillPaths.push(userDir)
     await logToOC("info", `wired user skills from ${userDir}`)
   }
 
   const compactionContext = buildCompactionContext(ctx.directory)
   // Ensure plan storage exists
-  ensureDir(planStorageDir())
+  try { ensureDir(planStorageDir()) } catch {}
 
   return {
     config: async (config: OpenHermesConfig) => {
@@ -501,7 +513,16 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
         }
 
         // Run all registered PreToolUse hooks (plan check, shell detect, delegation depth)
-        const preToolResult = await reg.executePreTool(hookContext)
+        let preToolResult: any
+        try {
+          preToolResult = await reg.executePreTool(hookContext)
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err)
+          const errOutput = output as { args: unknown; isError?: boolean; content?: unknown[] }
+          errOutput.isError = true
+          errOutput.content = [{ type: "text", text: `Hook error (PreTool): ${msg}` }]
+          return
+        }
 
         if (preToolResult.result === HookResult.STOP) {
           // Depth exceeded or other stop condition
@@ -517,7 +538,15 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
         // Run all registered RouteHooks — the agent/skill being delegated to IS the route
         // This fires confidence-gate (inject confirm/question on MEDIUM/LOW confidence)
         // and route-tracking (guard against infinite routing loops)
-        const routeResult = await reg.executeRoute(hookContext, agentName)
+        let routeResult: any
+        try {
+          routeResult = await reg.executeRoute(hookContext, agentName)
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err)
+          await logToOC("error", `Hook error (Route): ${msg}`)
+          // Route failed — don't change routing decision, just log
+          routeResult = { result: HookResult.CONTINUE }
+        }
 
         if (routeResult.result === HookResult.STOP) {
           // Loop guard triggered by route-tracking hook
@@ -572,7 +601,13 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
         }
 
         // Run all registered PostToolUse hooks
-        await reg.executePostTool(hookContext, outputText)
+        try {
+          await reg.executePostTool(hookContext, outputText)
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err)
+          await logToOC("error", `Hook error (PostTool): ${msg}`)
+          // Non-fatal — tool already executed
+        }
       }
     },
 

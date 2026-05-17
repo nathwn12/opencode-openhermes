@@ -112,11 +112,33 @@ export class PlanStore {
     }
 
     sections.push(""); // trailing newline
-    await fs.promises.writeFile(planPath, sections.join("\n"), "utf8");
+
+    // -----------------------------------------------------------------------
+    // Atomic write: write to temp file in same directory, then rename.
+    // Avoids partial/corrupt files on crash mid-write.
+    // Pattern adapted from plan-sync.ts atomicWrite().
+    // -----------------------------------------------------------------------
+    const dir = path.dirname(planPath);
+    const base = path.basename(planPath);
+    const tmpPath = path.join(dir, `.${base}.${process.pid}_${Date.now()}.tmp`);
+    await fs.promises.writeFile(tmpPath, sections.join("\n"), "utf8");
+    try {
+      await fs.promises.rename(tmpPath, planPath);
+    } catch {
+      // Cross-device rename fallback (Windows)
+      await fs.promises.readFile(tmpPath, "utf8").then((content) =>
+        fs.promises.writeFile(planPath, content, "utf8"),
+      );
+      await fs.promises.unlink(tmpPath).catch(() => {});
+    }
   }
 
   /**
    * Add a finding to the plan file at the given path.
+   *
+   * NOTE: read-modify-write pattern — this is a lost-update race if called
+   * concurrently on the same plan file. Callers should serialize access
+   * (e.g. via a mutex or queuing).
    */
   static async addFinding(
     planPath: string,
@@ -136,6 +158,10 @@ export class PlanStore {
 
   /**
    * Add a decision to the plan file at the given path.
+   *
+   * NOTE: read-modify-write pattern — this is a lost-update race if called
+   * concurrently on the same plan file. Callers should serialize access
+   * (e.g. via a mutex or queuing).
    */
   static async addDecision(
     planPath: string,

@@ -165,9 +165,14 @@ export class BackgroundManager {
 
       // On Windows, wrap everything in cmd.exe /c so PATH and .exe
       // resolution work the way users expect.
+      // Sanitize: strip shell metacharacters from the command to prevent
+      // command injection via LLM-generated command strings.
       const command = isWindows ? "cmd.exe" : options.command;
+      const sanitizedCommand = isWindows
+        ? options.command.replace(/[&|;<>^%!]/g, "")
+        : options.command;
       const commandArgs = isWindows
-        ? ["/c", options.command, ...args]
+        ? ["/d", "/c", sanitizedCommand, ...args]
         : args;
 
       const child = spawn(command, commandArgs, {
@@ -220,20 +225,34 @@ export class BackgroundManager {
     }
   }
 
-  private killProcess(entry: TaskEntry): void {
+  private async killProcess(entry: TaskEntry): Promise<void> {
     if (!entry.process) return;
-    try {
-      if (process.platform === "win32") {
-        // Forceful tree-kill via taskkill (more reliable than SIGTERM on Windows)
-        exec(`taskkill /pid ${entry.process.pid} /f /t`, () => {
-          /* fire-and-forget */
+
+    if (process.platform === "win32") {
+      // Forceful tree-kill via taskkill (more reliable than SIGTERM on Windows)
+      try {
+        await new Promise<void>((resolve, reject) => {
+          exec(`taskkill /pid ${entry.process!.pid} /f /t`, (err) => {
+            if (err) reject(err);
+            else resolve();
+          });
         });
+      } catch {
+        // taskkill failed — process may already be dead
       }
-      entry.process.kill("SIGTERM");
-    } catch {
-      // Process may already be dead — ignore
+      // Also try SIGTERM as a graceful fallback
+      try {
+        entry.process.kill("SIGTERM");
+      } catch {
+        /* already dead */
+      }
+    } else {
+      try {
+        entry.process.kill("SIGTERM");
+      } catch {
+        /* already dead */
+      }
     }
-    entry.process = null;
   }
 
   private clearTimeout(entry: TaskEntry): void {
@@ -248,13 +267,36 @@ export class BackgroundManager {
     this.cleanupTimer?.unref();
   }
 
-  /** Remove tasks that completed more than TASK_MAX_AGE_MS ago. */
+  /**
+   * Remove stale tasks:
+   * - Completed/failed tasks older than TASK_MAX_AGE_MS
+   * - Zombie processes (status "running" but process handle is dead)
+   */
   private sweepStale(): void {
     const now = Date.now();
     for (const [id, entry] of this.tasks) {
       const { task } = entry;
+
+      // Completed/failed tasks older than threshold
       if (task.endTime && now - task.endTime > TASK_MAX_AGE_MS) {
         this.clearTimeout(entry);
+        this.tasks.delete(id);
+        continue;
+      }
+
+      // Check for zombie processes: status "running" but process has exited
+      // Use exitCode !== null as the reliable cross-platform check
+      if (task.status === "running" && entry.process) {
+        if (entry.process.exitCode !== null) {
+          // Process exited but the close event wasn't processed (zombie)
+          task.status = "failed";
+          task.endTime = Date.now();
+          this.tasks.delete(id);
+        }
+      } else if (task.status === "running" && !entry.process) {
+        // Process reference is gone but status not updated
+        task.status = "failed";
+        task.endTime = Date.now();
         this.tasks.delete(id);
       }
     }

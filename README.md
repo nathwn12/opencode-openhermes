@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/openhermes"><img src="https://img.shields.io/npm/v/openhermes?style=for-the-badge&label=version&color=FFD700" alt="v4.10.0"></a>
+  <a href="https://www.npmjs.com/package/openhermes"><img src="https://img.shields.io/npm/v/openhermes?style=for-the-badge&label=version&color=FFD700" alt="v4.11.0"></a>
   <a href="https://github.com/nathwn12/openhermes/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="License: MIT"></a>
   <a href="https://opencode.ai"><img src="https://img.shields.io/badge/runs%20on-OpenCode-6366f1?style=for-the-badge" alt="Runs on OpenCode"></a>
   <a href="https://github.com/nathwn12/openhermes"><img src="https://img.shields.io/badge/⭐%20star%20on-GitHub-181717?style=for-the-badge" alt="Star on GitHub"></a>
@@ -33,7 +33,7 @@ To install from `dev` (latest features, may be unstable):
 
 ## One sentence. One engine.
 
-OpenHermes v4.10 ships with a new internal architecture — 8 subsystems working together to make every session faster, more reliable, and fully autonomous:
+OpenHermes v4.11 ships with a hardened internal architecture — 8 subsystems working together to make every session faster, more reliable, and fully autonomous:
 
 | Subsystem | What it does |
 |-----------|-------------|

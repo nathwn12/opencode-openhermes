@@ -29,9 +29,16 @@ export function listFragments(): string[] {
  * Throws if the fragment does not exist.
  */
 export function composeFragment(name: string): string {
-  const filePath = path.join(FRAGMENTS_DIR, `${name}.md`)
+  // Sanitize: strip directory separators and path traversal sequences
+  const safeName = name.replace(/[/\\:]/g, "_").replace(/\.\./g, "")
+  if (safeName !== name) {
+    console.warn(
+      `[composer] Path traversal detected in fragment name "${name}", sanitized to "${safeName}"`,
+    )
+  }
+  const filePath = path.join(FRAGMENTS_DIR, `${safeName}.md`)
   if (!fs.existsSync(filePath)) {
-    throw new Error(`Fragment "${name}" not found at ${filePath}`)
+    throw new Error(`Fragment "${safeName}" not found at ${filePath}`)
   }
   return fs.readFileSync(filePath, "utf8").trimEnd()
 }

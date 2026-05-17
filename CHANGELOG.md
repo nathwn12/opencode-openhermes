@@ -5,6 +5,25 @@ All notable changes to OpenHermes are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.11.0] - 2026-05-17
+
+### Fixed
+
+- **Bootstrap Hardening** — Graceful error handling for directory creation, plan file writes, and hook execution (PreTool, Route, PostTool). Plan system degrades gracefully on filesystem failures instead of crashing.
+- **Background Manager** — Command sanitization prevents LLM-generated injection via shell metacharacters. Zombie process detection sweeps orphaned tasks. Windows `taskkill` now awaited before SIGTERM fallback.
+- **Composer** — Path traversal sanitization prevents directory escape via fragment names containing `../` or `:`.
+- **Memory Manager** — Budget validation guard prevents `prune()` from operating on invalid (non-numeric/negative) budget values.
+- **Anomaly Tracker** — Cross-invocation identical output detection flags repeated content after 3 identical emissions.
+- **Sanity Checker** — Type guard for non-string inputs (null/undefined → critical). Empty string now properly flagged as warning. Cross-invocation dedup integration with AnomalyTracker.
+- **Plan Sync** — Cross-entry conflict detection during upsert catches concurrent writes to sibling entries. Windows-safe temp file fallback using read+write+unlink instead of `copyFile`.
+- **File Watcher** — Debounce pause timing fixed: events received during pause are debounced and fire on resume rather than being silently dropped.
+- **Recovery Patterns** — Gibberish detection now uses a real heuristic regex (keyboard mash, repeated chars, long non-alphabetic sequences) instead of a never-matching placeholder.
+
+### Tests
+
+- Updated recovery tests to verify gibberish classification produces a retry action with prompt modification.
+- Updated sanity tests to assert empty string → warning, null/undefined → critical.
+
 ## [4.10.0] - 2026-05-17
 
 ### Added
@@ -18,4 +37,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Background Command System** — Fire-and-forget child process management with immediate task ID return, status polling, timeout enforcement, process kill, and automatic cleanup of completed tasks.
 - **Test Harness Infrastructure** — Reusable test utilities: disposable temp directories with Symbol.asyncDispose for auto-cleanup, typed factory functions for test objects, and restore-capable mocks for console, process exit, filesystem, event emitters, and abort controllers.
 
+[4.11.0]: https://github.com/nathwn12/openhermes/compare/v4.10.0...v4.11.0
 [4.10.0]: https://github.com/nathwn12/openhermes/compare/v4.9.2...v4.10.0

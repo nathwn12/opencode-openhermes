@@ -239,14 +239,16 @@ describe("checkOutputSanity — detection patterns", () => {
     assertHealthy(checkOutputSanity(prose));
   });
 
-  it("handles empty string gracefully", () => {
+  it("flags empty string as warning", () => {
     const result = checkOutputSanity("");
-    assertHealthy(result);
+    assertUnhealthy(result, "warning", "empty_output");
   });
 
-  it("handles null/undefined gracefully", () => {
-    assertHealthy(checkOutputSanity(null as unknown as string));
-    assertHealthy(checkOutputSanity(undefined as unknown as string));
+  it("flags null/undefined as critical", () => {
+    const r1 = checkOutputSanity(null);
+    assertUnhealthy(r1, "critical", "empty_output");
+    const r2 = checkOutputSanity(undefined);
+    assertUnhealthy(r2, "critical", "empty_output");
   });
 
   it("detects multiple patterns (first match wins)", () => {

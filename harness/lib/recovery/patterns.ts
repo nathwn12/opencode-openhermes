@@ -94,12 +94,10 @@ export const PATTERNS: ErrorPattern[] = [
   },
 
   // ── gibberish ─────────────────────────────────────────────────────
-  // Matched last; uses a broad heuristic on output quality.
-  // For pattern matching we use a minimal regex — actual gibberish detection
-  // would inspect response content. Here we rely on the handler knowing
-  // the category via explicit classification.
+  // Broad heuristic on output quality — catches gibberish, keyboard mash,
+  // repeated single characters, and long non-alphabetic sequences.
   {
-    pattern: /^(?!x)x$/i, // never matches naturally — handled explicitly in handler
+    pattern: /gibberish|nonsens|unintelligible|asdfgh|qwerty|xxxxx|sdfsdf|[^a-z\s]{10,}|(.)\1{4,}/i,
     category: "gibberish",
     getAction: (): RecoveryAction => ({
       type: "retry",

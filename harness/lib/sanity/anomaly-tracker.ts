@@ -101,4 +101,27 @@ export class AnomalyTracker {
   setConfig(config: Partial<AnomalyTrackerConfig>): void {
     this.config = { ...this.config, ...config };
   }
+
+  // ── Cross-invocation identical output detection ────────────────
+
+  private lastOutput: string | null = null;
+  private identicalOutputCount = 0;
+  readonly MAX_IDENTICAL_OUTPUTS = 3;
+
+  /**
+   * Track output for repeated identical content.
+   * Returns true if output should be flagged as degenerate.
+   */
+  trackOutput(text: string): boolean {
+    if (text === this.lastOutput) {
+      this.identicalOutputCount++;
+      if (this.identicalOutputCount >= this.MAX_IDENTICAL_OUTPUTS) {
+        return true; // Flagged — repeated identical output
+      }
+    } else {
+      this.identicalOutputCount = 0;
+    }
+    this.lastOutput = text;
+    return false;
+  }
 }

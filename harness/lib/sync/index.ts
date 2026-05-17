@@ -1,7 +1,7 @@
 // MVCC-Style Plan Synchronization — barrel export.
 
 export type {
-  PlanEntry,
+  SyncPlanEntry,
   PlanSyncState,
   SyncConflict,
   ConflictStrategy,

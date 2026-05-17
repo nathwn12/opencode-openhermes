@@ -74,12 +74,12 @@ export class PlanFileWatcher {
         directory,
         { recursive: false },
         (eventType: string, filename: string | null) => {
-          if (this._paused) return;
-
           // fs.watch may pass null filename on some platforms
           const targetPath = filename ? path.join(directory, filename) : directory;
 
-          // Debounce
+          // Debounce — cancel any pending timer, schedule a new one.
+          // The _paused check happens at fire time, not here, so events
+          // received during pause are debounced and fire on resume.
           const existing = this.debounceTimers.get(directory);
           if (existing) clearTimeout(existing);
 

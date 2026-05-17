@@ -97,15 +97,11 @@ describe("RecoveryHandler — pattern classification", () => {
   });
 
   it("classifies gibberish (explicit) → retry with clean context", () => {
-    // Gibberish pattern is explicit; call handleError with a matching message.
-    // The pattern never matches natural text, so we test the fallback
-    // through the actual message. Let's use an explicit match test:
+    // Gibberish pattern now matches "gibberish", "nonsens", keyboard mash,
+    // and other low-quality output patterns in error messages.
     const action = handler.handleError(ctx("s1", "gibberish output detected", 0));
-    // This won't match gibberish pattern — it falls through to escalate.
-    // Gibberish doesn't have a natural regex match, it's for content-based detection.
-    // The pattern is a placeholder for explicit classification. We verify
-    // by checking that unknown messages escalate.
-    assertAction(action, "escalate");
+    assertAction(action, "retry", "gibberish");
+    assert.ok(action.modifyPrompt, "gibberish action should include modifyPrompt");
   });
 
   it("classifies lsp_diagnostic → retry with diagnostic prompt", () => {

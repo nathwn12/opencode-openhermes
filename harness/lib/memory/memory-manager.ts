@@ -123,7 +123,17 @@ export class MemoryManager {
    */
   prune(level: MemoryLevel): void {
     const budget = this.config.budgets[level] ?? DEFAULT_BUDGETS[level];
-    const bucket = this.entries.get(level)!;
+
+    // Guard: budget must be a valid non-negative number
+    if (typeof budget !== "number" || budget < 0 || !Number.isFinite(budget)) {
+      console.warn(
+        `[MemoryManager] Invalid budget for level "${level}": ${budget}. Skipping prune.`,
+      );
+      return;
+    }
+
+    const bucket = this.entries.get(level);
+    if (!bucket) return;
     if (bucket.length <= budget) return;
 
     // Already sorted: importance DESC → drop from the end

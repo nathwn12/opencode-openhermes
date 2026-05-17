@@ -3,6 +3,7 @@
 // ---------------------------------------------------------------------------
 
 import type { SanityResult } from "./interfaces.ts";
+import { AnomalyTracker } from "./anomaly-tracker.ts";
 
 /**
  * Check a text string for output degeneration patterns.
@@ -12,10 +13,28 @@ import type { SanityResult } from "./interfaces.ts";
  * Check ordering: all critical-severity checks first (most specific first),
  * then warning-severity checks. This ensures the most actionable, severe
  * issues are reported before mild ones.
+ *
+ * Accepts an optional AnomalyTracker for cross-invocation dedup detection.
  */
-export function checkOutputSanity(text: string): SanityResult {
-  if (!text || typeof text !== "string") {
-    return { isHealthy: true, severity: "ok" };
+export function checkOutputSanity(
+  text: unknown,
+  anomalyTracker?: AnomalyTracker,
+): SanityResult {
+  if (typeof text !== "string") {
+    return {
+      isHealthy: false,
+      severity: "critical",
+      reason: "Output is not a string (possibly undefined/null)",
+      patternName: "empty_output",
+    };
+  }
+  if (text.length === 0) {
+    return {
+      isHealthy: false,
+      severity: "warning",
+      reason: "Output is an empty string",
+      patternName: "empty_output",
+    };
   }
 
   // ═══════════════════════════════════════════════════════════════════
@@ -137,6 +156,19 @@ export function checkOutputSanity(text: string): SanityResult {
         severity: "warning",
         reason: `Output too short: ${text.length} characters`,
         patternName: "output_too_short",
+      };
+    }
+  }
+
+  // ── 9. Cross-invocation dedup check ────────────────────────────────
+  if (anomalyTracker) {
+    const isRepeated = anomalyTracker.trackOutput(text);
+    if (isRepeated) {
+      return {
+        isHealthy: false,
+        severity: "warning",
+        reason: `Output identical to previous ${anomalyTracker.MAX_IDENTICAL_OUTPUTS} invocations`,
+        patternName: "repeated_identical_output",
       };
     }
   }
