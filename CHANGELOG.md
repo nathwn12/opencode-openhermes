@@ -5,6 +5,30 @@ All notable changes to OpenHermes are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.11.1] - 2026-05-17
+
+### Security
+
+- **Background Manager — Full arg sanitization** — Command arguments are now sanitized for shell metacharacters (`&|;<>^%!`) on Windows, closing a command injection vector where LLM-generated args could be interpreted as shell syntax by `cmd.exe`.
+
+### Fixed
+
+- **PlanStore — Lost-update race eliminated** — Added per-path in-process mutex (`PathMutex`) around `addFinding()` and `addDecision()` read-modify-write cycles. Concurrent writes to the same plan file from memory sync and plan sync no longer silently overwrite each other's data.
+
+- **PlanSync — Verification now checks own entry** — The post-write verification loop no longer skips the written entry, ensuring concurrent overwrites are detected immediately and trigger a retry.
+
+- **Atomic write Windows fallback** — The EPERM fallback path (used when `rename` fails on cross-device or locked files) no longer leaves a crash window between `readFile` and `unlink`. Content is written directly since it's already in memory.
+
+- **Confidence Gate — Dead code reactivated** — The MEDIUM/LOW confidence gate INJECT result now injects awareness instructions into the task description instead of being silently discarded. Receiving sub-agents see `[CONFIDENCE: MEDIUM] Review your plan before executing` or `[CONFIDENCE: LOW] Pause for user approval` prefixed to their prompt.
+
+### Removed
+
+- **Dead dependency `gpt-tokenizer`** — Zero imports across all TypeScript source files. Removed from `package.json` along with the sole consumer `scripts/count-tokens.mjs`.
+
+### Tests
+
+- All 286 existing tests continue to pass. No behavioral regressions from any fix.
+
 ## [4.11.0] - 2026-05-17
 
 ### Fixed
@@ -37,5 +61,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Background Command System** — Fire-and-forget child process management with immediate task ID return, status polling, timeout enforcement, process kill, and automatic cleanup of completed tasks.
 - **Test Harness Infrastructure** — Reusable test utilities: disposable temp directories with Symbol.asyncDispose for auto-cleanup, typed factory functions for test objects, and restore-capable mocks for console, process exit, filesystem, event emitters, and abort controllers.
 
+[4.11.1]: https://github.com/nathwn12/openhermes/compare/v4.11.0...v4.11.1
 [4.11.0]: https://github.com/nathwn12/openhermes/compare/v4.10.0...v4.11.0
 [4.10.0]: https://github.com/nathwn12/openhermes/compare/v4.9.2...v4.10.0

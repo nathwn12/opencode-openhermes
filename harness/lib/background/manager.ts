@@ -171,8 +171,11 @@ export class BackgroundManager {
       const sanitizedCommand = isWindows
         ? options.command.replace(/[&|;<>^%!]/g, "")
         : options.command;
+      const sanitizedArgs = args.map((a) =>
+        a.replace(/[&|;<>^%!]/g, ""),
+      );
       const commandArgs = isWindows
-        ? ["/d", "/c", sanitizedCommand, ...args]
+        ? ["/d", "/c", sanitizedCommand, ...sanitizedArgs]
         : args;
 
       const child = spawn(command, commandArgs, {

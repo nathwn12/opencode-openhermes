@@ -13,6 +13,50 @@ import type {
 import { MemoryLevel } from "./interfaces.ts";
 
 // ---------------------------------------------------------------------------
+// Simple per-path mutex — serializes concurrent read-modify-write cycles
+// for the same plan file. Keyed by planPath so writes to different files
+// proceed in parallel.
+// ---------------------------------------------------------------------------
+
+class PathMutex {
+  private locked = false;
+  private queue: (() => void)[] = [];
+
+  acquire(): Promise<void> {
+    if (!this.locked) {
+      this.locked = true;
+      return Promise.resolve();
+    }
+    return new Promise((resolve) => {
+      this.queue.push(() => {
+        this.locked = true;
+        resolve();
+      });
+    });
+  }
+
+  release(): void {
+    if (this.queue.length > 0) {
+      const next = this.queue.shift()!;
+      next();
+    } else {
+      this.locked = false;
+    }
+  }
+}
+
+const planLocks = new Map<string, PathMutex>();
+
+function getPlanLock(planPath: string): PathMutex {
+  let lock = planLocks.get(planPath);
+  if (!lock) {
+    lock = new PathMutex();
+    planLocks.set(planPath, lock);
+  }
+  return lock;
+}
+
+// ---------------------------------------------------------------------------
 // Public types
 // ---------------------------------------------------------------------------
 
@@ -125,58 +169,66 @@ export class PlanStore {
     try {
       await fs.promises.rename(tmpPath, planPath);
     } catch {
-      // Cross-device rename fallback (Windows)
-      await fs.promises.readFile(tmpPath, "utf8").then((content) =>
-        fs.promises.writeFile(planPath, content, "utf8"),
-      );
-      await fs.promises.unlink(tmpPath).catch(() => {});
+      // EPERM on Windows (cross-device or locking): write content directly
+      // to target. Content is already in memory as `sections.join("\n")`.
+      await fs.promises.writeFile(planPath, sections.join("\n"), "utf8");
     }
   }
 
   /**
    * Add a finding to the plan file at the given path.
    *
-   * NOTE: read-modify-write pattern — this is a lost-update race if called
-   * concurrently on the same plan file. Callers should serialize access
-   * (e.g. via a mutex or queuing).
+   * Uses a per-path mutex to prevent lost-update races when called
+   * concurrently from memory-sync-hook (or any other caller).
    */
   static async addFinding(
     planPath: string,
     sessionId: string,
     finding: Omit<Finding, "id" | "sessionId" | "timestamp">,
   ): Promise<void> {
-    const data = await PlanStore.readPlan(planPath);
-    const newFinding: Finding = {
-      id: randomUUID(),
-      sessionId,
-      ...finding,
-      timestamp: Date.now(),
-    };
-    data.findings.push(newFinding);
-    await PlanStore.writePlan(planPath, data);
+    const lock = getPlanLock(planPath);
+    await lock.acquire();
+    try {
+      const data = await PlanStore.readPlan(planPath);
+      const newFinding: Finding = {
+        id: randomUUID(),
+        sessionId,
+        ...finding,
+        timestamp: Date.now(),
+      };
+      data.findings.push(newFinding);
+      await PlanStore.writePlan(planPath, data);
+    } finally {
+      lock.release();
+    }
   }
 
   /**
    * Add a decision to the plan file at the given path.
    *
-   * NOTE: read-modify-write pattern — this is a lost-update race if called
-   * concurrently on the same plan file. Callers should serialize access
-   * (e.g. via a mutex or queuing).
+   * Uses a per-path mutex to prevent lost-update races when called
+   * concurrently from memory-sync-hook (or any other caller).
    */
   static async addDecision(
     planPath: string,
     sessionId: string,
     decision: Omit<Decision, "id" | "sessionId" | "timestamp">,
   ): Promise<void> {
-    const data = await PlanStore.readPlan(planPath);
-    const newDecision: Decision = {
-      id: randomUUID(),
-      sessionId,
-      ...decision,
-      timestamp: Date.now(),
-    };
-    data.decisions.push(newDecision);
-    await PlanStore.writePlan(planPath, data);
+    const lock = getPlanLock(planPath);
+    await lock.acquire();
+    try {
+      const data = await PlanStore.readPlan(planPath);
+      const newDecision: Decision = {
+        id: randomUUID(),
+        sessionId,
+        ...decision,
+        timestamp: Date.now(),
+      };
+      data.decisions.push(newDecision);
+      await PlanStore.writePlan(planPath, data);
+    } finally {
+      lock.release();
+    }
   }
 
   /**

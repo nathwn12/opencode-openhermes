@@ -121,17 +121,20 @@ export class PlanSync {
 
       await this.writePlanState(planFilePath, currentState);
 
-      // Re-read and verify ALL pre-existing entries have the same version
-      // (catches cross-entry conflicts where a concurrent writer modified
-      // a different entry between our read and write).
+      // Re-read and verify ALL pre-existing entries have the expected version.
+      // For entries we didn't write, expected = pre-write version (unchanged).
+      // For our own entry, expected = pre-write version + 1 (intentionally bumped).
+      // This catches concurrent writers who overwrote any entry (including our own)
+      // between our write and verification.
+      const expectedVersions = new Map(preWriteVersions);
+      expectedVersions.set(entry.id, merged.version);
+
       const verifiedState = await this.readPlanState(planFilePath);
       let allConsistent = true;
 
-      for (const [id, version] of preWriteVersions) {
-        // Skip the entry we just wrote — its version was intentionally bumped
-        if (id === entry.id) continue;
+      for (const [id, expectedVersion] of expectedVersions) {
         const current = verifiedState.entries.get(id);
-        if (!current || current.version !== version) {
+        if (!current || current.version !== expectedVersion) {
           allConsistent = false;
           break;
         }
@@ -504,7 +507,8 @@ export class PlanSync {
 
   /**
    * Atomic file write: write to a temp file in the same directory, then rename.
-   * On Windows, delete the target first before renaming for reliable atomicity.
+   * Rename is atomic on the same filesystem. On Windows, rename can EPERM
+   * under cross-device or locking scenarios — fallback writes directly to target.
    */
   private async atomicWrite(filePath: string, content: string): Promise<void> {
     const dir = path.dirname(filePath);
@@ -516,17 +520,17 @@ export class PlanSync {
     await fs.promises.writeFile(tmpPath, content, "utf8");
 
     // Strategy:
-    // 1. Try rename (atomic on most platforms when dest doesn't exist;
-    //    on Windows rename overwrites, but can EPERM under concurrent load)
-    // 2. Fallback: copyFile + unlink (more reliable on Windows)
+    // 1. Try rename (atomic on same filesystem; Windows can overwrite target)
+    // 2. EPERM fallback: write content directly (no readFile+unlink — content
+    //    is already in memory, orphaned tmp is harmless until next write)
     try {
       await fs.promises.rename(tmpPath, filePath);
     } catch {
-      // On Windows, rename may fail cross-device. Fall back to read + write
-      // (not perfectly atomic but avoids orphaned temp files)
-      const content = await fs.promises.readFile(tmpPath, "utf8");
+      // EPERM on Windows (cross-device or locking): write content directly
+      // to target.  No readFile+unlink needed — we already have `content` in
+      // memory, and the orphaned temp file is harmless until next successful
+      // write cleans it up.
       await fs.promises.writeFile(filePath, content, "utf8");
-      await fs.promises.unlink(tmpPath).catch(() => {});
     }
   }
 }

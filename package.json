@@ -1,6 +1,6 @@
 {
   "name": "openhermes",
-  "version": "4.11.0",
+  "version": "4.11.1",
   "description": "Autonomous agent orchestration for OpenCode.",
   "type": "module",
   "license": "MIT",
@@ -9,8 +9,7 @@
   },
   "main": "./index.ts",
   "dependencies": {
-    "@opencode-ai/plugin": "1.15.0",
-    "gpt-tokenizer": "^3.4.0"
+    "@opencode-ai/plugin": "1.15.0"
   },
   "exports": {
     ".": "./index.ts",

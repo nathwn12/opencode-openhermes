@@ -559,9 +559,31 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
           errOutput.content = [{ type: "text", text: `ROUTE GUARD: ${optiReport}\n\nSurface to orchestrator with findings and stop delegating.` }]
         }
 
-        // Note: INJECT with modifiedRoute from confidence-gate is logged but not
-        // acted on here — the task tool is already being invoked on agentName.
-        // Full route interception requires SDK-level routing hooks.
+        if (routeResult.result === HookResult.INJECT && routeResult.modifiedRoute) {
+          // Confidence gate wants to inject a confirmation/pause into routing.
+          // Parse the modifiedRoute for markers and inject into task description/prompt.
+          const modifiedRoute: string = routeResult.modifiedRoute
+          const inputAny = input as Record<string, unknown>
+          const existingPrompt = (inputAny.description as string) || (inputAny.prompt as string) || ""
+          let gateMsg: string | undefined
+
+          if (modifiedRoute.includes("?echo=confirm")) {
+            gateMsg = "[CONFIDENCE: MEDIUM] Review your plan and confirm it before executing."
+          } else if (modifiedRoute.includes("?question=pause")) {
+            gateMsg = "[CONFIDENCE: LOW] Pause and ask the user for approval before proceeding."
+          }
+
+          if (gateMsg) {
+            if (inputAny.description) {
+              inputAny.description = `${gateMsg}\n${existingPrompt}`
+            } else if (inputAny.prompt) {
+              inputAny.prompt = `${gateMsg}\n${existingPrompt}`
+            } else {
+              inputAny.description = gateMsg
+            }
+            await logToOC("info", `Confidence gate: injected instruction into task to "${agentName}": ${gateMsg}`)
+          }
+        }
       }
     },
 
