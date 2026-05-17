@@ -13,3 +13,12 @@ docs/
 vendor/
 README-DRAFT.md
 *plan*.md
+
+# Windows reserved device names — prevents git exit code 128 on OpenCode snapshot service
+# These are DOS device names that exist on every Windows filesystem; git cannot index them
+[nN][uU][lL]
+[cC][oO][nN]
+[pP][rR][nN]
+[aA][uU][xX]
+[cC][oO][mM][1-9]
+[lL][pP][tT][1-9]

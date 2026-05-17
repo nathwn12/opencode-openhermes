@@ -5,6 +5,16 @@ All notable changes to OpenHermes are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.11.2] - 2026-05-17
+
+### Fixed
+
+- Current operational state hardened and documented for Windows/OpenCode edge cases.
+
+### Tests
+
+- All existing tests continue to pass.
+
 ## [4.11.1] - 2026-05-17
 
 ### Security
@@ -62,5 +72,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Test Harness Infrastructure** — Reusable test utilities: disposable temp directories with Symbol.asyncDispose for auto-cleanup, typed factory functions for test objects, and restore-capable mocks for console, process exit, filesystem, event emitters, and abort controllers.
 
 [4.11.1]: https://github.com/nathwn12/openhermes/compare/v4.11.0...v4.11.1
+[4.11.2]: https://github.com/nathwn12/openhermes/compare/v4.11.1...v4.11.2
 [4.11.0]: https://github.com/nathwn12/openhermes/compare/v4.10.0...v4.11.0
 [4.10.0]: https://github.com/nathwn12/openhermes/compare/v4.9.2...v4.10.0

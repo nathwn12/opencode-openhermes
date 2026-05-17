@@ -392,36 +392,22 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
 
       // Subagent permissions — tier-4 and tier-3 get execution access but cannot spawn orchestrators
       const SUBAGENT_PERMISSIONS: Record<string, Record<string, unknown>> = {
-        "oh-ascii":       { bash: "allow", edit: "allow", read: "allow" },
         "oh-builder": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
         "oh-browser": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
-        "oh-expert":      { bash: "deny", edit: "deny", read: "allow" },
         "oh-facade": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
-        "oh-freeze":      { bash: "deny", edit: "deny", read: "allow" },
-        "oh-full-output": { bash: "deny", edit: "deny", read: "allow" },
         "oh-fusion": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
         "oh-gauntlet": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
         "oh-grill": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
-        "oh-guard":       { bash: "deny", edit: "deny", read: "allow" },
-        "oh-handoff":     { bash: "deny", edit: "allow", read: "allow" },
-        "oh-health":      { bash: "allow", edit: "deny", read: "allow" },
-        "oh-init":        { bash: "allow", edit: "allow", read: "allow" },
         "oh-investigate": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
-        "oh-issue":       { bash: "allow", edit: "deny", read: "allow" },
         "oh-manifest": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
         "oh-plan-review": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
         "oh-planner": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
-        "oh-prd":         { bash: "allow", edit: "allow", read: "allow" },
         "oh-refactor": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
         "oh-retro": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
         "oh-review": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
         "oh-security": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
         "oh-ship": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
         "oh-skill-craft": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
-        "oh-skills-link": { bash: "deny", edit: "deny", read: "allow" },
-        "oh-skills-list": { bash: "deny", edit: "deny", read: "allow" },
-        "oh-triage":      { bash: "deny", edit: "deny", read: "allow" },
-        "oh-worktree":    { bash: "allow", edit: "allow", read: "allow" },
       }
 
       config.agent = {
@@ -535,6 +521,28 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
           return
         }
 
+        // Handle INJECT from PreTool hooks (e.g. plan check wants a plan first)
+        if (preToolResult.result === HookResult.INJECT) {
+          const planInstruction = preToolResult.modifiedContext?._planCheckInstruction as string | undefined
+          if (planInstruction) {
+            // Plan check hook returned INJECT — inject "create plan" instruction
+            const inputAny = input as Record<string, unknown>
+            const existingPrompt = (inputAny.description as string) || (inputAny.prompt as string) || ""
+            if (inputAny.description) {
+              inputAny.description = `${planInstruction}\n\n${existingPrompt}`
+            } else if (inputAny.prompt) {
+              inputAny.prompt = `${planInstruction}\n\n${existingPrompt}`
+            } else {
+              inputAny.description = planInstruction
+            }
+            await logToOC("info", `Plan check: injected plan creation instruction into task for "${agentName}"`)
+          } else {
+            // Generic INJECT — hooks modified task context
+            await logToOC("debug", `PreTool INJECT: hooks modified task context for "${agentName}"`)
+          }
+          // Continue execution — INJECT is not a stop signal
+        }
+
         // Run all registered RouteHooks — the agent/skill being delegated to IS the route
         // This fires confidence-gate (inject confirm/question on MEDIUM/LOW confidence)
         // and route-tracking (guard against infinite routing loops)
@@ -624,7 +632,20 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
 
         // Run all registered PostToolUse hooks
         try {
-          await reg.executePostTool(hookContext, outputText)
+          const postToolResult = await reg.executePostTool(hookContext, outputText)
+
+          // Surface recovery instructions from errorRecoveryHook and/or sanityCheckHook
+          if (postToolResult.recovery) {
+            await logToOC("warn", `PostTool recovery instruction:\n${postToolResult.recovery}`)
+          }
+
+          // Log when hooks signal issues (INJECT = anomaly/error detected by a hook)
+          if (postToolResult.result === HookResult.INJECT) {
+            await logToOC("warn", "PostTool INJECT: hooks detected issues in tool output")
+          }
+
+          // memorySyncHook catches its own errors (best-effort sync),
+          // so memory sync failures are already handled gracefully inside the hook
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err)
           await logToOC("error", `Hook error (PostTool): ${msg}`)
