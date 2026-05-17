@@ -26,7 +26,7 @@ Always know before you go.
 
 # oh-planner
 
-ALL-arounder planner. Merges brainstorm, architecture analysis, strategy, and plan review into one skill. Produces plan files in canonical storage (`~/.local/share/opencode/openhermes/plans/`).
+ALL-arounder planner. Merges brainstorm, architecture analysis, strategy, and plan review into one skill. Produces plan files in canonical storage (`~/.local/share/openhermes/plans/`).
 
 Load the relevant section based on entry mode:
 

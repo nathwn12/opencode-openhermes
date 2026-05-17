@@ -80,7 +80,7 @@ One section at a time: Architecture → Code Quality → Tests → Performance. 
 
 ## Output
 
-Plan file (`~/.local/share/opencode/openhermes/plans/<project-name>/plan-<nnn>.md`) updated with findings and decisions.
+Plan file (`~/.local/share/openhermes/plans/<project-name>/plan-<nnn>.md`) updated with findings and decisions.
 
 ## Anti-patterns
 

@@ -8,7 +8,7 @@ Closed-loop routing engine. Every task auto-classifies, auto-routes, auto-chains
 
 ## Plan Pre-condition
 
-Before any classification, verify plan file at `~/.local/share/opencode/openhermes/plans/<project-name>/plan-<nnn>.md`:
+Before any classification, verify plan file at `~/.local/share/openhermes/plans/<project-name>/plan-<nnn>.md`:
 - No plan exists → create one (status: `active`)
 - Latest is complete/abandoned → create next sequential plan
 - Latest is active/in-progress → reuse it
@@ -235,7 +235,7 @@ Within same phase, hooks run by priority DESC then topological dependency order.
 | `plan-check` | PreToolUse | EARLY | 90 | Verify plan file exists before sub-agent delegation |
 | `shell-detect` | PreToolUse | EARLY | 80 | Detect platform, inject shell preamble context |
 | `confidence-gate` | Route | NORMAL | 70 | Adjust route based on confidence level |
-| `delegation-depth` | PreToolUse | NORMAL | 60 | Loop guard — stops at depth >= max (default 5-10) |
+| `delegation-depth` | PreToolUse | NORMAL | 60 | Loop guard — stops at depth >= max (default 10-25) |
 | `route-tracking` | Route | LATE | 55 | Enforce max skill repeats (5) and unproductive hop limits (8) mechanically |
 | `error-recovery` | PostToolUse | LATE | 50 | Match error patterns, inject recovery instructions |
 | `memory-sync` | PostToolUse | LATE | 40 | Sync task findings and decisions to plan file |

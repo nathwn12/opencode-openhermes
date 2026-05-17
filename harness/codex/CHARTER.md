@@ -63,7 +63,7 @@ Detect shell before spawning subagents. PowerShell (`powershell`/`pwsh`), CMD (`
 
 ## Plan Lifecycle
 
-Plans at `~/.local/share/opencode/openhermes/plans/<project-name>/plan-<nnn>.md`.
+Plans at `~/.local/share/openhermes/plans/<project-name>/plan-<nnn>.md`.
 - **Keep**: `active`, `in-progress`, `blocked`
 - **Delete**: `complete`, `abandoned`
 - Cleanup is direct filesystem operation — AI knows project name, derives path, keeps by status. Surface summary only.
@@ -77,4 +77,4 @@ Plans at `~/.local/share/opencode/openhermes/plans/<project-name>/plan-<nnn>.md`
 
 ## Shared State
 
-- **Plans**: `~/.local/share/opencode/openhermes/plans/<project-name>/plan-<nnn>.md`
+- **Plans**: `~/.local/share/openhermes/plans/<project-name>/plan-<nnn>.md`

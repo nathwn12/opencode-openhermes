@@ -26,7 +26,7 @@ OpenHermes is the primary orchestrator. All routing, planning, and delegation fl
 - **Test command**: <fill or auto-detect>
 
 ## Key Directives
-- Plan first. Write to `~/.local/share/opencode/openhermes/plans/<project>/plan-<nnn>.md` before multi-file changes.
+- Plan first. Write to `~/.local/share/openhermes/plans/<project>/plan-<nnn>.md` before multi-file changes.
 - OpenHermes delegates everything to sub-agents — never executes directly.
 - Verify before claiming success. Read files, run commands, confirm output.
 - Use oh-* skills on demand via the skill tool.
@@ -40,7 +40,7 @@ Ask user to fill or auto-detect from manifests.
 ```markdown
 ## OpenHermes Orchestrator
 OpenHermes is the primary orchestrator.
-- **Plan**: `~/.local/share/opencode/openhermes/plans/<project>/plan-<nnn>.md`
+- **Plan**: `~/.local/share/openhermes/plans/<project>/plan-<nnn>.md`
 - **Never execute**: delegates everything to sub-agents
 - **Verify before claim**: read files, run commands, confirm output
 ```

@@ -92,7 +92,7 @@ Runs sequentially: **Strategy → Architecture → Design → Engineering → DX
 Every plan written by oh-planner uses this canonical format.
 
 ### Storage
-Canonical path: `~/.local/share/opencode/openhermes/plans/<project>/plan-<nnn>.md`
+Canonical path: `~/.local/share/openhermes/plans/<project>/plan-<nnn>.md`
 
 ### Template
 ```markdown

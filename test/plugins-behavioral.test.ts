@@ -213,15 +213,17 @@ describe("BootstrapPlugin behavior", () => {
     assert.ok(!context.some(line => line.includes("Active plan:")), "should NOT include plan summary when no plan exists")
   })
 
-  it("delegation depth guard blocks at depth >= 10", async () => {
+  it("delegation depth guard blocks at depth >= 25", async () => {
     // BootstrapPlugin with a clean directory so delegation depth starts at 0
     const uniqueDir = fs.mkdtempSync(path.join(os.tmpdir(), "oh-depth-test-"))
     tmpDirs.push(uniqueDir)
     const plugin = await mod.BootstrapPlugin({ directory: uniqueDir })
 
     // Helper: simulate calling tool.execute.before with task tool
-    async function callTaskHook(): Promise<{ blocked: boolean; errorMsg?: string }> {
-      const input = { tool: "task", args: { name: "oh-builder", prompt: "test" } }
+    // agent param distinguishes routes so route-tracking hooks don't prematurely stop
+    async function callTaskHook(agent?: string): Promise<{ blocked: boolean; errorMsg?: string }> {
+      const input: Record<string, unknown> = { tool: "task", args: { name: "oh-builder", prompt: "test" } }
+      if (agent) input.agent = agent
       const output: { isError?: boolean; content?: { type: string; text: string }[] } = {}
       await plugin["tool.execute.before"](input, output)
       return { blocked: !!output.isError, errorMsg: output.content?.[0]?.text }
@@ -233,17 +235,18 @@ describe("BootstrapPlugin behavior", () => {
     await plugin["tool.execute.before"](nonTaskInput, nonTaskOutput)
     assert.equal(nonTaskOutput.isError, undefined, "non-task tool never blocked")
 
-    // Call task hook 9 times — should NOT block
-    for (let i = 0; i < 9; i++) {
-      const result = await callTaskHook()
+    // Call task hook 24 times with distinct agent names — should NOT block
+    // Each call uses a different route so route-tracking doesn't trigger on repeated skills
+    for (let i = 0; i < 24; i++) {
+      const result = await callTaskHook(`skill-${i}`)
       assert.equal(result.blocked, false, `task call ${i + 1} should not block`)
     }
 
-    // 10th call should BLOCK
-    const tenth = await callTaskHook()
-    assert.equal(tenth.blocked, true, "10th task call should be blocked")
-    assert.ok(tenth.errorMsg?.includes("LOOP GUARD"), "block message should include LOOP GUARD")
-    assert.ok(tenth.errorMsg?.includes("Delegation depth exceeded"), "block message should mention depth exceeded")
+    // 25th call should BLOCK
+    const twentyFifth = await callTaskHook()
+    assert.equal(twentyFifth.blocked, true, "25th task call should be blocked")
+    assert.ok(twentyFifth.errorMsg?.includes("LOOP GUARD"), "block message should include LOOP GUARD")
+    assert.ok(twentyFifth.errorMsg?.includes("Delegation depth exceeded"), "block message should mention depth exceeded")
   })
 
   it("registers user skill paths in config.skills.paths", async () => {

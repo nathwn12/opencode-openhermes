@@ -47,7 +47,7 @@ Run a structured 8-category diagnostic. For each check, inspect the actual files
 - Read `openhermes.md` frontmatter — must have `mode: primary`.
 - Verify primary agent permissions in bootstrap.ts (lines 370-391): `bash: deny`, `edit: deny`, `task: allow`.
 - Verify 16 subagents have explicit permissions in `SUBAGENT_PERMISSIONS` (lines 335-350): `bash: allow`, `edit: allow`, `task: { "oh-*": "deny" }`.
-- Verify delegation loop guard (line 424): max depth = 10.
+- Verify delegation loop guard (line 496): max depth = 25.
 - Verify `oh-planner` + `oh-grill` + `oh-skill-craft` are hidden from @-menu (line 366).
 
 **Expected:** 17 entries, no missing agent definitions, all permissions assigned.

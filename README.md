@@ -77,7 +77,7 @@ The loop runs unsupervised because these never turn off:
 | **`/oh-log`** | Session log — routing hops, skill loads, compaction events. |
 | **Shared operating model** | CHARTER + AUTOPILOT + CONTEXT + ETHOS injected every session. Every interaction grounded in the same rules. |
 | **CORE/DEEP skill format** | Every skill is a two-file system: CORE (SKILL.md) handles 80% of passes in one read. DEEP.md loads on demand for hard cases. |
-| **Plan file storage** | `~/.local/share/opencode/openhermes/plans/`. Survives `npm update`. |
+| **Plan file storage** | `~/.local/share/openhermes/plans/`. Survives `npm update`. |
 | **8 internal subsystems** | Compositor, hooks, memory, recovery, sync, sanity checks, background commands, test harness — all native Node.js / TypeScript. |
 | **Zero npm dependency additions** | All new subsystems use native Node.js and TypeScript only. No new packages. |
 
@@ -161,7 +161,7 @@ openhermes-pkg/
     └── harness/           # Test utilities (fixture, builders, mocks)
 ```
 
-Plan files: `~/.local/share/opencode/openhermes/plans/<project>/plan-<nnn>.md`
+Plan files: `~/.local/share/openhermes/plans/<project>/plan-<nnn>.md`
 
 ---
 

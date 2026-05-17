@@ -33,7 +33,7 @@ const USER_SKILL_DIRS: ReadonlyArray<string> = [
 let _planStorageOverride: string | undefined
 export function setPlanStorageDirForTest(dir: string | undefined): void { _planStorageOverride = dir }
 function planStorageDir(): string {
-  return _planStorageOverride ?? path.join(os.homedir(), ".local", "share", "opencode", "openhermes", "plans")
+  return _planStorageOverride ?? path.join(os.homedir(), ".local", "share", "openhermes", "plans")
 }
 
 function getProjectName(projectDir: string): string {
@@ -493,21 +493,86 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
           sessions: new Map(),
           _confidenceLevel: typeof inputAny.confidence === "string" ? inputAny.confidence : undefined,
           _confidenceExchanges: 0,
-          _maxDelegationDepth: 10,    // matches original limit
+          _maxDelegationDepth: 25,
+          _routeTrackingConfig: {
+            maxSkillRepeats: 5,
+            maxUnproductiveHops: 30,    // higher than max delegation depth (25) so depth guard fires first
+          },
         }
 
-        // Run all registered PreToolUse hooks
-        const hookResult = await reg.executePreTool(hookContext)
+        // Run all registered PreToolUse hooks (plan check, shell detect, delegation depth)
+        const preToolResult = await reg.executePreTool(hookContext)
 
-        if (hookResult.result === HookResult.STOP) {
+        if (preToolResult.result === HookResult.STOP) {
           // Depth exceeded or other stop condition
           const errOutput = output as { args: unknown; isError?: boolean; content?: unknown[] }
           errOutput.isError = true
-          const message = (hookResult.modifiedContext?._depthError as string)
-            ?? "LOOP GUARD: Delegation depth exceeded (max 10). " +
+          const message = (preToolResult.modifiedContext?._depthError as string)
+            ?? "LOOP GUARD: Delegation depth exceeded (max 25). " +
                "Surface to orchestrator with findings and stop delegating."
           errOutput.content = [{ type: "text", text: message }]
+          return
         }
+
+        // Run all registered RouteHooks — the agent/skill being delegated to IS the route
+        // This fires confidence-gate (inject confirm/question on MEDIUM/LOW confidence)
+        // and route-tracking (guard against infinite routing loops)
+        const routeResult = await reg.executeRoute(hookContext, agentName)
+
+        if (routeResult.result === HookResult.STOP) {
+          // Loop guard triggered by route-tracking hook
+          const errOutput = output as { args: unknown; isError?: boolean; content?: unknown[] }
+          errOutput.isError = true
+          const ctxAny = hookContext as Record<string, unknown>
+          const optiReport = ctxAny._optiRoute
+            ? JSON.stringify(ctxAny._optiRoute, null, 2)
+            : "Route guard: Excessive or unproductive routing detected."
+          errOutput.content = [{ type: "text", text: `ROUTE GUARD: ${optiReport}\n\nSurface to orchestrator with findings and stop delegating.` }]
+        }
+
+        // Note: INJECT with modifiedRoute from confidence-gate is logged but not
+        // acted on here — the task tool is already being invoked on agentName.
+        // Full route interception requires SDK-level routing hooks.
+      }
+    },
+
+    // Hook-enabled post-execution — runs PostToolUse hooks
+    "tool.execute.after": async (input, output) => {
+      if (input.tool === "task") {
+        const reg = HookRegistry.getInstance()
+
+        // Access optional fields from input
+        const inputAny = input as Record<string, unknown>
+        const agentName = typeof inputAny.agent === "string" ? inputAny.agent : "unknown"
+
+        // Build hook context from input and current session state
+        const hookContext = {
+          sessionId: ctx.directory,
+          agent: agentName,
+          directory: ctx.directory,
+          sessions: new Map(),
+          _confidenceLevel: typeof inputAny.confidence === "string" ? inputAny.confidence : undefined,
+          _confidenceExchanges: 0,
+          _maxDelegationDepth: 25,
+        }
+ 
+        // Extract output text from tool result
+        // output.content may be array of content blocks, or a string, or undefined
+        const outputAny = output as Record<string, unknown> | undefined
+        let outputText = ""
+        if (outputAny?.content) {
+          const content = outputAny.content
+          if (typeof content === "string") {
+            outputText = content
+          } else if (Array.isArray(content)) {
+            outputText = content
+              .map((c: Record<string, unknown>) => (typeof c.text === "string" ? c.text : ""))
+              .join("\n")
+          }
+        }
+
+        // Run all registered PostToolUse hooks
+        await reg.executePostTool(hookContext, outputText)
       }
     },
 
