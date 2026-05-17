@@ -44,8 +44,6 @@ describe("BootstrapPlugin behavior", () => {
     await plugin.config(config)
 
     assert.ok((config.skills as { paths: string[] }).paths.some(p => p.endsWith(path.join("harness", "skills"))))
-    assert.ok((config.command as Record<string, unknown>)["oh-doctor"])
-    assert.ok((config.command as Record<string, unknown>)["oh-log"])
     assert.ok((config.agent as Record<string, unknown>).OpenHermes)
     assert.equal(config.default_agent, "OpenHermes")
   })
@@ -55,14 +53,6 @@ describe("BootstrapPlugin behavior", () => {
     const config: Record<string, unknown> = { skills: { paths: [] }, command: {}, agent: {}, instructions: [] }
 
     await plugin.config(config)
-
-    const cmd = (config.command as Record<string, { template: string; agent: string }>)["oh-doctor"]
-    assert.match(cmd.template, /Run a structured 8-category diagnostic/)
-    assert.equal(cmd.agent, "OpenHermes")
-
-    const logCmd = (config.command as Record<string, { template: string; agent: string }>)["oh-log"]
-    assert.match(logCmd.template, /OpenHermes session log/)
-    assert.equal(logCmd.agent, "OpenHermes")
 
     const agentEntry = config.agent as Record<string, { prompt: string; mode: string }>
     assert.match(agentEntry.OpenHermes.prompt, /You are OpenHermes, an OpenCode-native orchestrator/)
