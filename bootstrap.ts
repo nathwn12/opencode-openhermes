@@ -3,6 +3,22 @@ import fs from "node:fs"
 import os from "node:os"
 import type { Plugin } from "@opencode-ai/plugin"
 import { getHarnessDir, setHarnessRootForTest, resolveHarnessRoot } from "./lib/harness-resolver.ts"
+import { compose } from "./harness/lib/composer/index.ts"
+
+// Hook system — pluggable lifecycle hooks with topological sort
+import {
+  HookRegistry,
+  HookResult,
+  planCheckHook,
+  shellDetectHook,
+  confidenceGateHook,
+  delegationDepthHook,
+  resetDepthTracker,
+  errorRecoveryHook,
+  memorySyncHook,
+  sanityCheckHook,
+  routeTrackingHook,
+} from "./harness/lib/hooks/index.ts"
 
 const OPENHERMES_AGENT = "OpenHermes"
 
@@ -24,7 +40,7 @@ function getProjectName(projectDir: string): string {
   return path.basename(projectDir)
 }
 
-export { resolveHarnessRoot, setHarnessRootForTest, getHarnessDir, ensurePlanFile }
+export { resolveHarnessRoot, setHarnessRootForTest, getHarnessDir, ensurePlanFile, findLatestPlanFile }
 
 function parseFrontmatter(raw: string | undefined): Record<string, string> {
   const frontmatter: Record<string, string> = {}
@@ -274,6 +290,7 @@ interface OpenHermesConfig {
   agent?: Record<string, unknown>
   instructions?: string[]
   default_agent?: string
+  [key: string]: unknown  // allow additional SDK properties (experimental, etc.)
 }
 
 export const BootstrapPlugin: Plugin = async (ctx) => {
@@ -306,6 +323,32 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
 
   return {
     config: async (config: OpenHermesConfig) => {
+      // ── 1. Hooks System ─────────────────────────────────────────────────
+      // Read experimental.hooks config from the raw config object
+      const hooksConfig = (config.experimental as Record<string, unknown> | undefined)?.hooks as
+        | Record<string, boolean>
+        | undefined
+      const hooksEnabled = (hooksConfig?.enabled ?? true) as boolean
+
+      if (hooksEnabled) {
+        const reg = HookRegistry.getInstance()
+
+        // Check individual hook flags (default: true if not specified)
+        if (hooksConfig?.plan_check ?? true) reg.registerPreTool(planCheckHook)
+        if (hooksConfig?.shell_detect ?? true) reg.registerPreTool(shellDetectHook)
+        if (hooksConfig?.delegation_depth ?? true) reg.registerPreTool(delegationDepthHook)
+        if (hooksConfig?.confidence_gate ?? true) reg.registerRoute(confidenceGateHook)
+        if (hooksConfig?.error_recovery ?? true) reg.registerPostTool(errorRecoveryHook)
+        if (hooksConfig?.memory_sync ?? true) reg.registerPostTool(memorySyncHook)
+        if (hooksConfig?.sanity_check ?? true) reg.registerPostTool(sanityCheckHook)
+        if (hooksConfig?.route_tracking ?? true) reg.registerRoute(routeTrackingHook)
+
+        await logToOC("info", `hooks: ${reg.getPreToolHooks().length + reg.getPostToolHooks().length + reg.getRouteHooks().length} registered`)
+      } else {
+        await logToOC("info", "hooks: disabled via config")
+      }
+
+      // ── 2. Skills ──────────────────────────────────────────────────────
       config.skills = config.skills || {}
       // Built-in paths first, user paths last → user skills override built-in on name conflict
       const allPaths = [skillsDir, ...userSkillPaths]
@@ -322,30 +365,51 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
       config.command = { ...(config.command ?? {}), ...commandDefinitions(commandsDir) }
 
       const loadedAgents = agentDefinitions(agentsDir)
-      const openHermesAgent = loadedAgents[OPENHERMES_AGENT] ?? {
-        description: "OpenHermes primary orchestrator",
-        mode: "primary",
-        prompt: "You are OpenHermes.",
+      // Use composer for the OpenHermes agent prompt — assemble from fragments
+      let openHermesPrompt: string
+      try {
+        openHermesPrompt = compose()
+      } catch {
+        openHermesPrompt = loadedAgents[OPENHERMES_AGENT]?.prompt ?? "You are OpenHermes."
+      }
+      const openHermesAgent = {
+        description: loadedAgents[OPENHERMES_AGENT]?.description ?? "OpenHermes primary orchestrator",
+        mode: loadedAgents[OPENHERMES_AGENT]?.mode ?? "primary",
+        prompt: openHermesPrompt,
       }
 
       // Subagent permissions — tier-4 and tier-3 get execution access but cannot spawn orchestrators
       const SUBAGENT_PERMISSIONS: Record<string, Record<string, unknown>> = {
+        "oh-ascii":       { bash: "allow", edit: "allow", read: "allow" },
         "oh-builder": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
         "oh-browser": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
+        "oh-expert":      { bash: "deny", edit: "deny", read: "allow" },
         "oh-facade": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
-        "oh-gauntlet": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
-        "oh-manifest": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
-        "oh-ship": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
-        "oh-planner": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
-        "oh-grill": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
-        "oh-investigate": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
-        "oh-plan-review": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
-        "oh-security": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
-        "oh-refactor": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
-        "oh-review": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
+        "oh-freeze":      { bash: "deny", edit: "deny", read: "allow" },
+        "oh-full-output": { bash: "deny", edit: "deny", read: "allow" },
         "oh-fusion": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
+        "oh-gauntlet": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
+        "oh-grill": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
+        "oh-guard":       { bash: "deny", edit: "deny", read: "allow" },
+        "oh-handoff":     { bash: "deny", edit: "allow", read: "allow" },
+        "oh-health":      { bash: "allow", edit: "deny", read: "allow" },
+        "oh-init":        { bash: "allow", edit: "allow", read: "allow" },
+        "oh-investigate": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
+        "oh-issue":       { bash: "allow", edit: "deny", read: "allow" },
+        "oh-manifest": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
+        "oh-plan-review": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
+        "oh-planner": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
+        "oh-prd":         { bash: "allow", edit: "allow", read: "allow" },
+        "oh-refactor": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
         "oh-retro": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
+        "oh-review": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
+        "oh-security": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
+        "oh-ship": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
         "oh-skill-craft": { bash: { "*": "allow" }, edit: "allow", read: "allow", glob: "allow", grep: "allow", task: { "oh-*": "deny" } },
+        "oh-skills-link": { bash: "deny", edit: "deny", read: "allow" },
+        "oh-skills-list": { bash: "deny", edit: "deny", read: "allow" },
+        "oh-triage":      { bash: "deny", edit: "deny", read: "allow" },
+        "oh-worktree":    { bash: "allow", edit: "allow", read: "allow" },
       }
 
       config.agent = {
@@ -404,7 +468,7 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
 
       // Reset delegation depth on session start/error
       if (typed.type === "session.created" || typed.type === "session.error") {
-        delegationDepths.delete(`delegation:${ctx.directory}`)
+        resetDepthTracker()
       }
     },
 
@@ -412,22 +476,37 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
       output.context.push(...compactionContext)
     },
 
-    // Mechanical delegation loop guard — prevents runaway agent nesting
+    // Hook-enabled tool execution — delegates to HookRegistry for lifecycle hooks
     "tool.execute.before": async (input, output) => {
       if (input.tool === "task") {
-        // Track delegation depth per project (one session per project at a time)
-        const depthKey = `delegation:${ctx.directory}`
-        const currentDepth = (delegationDepths.get(depthKey) ?? 0) + 1
-        delegationDepths.set(depthKey, currentDepth)
+        const reg = HookRegistry.getInstance()
 
-        if (currentDepth >= 10) {
+        // Access optional fields from input (SDK may include these at runtime)
+        const inputAny = input as Record<string, unknown>
+        const agentName = typeof inputAny.agent === "string" ? inputAny.agent : "unknown"
+
+        // Build hook context from input and current session state
+        const hookContext = {
+          sessionId: ctx.directory,           // project directory as session key
+          agent: agentName,
+          directory: ctx.directory,
+          sessions: new Map(),
+          _confidenceLevel: typeof inputAny.confidence === "string" ? inputAny.confidence : undefined,
+          _confidenceExchanges: 0,
+          _maxDelegationDepth: 10,    // matches original limit
+        }
+
+        // Run all registered PreToolUse hooks
+        const hookResult = await reg.executePreTool(hookContext)
+
+        if (hookResult.result === HookResult.STOP) {
+          // Depth exceeded or other stop condition
           const errOutput = output as { args: unknown; isError?: boolean; content?: unknown[] }
           errOutput.isError = true
-          errOutput.content = [{
-            type: "text",
-            text: "LOOP GUARD: Delegation depth exceeded (max 10). " +
-                  "Surface to orchestrator with findings and stop delegating."
-          }]
+          const message = (hookResult.modifiedContext?._depthError as string)
+            ?? "LOOP GUARD: Delegation depth exceeded (max 10). " +
+               "Surface to orchestrator with findings and stop delegating."
+          errOutput.content = [{ type: "text", text: message }]
         }
       }
     },
@@ -435,5 +514,3 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
   }
 }
 
-// Module-level delegation depth tracker — reset per project session
-const delegationDepths = new Map<string, number>()

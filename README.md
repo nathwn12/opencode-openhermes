@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/openhermes"><img src="https://img.shields.io/npm/v/openhermes?style=for-the-badge&label=version&color=FFD700" alt="npm version"></a>
+  <a href="https://www.npmjs.com/package/openhermes"><img src="https://img.shields.io/npm/v/openhermes?style=for-the-badge&label=version&color=FFD700" alt="v4.10.0"></a>
   <a href="https://github.com/nathwn12/openhermes/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="License: MIT"></a>
   <a href="https://opencode.ai"><img src="https://img.shields.io/badge/runs%20on-OpenCode-6366f1?style=for-the-badge" alt="Runs on OpenCode"></a>
   <a href="https://github.com/nathwn12/openhermes"><img src="https://img.shields.io/badge/⭐%20star%20on-GitHub-181717?style=for-the-badge" alt="Star on GitHub"></a>
@@ -31,27 +31,20 @@ To install from `dev` (latest features, may be unstable):
 
 ---
 
-## One sentence. Nine steps.
+## One sentence. One engine.
 
-Add the plugin. Restart. Type:
+OpenHermes v4.10 ships with a new internal architecture — 8 subsystems working together to make every session faster, more reliable, and fully autonomous:
 
-> *"Plan a CLI tool for managing dotfiles."*
-
-You see output. Behind the scenes, this runs:
-
-| # | What fires | What it does |
-|---|---|---|
-| **1** | `AUTOPILOT.md` decision matrix | Multi-step, vague → `PLANNING NEEDED` |
-| **2** | `oh-planner` | Brainstorm mode: architecture, user flow, risks |
-| **3** | `oh-planner` → `oh-grill` | Plan passes → stress-test it |
-| **4** | `oh-grill` → `oh-planner` (revise) | Gaps found → planner revises |
-| **5** | `oh-planner` → `oh-manifest` | Plan solid → enter build loop |
-| **6** | `oh-planner` → `oh-builder` → `oh-gauntlet` | Implement → test → review → loop |
-| **7** | `oh-gauntlet` → `oh-ship` | Tests pass → PR pipeline |
-| **8** | `oh-ship` → `oh-retro` | Shipped → retrospective |
-| **9** | `oh-retro` → `oh-planner` | Ready for the next cycle |
-
-One sentence. Nine automated steps. Each skill loaded on demand, executed in isolation, routed to the next specialist. **Auto-classify, delegate, route, repeat.** That's the entire model.
+| Subsystem | What it does |
+|-----------|-------------|
+| **Prompt Composer** | 9 modular fragments joined at runtime → byte-identical. Add a fragment, never edit the composition code. |
+| **Auto-Recovery** | 9 error categories with typed actions — retry with backoff, compact on overflow, escalate on unknowns. Self-healing. |
+| **4-Tier Memory** | System → Project → Mission → Task. Importance-scored, budget-enforced, plan-file-persisted. Context that survives hops. |
+| **Hook Registry** | Pluggable pre-tool, post-tool, route, and session hooks with topological sort. 8 built-in hooks, zero routing boilerplate. |
+| **MVCC Sync** | Atomic writes, version counters, conflict detection. Multiple sub-agents writing the same plan file — no data loss. |
+| **Sanity Checker** | 8 output degeneration detectors — repetition, gibberish, low diversity — with automatic escalation and recovery injection. |
+| **Background Cmd** | Fire-and-forget process spawning with timeout, status polling, and auto-cleanup. Non-blocking long-running tasks. |
+| **Test Harness** | Disposable temp dirs (Symbol.asyncDispose), factory builders, restore-capable mocks. Professional-grade test utilities. |
 
 ---
 
@@ -85,6 +78,8 @@ The loop runs unsupervised because these never turn off:
 | **Shared operating model** | CHARTER + AUTOPILOT + CONTEXT + ETHOS injected every session. Every interaction grounded in the same rules. |
 | **CORE/DEEP skill format** | Every skill is a two-file system: CORE (SKILL.md) handles 80% of passes in one read. DEEP.md loads on demand for hard cases. |
 | **Plan file storage** | `~/.local/share/opencode/openhermes/plans/`. Survives `npm update`. |
+| **8 internal subsystems** | Compositor, hooks, memory, recovery, sync, sanity checks, background commands, test harness — all native Node.js / TypeScript. |
+| **Zero npm dependency additions** | All new subsystems use native Node.js and TypeScript only. No new packages. |
 
 ## 30 skills — three tiers
 
@@ -147,14 +142,23 @@ openhermes-pkg/
 ├── ETHOS.md               # Operating principles
 ├── bootstrap.ts           # Plugin entry — registers everything
 ├── index.ts               # Package entrypoint
-├── lib/                   # harness-resolver.ts
 ├── harness/
 │   ├── agents/            # Agent manifests (OpenHermes primary)
 │   ├── codex/             # CHARTER, AUTOPILOT
 │   ├── commands/          # Slash commands (/oh-doctor, /oh-log)
 │   ├── instructions/      # SHELL.md
+│   ├── lib/               # Internal subsystems
+│   │   ├── composer/      # Prompt fragment composition
+│   │   ├── recovery/      # Auto-recovery with error patterns
+│   │   ├── memory/        # 4-tier hierarchical memory
+│   │   ├── sync/          # MVCC plan synchronization
+│   │   ├── hooks/         # Pluggable hook registry
+│   │   ├── sanity/        # Output degeneration detection
+│   │   └── background/    # Fire-and-forget command system
 │   └── skills/            # 30 skill SKILL.md files (CORE/DEEP format)
+├── lib/                   # harness-resolver.ts
 └── test/
+    └── harness/           # Test utilities (fixture, builders, mocks)
 ```
 
 Plan files: `~/.local/share/opencode/openhermes/plans/<project>/plan-<nnn>.md`

@@ -12,5 +12,5 @@
     "allowImportingTsExtensions": true,
     "types": ["node"]
   },
-  "include": ["index.ts", "bootstrap.ts", "lib/**/*.ts", "test/**/*.ts"]
+  "include": ["index.ts", "bootstrap.ts", "lib/**/*.ts", "harness/lib/**/*.ts", "test/**/*.ts"]
 }

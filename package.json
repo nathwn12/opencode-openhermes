@@ -1,6 +1,6 @@
 {
   "name": "openhermes",
-  "version": "4.9.2",
+  "version": "4.10.0",
   "description": "Autonomous agent orchestration for OpenCode.",
   "type": "module",
   "license": "MIT",
@@ -28,7 +28,8 @@
     "harness/instructions/",
     "harness/skills/",
     "harness/commands/",
-    "harness/agents/"
+    "harness/agents/",
+    "harness/lib/"
   ],
   "scripts": {
     "test": "bun test"

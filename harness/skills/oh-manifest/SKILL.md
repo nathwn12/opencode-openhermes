@@ -26,6 +26,6 @@ Full build orchestration loop: pre-flight → plan → build → verify → loop
 
 | Outcome | Route |
 |---------|-------|
-| pass | → pipeline continues (planner→builder→gauntlet→ship) |
+| pass | → oh-planner |
 | fail | → oh-expert (diagnose loop failure) |
 | blocker | → surface with context and options |

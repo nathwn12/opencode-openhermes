@@ -28,7 +28,7 @@ describe("bootstrap integration", () => {
     fs.mkdirSync(path.join(harnessDir, "codex"), { recursive: true })
     fs.writeFileSync(path.join(harnessDir, "codex", "CHARTER.md"), "# Test Charter\n")
     fs.mkdirSync(path.join(harnessDir, "instructions"), { recursive: true })
-    fs.writeFileSync(path.join(harnessDir, "instructions", "AUTOPILOT.md"), "# Test Autopilot\n")
+    fs.writeFileSync(path.join(harnessDir, "codex", "AUTOPILOT.md"), "# Test Autopilot\n")
     fs.mkdirSync(path.join(harnessDir, "commands"), { recursive: true })
 
     // Agents dir

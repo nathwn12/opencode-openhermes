@@ -73,7 +73,7 @@ Run a structured 8-category diagnostic. For each check, inspect the actual files
   - `name: "openhermes"`
   - `version` — note current version
   - `exports: { ".": "./index.ts", "./bootstrap": "./bootstrap.ts" }`
-  - `files` — all 11 entries must resolve to real files/dirs on disk
+  - `files` — all 13 entries must resolve to real files/dirs on disk
 - Read `tsconfig.json` — must have: `strict: true`, `target: ESNext`, `module: ESNext`, `moduleResolution: bundler`.
 - Verify `lib/harness-resolver.ts` — check its `REQUIRED_HARNESS_FILES` (CHARTER.md, AUTOPILOT.md, oh-planner/SKILL.md) all resolve from the harness root.
 - Check `scripts/` directory — `oh-doctor.ps1` exists. This is the companion diagnostic script.

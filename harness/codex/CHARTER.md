@@ -24,7 +24,7 @@ Non-negotiable operating core. All skills, commands, and agents follow these pri
 
 8. **Rules over hidden state** — Prefer AGENTS.md, instructions, and manifests over implicit state.
 
-9. **Memory deferred** — Intentional absence for this pass.
+9. **Memory implemented** — 4-tier hierarchical memory with importance scoring, budget enforcement, and plan-file persistence via MemoryManager + PlanStore.
 
 10. **Closed-loop autonomy** — Auto-classify, auto-route after every skill. Only stop for blockers and major decisions.
 

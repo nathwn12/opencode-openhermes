@@ -147,8 +147,13 @@ Every skill routes somewhere — no leaf nodes. Route by outcome, not convention
 
 ## Safety Valves
 
-### Loop Guard
-If the same skill is visited 5+ times in one chain, or 8+ hops pass without producing a new artifact — STOP. Write OptiRoute report to plan file (routing chain, trigger, current state, blocker). Surface to user. Do not keep looping.
+### Loop Guard (Mechanical)
+Enforced by the `route-tracking` hook — no LLM instruction needed.
+
+- **Same skill 5+ times** → STOP (configurable via `hooks.route_tracking.max_skill_repeats`)
+- **Unproductive hops** after 8 consecutive no-artifact hops → STOP (configurable via `hooks.route_tracking.max_unproductive_hops`)
+
+On violation, the hook injects an OptiRoute report with the full hop chain, skill counts, and the trigger reason. Orchestrator surfaces to user with findings.
 
 ### Question Gate
 Before each routing hop, check: "Can I proceed without guessing?" If the next skill's input is missing and you cannot discover or create it independently — surface to user. Do not route into guaranteed failure. For plan issues, create the plan yourself — do not ask the user to do it.
@@ -166,6 +171,97 @@ Before each routing hop, check: "Can I proceed without guessing?" If the next sk
 - "Which skill?" — Auto-classify table tells you. Do not ask.
 - "Is this OK?" — Verify and present evidence. Do not ask.
 - "Do you want me to X?" — If next routing step, just do it. Do not ask.
+
+## Hook System
+
+Pluggable lifecycle hooks with topological sort. Hooks register with priority, phase (early/normal/late), and dependencies. Deterministic execution order via Kahn's algorithm.
+
+### Hook Lifecycle
+
+```
+User Input
+    │
+    ▼
+Session Start Hook ────► SessionHook.onSessionStart()
+    │
+    ▼
+PreToolUse Hook        ◄── PlanCheck, ShellDetect, DelegationDepth
+    │                       (phase: EARLY → NORMAL)
+    ▼
+Tool / Sub-Agent Call
+    │
+    ▼
+PostToolUse Hook       ◄── ErrorRecovery, MemorySync
+    │                       (phase: LATE)
+    ▼
+Route Hook             ◄── ConfidenceGate
+    │                       (phase: NORMAL)
+    ▼
+Next Skill / Surface
+    │
+    ▼
+Session End Hook       ──► SessionHook.onSessionEnd()
+```
+
+### Hook Types
+
+| Type | Interface | Purpose |
+|------|-----------|---------|
+| `PreToolUseHook` | `execute(context)` | Before sub-agent call — modify context, inject instructions, stop on loop guard |
+| `PostToolUseHook` | `execute(context, output)` | After sub-agent call — modify output, inject recovery actions, sync memory |
+| `RouteHook` | `execute(context, route)` | During routing — modify destination, pause on low confidence |
+| `SessionHook` | `onSessionStart/End(context)` | Session lifecycle — setup/teardown |
+
+### Hook Result Values
+
+| Value | Meaning |
+|-------|---------|
+| `CONTINUE` | Proceed to next hook or tool call |
+| `STOP` | Abort immediately — all subsequent hooks are skipped |
+| `INJECT` | Context/output was modified — subsequent hooks still run, final result reflects injection |
+
+### Phase Ordering
+
+1. **EARLY** — Plan verification, shell detection (priority 80-90)
+2. **NORMAL** — Depth tracking, confidence gating (priority 60-70)
+3. **LATE** — Error recovery, memory sync (priority 40-50)
+
+Within same phase, hooks run by priority DESC then topological dependency order.
+
+### Built-in Hooks
+
+| Name | Type | Phase | Priority | Purpose |
+|------|------|-------|----------|---------|
+| `plan-check` | PreToolUse | EARLY | 90 | Verify plan file exists before sub-agent delegation |
+| `shell-detect` | PreToolUse | EARLY | 80 | Detect platform, inject shell preamble context |
+| `confidence-gate` | Route | NORMAL | 70 | Adjust route based on confidence level |
+| `delegation-depth` | PreToolUse | NORMAL | 60 | Loop guard — stops at depth >= max (default 5-10) |
+| `route-tracking` | Route | LATE | 55 | Enforce max skill repeats (5) and unproductive hop limits (8) mechanically |
+| `error-recovery` | PostToolUse | LATE | 50 | Match error patterns, inject recovery instructions |
+| `memory-sync` | PostToolUse | LATE | 40 | Sync task findings and decisions to plan file |
+| `sanity-check` | PostToolUse | LATE | 30 | Detect LLM output degeneration patterns, inject recovery on anomaly |
+
+### Configuration
+
+All hooks enabled by default. Disable individual hooks via `openhermes.json`:
+```json
+{
+  "experimental": {
+    "hooks": {
+      "enabled": true,
+      "plan_check": false,
+      "memory_sync": false
+    }
+  }
+}
+```
+
+### Adding Custom Hooks
+
+1. Create a hook implementing one of the four hook interfaces
+2. Import `HookRegistry` from `openhermes/harness/lib/hooks`
+3. Register via `HookRegistry.getInstance().registerPreTool(myHook)`
+4. Hooks are topologically sorted by phase, priority, and dependencies
 
 ## User Skills
 

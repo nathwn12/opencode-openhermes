@@ -3,7 +3,7 @@ name: oh-ship
 description: "Use when code is ready to ship. Tests, version bump, commit, push to current branch, deploy, and verify. PRs only on request."
 tier: 4
 route:
-  pass: oh-retro
+  pass: surface
   fail: oh-expert
   blocker: surface
 ---

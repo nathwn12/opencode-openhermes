@@ -24,4 +24,4 @@
 - OpenHermes is the default primary Agent.
 
 ## Flagged Ambiguities
-- Durable state is deferred for now and not a domain term for this pass.
+- Durable state resolved — 4-Tier Memory subsystem (System/Project/Mission/Task) now provides structured persistence with importance-driven retention.
