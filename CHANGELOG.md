@@ -34,7 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-- **Orphaned `v4.12.0` tag from `master` branch** — The tag pointed to a dead branch with unmerged Rust oh-tools work (accessible only via the tag). Cleaned up to prevent version confusion.
+- **Orphaned `v4.12.0` tag from `master` branch** — Cleaned up to prevent version confusion between the `master` and `dev` branches.
 
 ### Tests
 
