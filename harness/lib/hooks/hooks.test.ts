@@ -13,15 +13,11 @@ import {
   confidenceGateHook,
   delegationDepthHook,
   resetDepthTracker,
-  errorRecoveryHook,
-  memorySyncHook,
   routeTrackingHook,
   resetRouteTracker,
   getHopHistory,
-  sanityCheckHook,
   dynamicRouteHook,
 } from "./index.ts";
-import { AnomalyTracker } from "../sanity/anomaly-tracker.ts";
 import type {
   HookContext,
   HookContextPatch,
@@ -81,7 +77,6 @@ function makePostToolHook(
   ) => Promise<{
     result: HookResult;
     modifiedOutput?: string;
-    injectRecovery?: string;
   }>,
 ): PostToolUseHook {
   return {
@@ -264,7 +259,7 @@ describe("HookRegistry", () => {
       assert.equal(sorted[2].metadata.name, "late-hook");
     });
 
-    it("handles simple linear dependencies", () => {
+    it("sorts by priority within same phase, ignoring dependencies", () => {
       const reg = HookRegistry.getInstance();
       const a = makePreToolHook("a", {
         phase: HookPhase.EARLY,
@@ -273,89 +268,27 @@ describe("HookRegistry", () => {
       });
       const b = makePreToolHook("b", {
         phase: HookPhase.EARLY,
-        priority: 50,
+        priority: 70,
         dependencies: ["a"],
       });
-      const c = makePreToolHook("c", {
-        phase: HookPhase.EARLY,
-        priority: 50,
-        dependencies: ["b"],
-      });
 
+      // Higher priority first (70 > 50), regardless of dependency declaration
+      const sorted = reg.topologicalSort([a, b]);
+      assert.equal(sorted[0].metadata.name, "b");
+      assert.equal(sorted[1].metadata.name, "a");
+    });
+
+    it("preserves original order for equal phase and priority", () => {
+      const reg = HookRegistry.getInstance();
+      const c = makePreToolHook("c", { phase: HookPhase.EARLY, priority: 50 });
+      const a = makePreToolHook("a", { phase: HookPhase.EARLY, priority: 50 });
+      const b = makePreToolHook("b", { phase: HookPhase.EARLY, priority: 50 });
+
+      // Stable sort: same phase + priority means original order is preserved
       const sorted = reg.topologicalSort([c, a, b]);
-      assert.equal(sorted[0].metadata.name, "a");
-      assert.equal(sorted[1].metadata.name, "b");
-      assert.equal(sorted[2].metadata.name, "c");
-    });
-
-    it("handles diamond dependencies (A→B→D and A→C→D)", () => {
-      const reg = HookRegistry.getInstance();
-      const a = makePreToolHook("a", {
-        phase: HookPhase.EARLY,
-        priority: 50,
-        dependencies: [],
-      });
-      const b = makePreToolHook("b", {
-        phase: HookPhase.EARLY,
-        priority: 50,
-        dependencies: ["a"],
-      });
-      const c = makePreToolHook("c", {
-        phase: HookPhase.EARLY,
-        priority: 50,
-        dependencies: ["a"],
-      });
-      const d = makePreToolHook("d", {
-        phase: HookPhase.EARLY,
-        priority: 50,
-        dependencies: ["b", "c"],
-      });
-
-      const sorted = reg.topologicalSort([d, c, b, a]);
-      // A must come first, D must come last
-      assert.equal(sorted[0].metadata.name, "a");
-      assert.equal(sorted[3].metadata.name, "d");
-      // B and C can be in any order but must be before D and after A
-      const bIdx = sorted.findIndex((h) => h.metadata.name === "b");
-      const cIdx = sorted.findIndex((h) => h.metadata.name === "c");
-      assert.ok(bIdx > 0);
-      assert.ok(cIdx > 0);
-      assert.ok(bIdx < 3);
-      assert.ok(cIdx < 3);
-    });
-
-    it("throws on circular dependency (A→B→C→A)", () => {
-      const reg = HookRegistry.getInstance();
-      const a = makePreToolHook("a", {
-        phase: HookPhase.EARLY,
-        dependencies: ["c"],
-      });
-      const b = makePreToolHook("b", {
-        phase: HookPhase.EARLY,
-        dependencies: ["a"],
-      });
-      const c = makePreToolHook("c", {
-        phase: HookPhase.EARLY,
-        dependencies: ["b"],
-      });
-
-      assert.throws(
-        () => reg.topologicalSort([a, b, c]),
-        /Circular dependency detected/,
-      );
-    });
-
-    it("self-dependency throws", () => {
-      const reg = HookRegistry.getInstance();
-      const a = makePreToolHook("a", {
-        phase: HookPhase.EARLY,
-        dependencies: ["a"],
-      });
-
-      assert.throws(
-        () => reg.topologicalSort([a]),
-        /Circular dependency detected/,
-      );
+      assert.equal(sorted[0].metadata.name, "c");
+      assert.equal(sorted[1].metadata.name, "a");
+      assert.equal(sorted[2].metadata.name, "b");
     });
 
     it("cross-phase dependencies are ignored (not within same phase)", () => {
@@ -478,12 +411,12 @@ describe("HookRegistry", () => {
       assert.equal(result.modifiedOutput, "[[[HELLO]]]");
     });
 
-    it("injects recovery action", async () => {
+    it("injects recovery action (stub)", async () => {
+      // Recovery field removed in cleanup — test kept as placeholder
       const reg = HookRegistry.getInstance();
       reg.registerPostTool(
         makePostToolHook("recovery-test", {}, async () => ({
           result: HookResult.INJECT,
-          injectRecovery: "retry with backoff",
         })),
       );
 
@@ -491,7 +424,7 @@ describe("HookRegistry", () => {
         makeContext(),
         "output",
       );
-      assert.equal(result.recovery, "retry with backoff");
+      assert.equal(result.result, HookResult.INJECT);
     });
 
     it("appends structured route guidance from output evidence", async () => {
@@ -678,18 +611,6 @@ route:
       assert.equal(delegationDepthHook.metadata.phase, HookPhase.NORMAL);
     });
 
-    it("errorRecoveryHook has correct metadata", () => {
-      assert.equal(errorRecoveryHook.metadata.name, "error-recovery");
-      assert.equal(errorRecoveryHook.metadata.priority, 50);
-      assert.equal(errorRecoveryHook.metadata.phase, HookPhase.LATE);
-    });
-
-    it("memorySyncHook has correct metadata", () => {
-      assert.equal(memorySyncHook.metadata.name, "memory-sync");
-      assert.equal(memorySyncHook.metadata.priority, 40);
-      assert.equal(memorySyncHook.metadata.phase, HookPhase.LATE);
-    });
-
     it("shellDetectHook returns shell context", async () => {
       const result = await shellDetectHook.execute(makeContext());
       assert.equal(result.result, HookResult.CONTINUE);
@@ -716,24 +637,6 @@ route:
       assert.equal(result.modifiedContext?._depthExceeded, true);
     });
 
-    it("errorRecoveryHook returns CONTINUE for normal output", async () => {
-      const result = await errorRecoveryHook.execute(
-        makeContext(),
-        "Everything completed successfully.",
-      );
-      assert.equal(result.result, HookResult.CONTINUE);
-    });
-
-    it("errorRecoveryHook detects error output", async () => {
-      const result = await errorRecoveryHook.execute(
-        makeContext(),
-        "Error: Failed to connect to server",
-      );
-      assert.equal(result.result, HookResult.INJECT);
-      assert.ok(result.injectRecovery);
-      assert.ok(result.injectRecovery!.includes("Error Recovery"));
-    });
-
     it("confidenceGateHook passes through without confidence info", async () => {
       const result = await confidenceGateHook.execute(
         makeContext(),
@@ -758,12 +661,9 @@ route:
       reg.registerPreTool(shellDetectHook);
       reg.registerPreTool(delegationDepthHook);
       reg.registerRoute(confidenceGateHook);
-      reg.registerPostTool(errorRecoveryHook);
-      reg.registerPostTool(memorySyncHook);
 
       assert.equal(reg.getPreToolHooks().length, 3);
       assert.equal(reg.getRouteHooks().length, 1);
-      assert.equal(reg.getPostToolHooks().length, 2);
     });
 
     it("routeTrackingHook has correct metadata", () => {
@@ -784,9 +684,6 @@ route:
       // Route hook
       await confidenceGateHook.execute(ctx, "oh-builder");
 
-      // Post-tool hooks
-      await errorRecoveryHook.execute(ctx, "normal output");
-      await memorySyncHook.execute(ctx, "some output");
       // If we got here without throwing, success
       assert.ok(true);
     });
@@ -1028,65 +925,4 @@ route:
     });
   });
 
-  // ---------------------------------------------------------------------------
-  // sanityCheckHook
-  // ---------------------------------------------------------------------------
-
-  describe("sanityCheckHook", () => {
-    beforeEach(() => {
-      AnomalyTracker.getInstance().resetAll();
-    });
-
-    it("passes clean output through unchanged", async () => {
-      const ctx = makeContext();
-      const result = await sanityCheckHook.execute(
-        ctx,
-        "Everything is working fine. The system completed the task successfully.",
-      );
-      assert.equal(result.result, HookResult.CONTINUE);
-      assert.equal(result.modifiedOutput, undefined);
-    });
-
-    it("detects repetitive output", async () => {
-      const ctx = makeContext();
-      const line =
-        "Sphinx of black quartz, judge my vow! The five boxing wizards jump quickly. 0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-      const repetitiveOutput = Array.from({ length: 20 }, () => line).join("\n");
-      const result = await sanityCheckHook.execute(ctx, repetitiveOutput);
-      // First anomaly — not yet escalated
-      assert.equal(result.result, HookResult.CONTINUE);
-    });
-
-    it("detects box-drawing character flooding", async () => {
-      const ctx = makeContext();
-      const boxArt = "─│┌┐└┘├┤┬┴┼".repeat(50);
-      const result = await sanityCheckHook.execute(ctx, boxArt);
-      assert.equal(result.result, HookResult.CONTINUE);
-    });
-
-    it("detects placeholder patterns", async () => {
-      const ctx = makeContext();
-      // 50× [PLACEHOLDER] = 650 chars, 11 unique → triggers low_diversity check
-      const placeholderText = "[PLACEHOLDER]".repeat(50);
-      const result = await sanityCheckHook.execute(ctx, placeholderText);
-      assert.equal(result.result, HookResult.CONTINUE);
-    });
-
-    it("tracks anomalies across calls", async () => {
-      const ctx = makeContext({ sessionId: "anomaly-escalation-test" });
-      const line =
-        "Sphinx of black quartz, judge my vow! The five boxing wizards jump quickly. 0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-      const repetitiveOutput = Array.from({ length: 20 }, () => line).join("\n");
-
-      // First call: anomaly detected but below threshold → CONTINUE
-      const firstResult = await sanityCheckHook.execute(ctx, repetitiveOutput);
-      assert.equal(firstResult.result, HookResult.CONTINUE);
-
-      // Second call: threshold reached → INJECT with recovery
-      const secondResult = await sanityCheckHook.execute(ctx, repetitiveOutput);
-      assert.equal(secondResult.result, HookResult.INJECT);
-      assert.ok(secondResult.injectRecovery);
-      assert.equal(secondResult.modifiedOutput, repetitiveOutput);
-    });
-  });
 });

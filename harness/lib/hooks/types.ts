@@ -51,8 +51,6 @@ export interface HookContextExtras {
     maxUnproductiveHops: number;
   };
 
-  _memorySyncCount?: number;
-  _recoveryAttempt?: number;
   _routingSkillsDir?: string;
   _nextRoute?: import("../routing/index.ts").RuntimeRouteDecision;
 
@@ -93,7 +91,6 @@ export interface PostToolUseHook {
   ): Promise<{
     result: HookResult;
     modifiedOutput?: string;
-    injectRecovery?: string;
   }>;
 }
 

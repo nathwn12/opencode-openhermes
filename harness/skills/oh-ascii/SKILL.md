@@ -19,7 +19,7 @@ Create and validate ASCII diagrams in three phases: design, generate, validate.
 3. Fence all diagrams in markdown code blocks
 4. Keep diagrams under 80 columns with max 3 nesting levels
 5. For complex diagrams, author PlantUML and render with `-utxt`
-6. Validate structural alignment with `scripts/check_ascii_alignment.py`
+6. Validate visual alignment manually: check that box-drawing characters connect cleanly and all columns align within the markdown code block
 7. Fix reported issues and re-validate until clean
 
 ## Routing

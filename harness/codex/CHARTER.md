@@ -24,7 +24,7 @@ Non-negotiable operating core. All skills, commands, and agents follow these pri
 
 8. **Rules over hidden state** — Prefer AGENTS.md, instructions, and manifests over implicit state.
 
-9. **Memory implemented** — 4-tier hierarchical memory with importance scoring, budget enforcement, and plan-file persistence via MemoryManager + PlanStore.
+9. **Plan files store state** — The plan file is the single source of truth for session state. No parallel memory store.
 
 10. **Closed-loop autonomy** — Auto-classify, auto-route after every skill. Only stop for blockers and major decisions.
 
@@ -73,7 +73,7 @@ Plans at `~/.local/share/openhermes/plans/<project-name>/plan-<nnn>.md`.
 - **Concurrency**: Parallelize independent sub-tasks. Sequentialize dependent ones.
 - **Circuit breaker**: 5 subagent failures on the same task → surface BLOCKER.
 - **Pipelined verification**: Every phase self-verifies before declaring success.
-- **Background vs sync**: Independent work fires and forgets. Dependent work awaits.
+- **Parallel independent tasks**: Fire independent sub-tasks concurrently. Serialize only when B depends on A's output.
 
 ## Shared State
 

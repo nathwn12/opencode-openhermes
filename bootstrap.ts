@@ -17,13 +17,8 @@ import {
   confidenceGateHook,
   delegationDepthHook,
   resetDepthTracker,
-  errorRecoveryHook,
-  memorySyncHook,
-  sanityCheckHook,
   dynamicRouteHook,
   routeTrackingHook,
-  subagentFailureHook,
-  resetSubagentFailures,
   DEFAULT_GUARD_CONFIG,
 } from "./harness/lib/hooks/index.ts"
 import type { HookContext } from "./harness/lib/hooks/index.ts"
@@ -250,17 +245,12 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
         if (hooksConfig?.delegation_depth ?? true) reg.registerPreTool(delegationDepthHook)
         reg.registerRoute(nextRouteHook)
         if (hooksConfig?.confidence_gate ?? true) reg.registerRoute(confidenceGateHook)
-        if (hooksConfig?.error_recovery ?? true) reg.registerPostTool(errorRecoveryHook)
-        if (hooksConfig?.memory_sync ?? true) reg.registerPostTool(memorySyncHook)
-        if (hooksConfig?.sanity_check ?? true) reg.registerPostTool(sanityCheckHook)
         if (hooksConfig?.dynamic_route ?? true) reg.registerPostTool(dynamicRouteHook)
         if (hooksConfig?.route_tracking ?? true) {
           reg.registerRoute(routeTrackingHook)
         } else {
           reg.unregister("route-tracking")
         }
-        if (hooksConfig?.subagent_failure ?? true) reg.registerPostTool(subagentFailureHook)
-
         await logToOC("info", `hooks: ${reg.getPreToolHooks().length + reg.getPostToolHooks().length + reg.getRouteHooks().length} registered`)
       } else {
         await logToOC("info", "hooks: disabled via config")
@@ -370,10 +360,9 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
       // creates plans on demand (see Task Flow step 1 in agent prompt).
       // Auto-creation produced ghost skeletons like plan-004.
 
-      // Reset delegation depth and subagent failures on session start/error
+      // Reset delegation depth on session start/error
       if (typed.type === "session.created" || typed.type === "session.error") {
         resetDepthTracker()
-        resetSubagentFailures()
       }
     },
 
@@ -551,7 +540,7 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
         try {
           const postToolResult = await reg.executePostTool(hookContext, outputText)
 
-          // Surface recovery instructions from errorRecoveryHook and/or sanityCheckHook
+          // Surface recovery instructions from PostTool hooks
           if (postToolResult.recovery) {
             await logToOC("warn", `PostTool recovery instruction:\n${postToolResult.recovery}`)
           }
@@ -577,8 +566,6 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
             mutableOutput._nextRoute = runtimeNextRoute
           }
 
-          // memorySyncHook catches its own errors (best-effort sync),
-          // so memory sync failures are already handled gracefully inside the hook
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err)
           await logToOC("error", `Hook error (PostTool): ${msg}`)

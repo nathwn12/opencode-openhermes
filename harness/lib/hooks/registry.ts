@@ -174,11 +174,9 @@ export class HookRegistry {
   ): Promise<{
     result: HookResult;
     modifiedOutput?: string;
-    recovery?: string;
   }> {
     const sorted = this.topologicalSort(this.postToolHooks);
     let currentOutput = output;
-    let recovery: string | undefined;
     let hasInjection = false;
 
     for (const hook of sorted) {
@@ -186,14 +184,10 @@ export class HookRegistry {
       if (result.modifiedOutput !== undefined) {
         currentOutput = result.modifiedOutput;
       }
-      if (result.injectRecovery !== undefined) {
-        recovery = result.injectRecovery;
-      }
       if (result.result === HookResult.STOP) {
         return {
           result: HookResult.STOP,
           modifiedOutput: currentOutput,
-          recovery,
         };
       }
       if (result.result === HookResult.INJECT) {
@@ -204,7 +198,6 @@ export class HookRegistry {
     return {
       result: hasInjection ? HookResult.INJECT : HookResult.CONTINUE,
       modifiedOutput: currentOutput,
-      recovery,
     };
   }
 
@@ -290,127 +283,27 @@ export class HookRegistry {
   }
 
   // -----------------------------------------------------------------------
-  // Topological Sort
+  // Priority Sort
   // -----------------------------------------------------------------------
 
   /**
-   * Topological sort using Kahn's algorithm.
-   *
-   * Ordering rules:
-   *  1. Group by phase: EARLY → NORMAL → LATE
-   *  2. Within same phase, sort by priority DESC
-   *  3. Within same priority, topological dependency order
-   *
-   * Cycle detection: throws Error("Circular dependency detected: ...")
-   * Handles diamond dependencies correctly.
+   * Sort hooks by phase order (EARLY → NORMAL → LATE), then priority DESC.
+   * Dependencies are ignored — all current built-in hooks declare no dependencies,
+   * so the simpler sort is sufficient and the Kahn complexity is unnecessary.
    */
   topologicalSort<T extends { metadata: HookMetadata }>(hooks: T[]): T[] {
     if (hooks.length === 0) return [];
 
-    // Build name-to-hook map for lookup
-    const nameToHook = new Map<string, T>();
-    for (const hook of hooks) {
-      nameToHook.set(hook.metadata.name, hook);
-    }
+    const phaseOrder: Record<string, number> = {
+      [HookPhase.EARLY]: 0,
+      [HookPhase.NORMAL]: 1,
+      [HookPhase.LATE]: 2,
+    };
 
-    // Separate hooks by phase, keeping only those in the input set
-    const phaseGroups = new Map<HookPhase, T[]>();
-    for (const hook of hooks) {
-      const phase = hook.metadata.phase;
-      if (!phaseGroups.has(phase)) phaseGroups.set(phase, []);
-      phaseGroups.get(phase)!.push(hook);
-    }
-
-    const result: T[] = [];
-
-    // Process phases in order: EARLY, NORMAL, LATE
-    for (const phase of [HookPhase.EARLY, HookPhase.NORMAL, HookPhase.LATE]) {
-      const phaseHooks = phaseGroups.get(phase);
-      if (!phaseHooks || phaseHooks.length === 0) continue;
-
-      // Topologically sort within this phase
-      const sorted = this.kahnSort(phaseHooks, nameToHook);
-      result.push(...sorted);
-    }
-
-    return result;
-  }
-
-  /**
-   * Kahn's algorithm for topological sorting within a phase group.
-   * Dependencies are only considered within the hooks passed in.
-   */
-  private kahnSort<T extends { metadata: HookMetadata }>(
-    hooks: T[],
-    _allHooks: Map<string, T>,
-  ): T[] {
-    const nameToHook = new Map<string, T>();
-    for (const hook of hooks) {
-      nameToHook.set(hook.metadata.name, hook);
-    }
-
-    // Build adjacency list and in-degree map
-    const inDegree = new Map<string, number>();
-    const adj = new Map<string, string[]>();
-
-    for (const hook of hooks) {
-      const name = hook.metadata.name;
-      if (!inDegree.has(name)) inDegree.set(name, 0);
-      if (!adj.has(name)) adj.set(name, []);
-
-      for (const dep of hook.metadata.dependencies) {
-        // Only consider dependencies within this phase group
-        if (!nameToHook.has(dep)) continue;
-
-        if (!adj.has(dep)) adj.set(dep, []);
-        adj.get(dep)!.push(name);
-        inDegree.set(name, (inDegree.get(name) ?? 0) + 1);
-      }
-    }
-
-    // Seed queue with zero in-degree nodes, sorted by priority DESC for determinism
-    const queue: string[] = [];
-    for (const [name, degree] of inDegree) {
-      if (degree === 0) queue.push(name);
-    }
-
-    const sorted: T[] = [];
-
-    while (queue.length > 0) {
-      // Sort by priority DESC for deterministic output
-      queue.sort((a, b) => {
-        const pa = nameToHook.get(a)?.metadata.priority ?? 0;
-        const pb = nameToHook.get(b)?.metadata.priority ?? 0;
-        if (pb !== pa) return pb - pa;
-        // Tie-break by name for stability
-        return a.localeCompare(b);
-      });
-
-      const name = queue.shift()!;
-      const hook = nameToHook.get(name)!;
-      sorted.push(hook);
-
-      for (const neighbor of adj.get(name) ?? []) {
-        const currentDegree = inDegree.get(neighbor) ?? 1;
-        const newDegree = currentDegree - 1;
-        inDegree.set(neighbor, newDegree);
-        if (newDegree === 0) {
-          queue.push(neighbor);
-        }
-      }
-    }
-
-    // Cycle detection
-    if (sorted.length !== hooks.length) {
-      const sortedNames = new Set(sorted.map((h) => h.metadata.name));
-      const unsorted = hooks
-        .filter((h) => !sortedNames.has(h.metadata.name))
-        .map((h) => h.metadata.name);
-      throw new Error(
-        `Circular dependency detected: ${unsorted.join(" → ")}`,
-      );
-    }
-
-    return sorted;
+    return [...hooks].sort((a, b) => {
+      const phaseDiff = (phaseOrder[a.metadata.phase] ?? 1) - (phaseOrder[b.metadata.phase] ?? 1);
+      if (phaseDiff !== 0) return phaseDiff;
+      return (b.metadata.priority ?? 0) - (a.metadata.priority ?? 0);
+    });
   }
 }

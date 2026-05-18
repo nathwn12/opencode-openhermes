@@ -9,7 +9,7 @@ export interface GuardConfig {
   maxUnproductiveHops: number
   /** Max delegation (sub-agent) depth before STOP */
   maxDelegationDepth: number
-  /** Consecutive anomalies before recovery escalation */
+  /** Consecutive anomalies before guard escalation */
   maxConsecutiveAnomalies: number
   /** Max subagent failures on same task before BLOCKER */
   maxSubagentFailures: number

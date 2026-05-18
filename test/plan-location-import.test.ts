@@ -9,7 +9,6 @@ import { readPlanSummary, resolvePlanAccess, setPlanStorageDirForTest } from "..
 describe("plan-location imports", () => {
   it("imports hook modules without bootstrap cycle failure", async () => {
     await import("../harness/lib/hooks/builtins/plan-check-hook.ts")
-    await import("../harness/lib/hooks/builtins/memory-sync-hook.ts")
   })
 
   it("resolvePlanAccess and readPlanSummary use the same latest plan", () => {

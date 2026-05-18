@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/openhermes"><img src="https://img.shields.io/npm/v/openhermes?style=for-the-badge&label=version&color=FFD700" alt="v4.11.3"></a>
+  <a href="https://www.npmjs.com/package/openhermes"><img src="https://img.shields.io/npm/v/openhermes?style=for-the-badge&label=version&color=FFD700" alt="v4.13.0"></a>
   <a href="https://github.com/nathwn12/openhermes/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="License: MIT"></a>
   <a href="https://opencode.ai"><img src="https://img.shields.io/badge/runs%20on-OpenCode-6366f1?style=for-the-badge" alt="Runs on OpenCode"></a>
   <a href="https://github.com/nathwn12/openhermes"><img src="https://img.shields.io/badge/⭐%20star%20on-GitHub-181717?style=for-the-badge" alt="Star on GitHub"></a>
@@ -33,17 +33,12 @@ To install from `dev` (latest features, may be unstable):
 
 ## One sentence. One engine.
 
-OpenHermes v4.11 ships with a hardened internal architecture — 8 subsystems working together to make every session faster, more reliable, and fully autonomous:
+OpenHermes ships with a focused internal architecture — 3 subsystems working together to make every session faster, more reliable, and fully autonomous:
 
 | Subsystem | What it does |
 |-----------|-------------|
 | **Prompt Composer** | 9 modular fragments joined at runtime → byte-identical. Add a fragment, never edit the composition code. |
-| **Auto-Recovery** | 9 error categories with typed actions — retry with backoff, compact on overflow, escalate on unknowns. Self-healing. |
-| **4-Tier Memory** | System → Project → Mission → Task. Importance-scored, budget-enforced, plan-file-persisted. Context that survives hops. |
-| **Hook Registry** | Pluggable pre-tool, post-tool, route, and session hooks with topological sort. 8 built-in hooks, zero routing boilerplate. |
-| **MVCC Sync** | Atomic writes, version counters, conflict detection. Multiple sub-agents writing the same plan file — no data loss. |
-| **Sanity Checker** | 8 output degeneration detectors — repetition, gibberish, low diversity — with automatic escalation and recovery injection. |
-| **Background Cmd** | Fire-and-forget process spawning with timeout, status polling, and auto-cleanup. Non-blocking long-running tasks. |
+| **Hook Registry** | Pluggable pre-tool, post-tool, route, and session hooks with priority-sort ordering. 5 built-in hooks, zero routing boilerplate. |
 | **Plan Location** | Resolves plan file paths per project with directory-per-project layout in `~/.local/share/openhermes/plans/`. |
 
 ---
@@ -76,7 +71,7 @@ The loop runs unsupervised because these never turn off:
 | **Shared operating model** | CHARTER + AUTOPILOT + CONTEXT + ETHOS injected every session. Every interaction grounded in the same rules. |
 | **CORE/DEEP skill format** | Every skill is a two-file system: CORE (SKILL.md) handles 80% of passes in one read. DEEP.md loads on demand for hard cases. |
 | **Plan file storage** | `~/.local/share/openhermes/plans/`. Survives `npm update`. |
-| **8 internal subsystems** | Composer, recovery, memory, sync, hooks, plans, sanity, background — all native Node.js / TypeScript. |
+| **3 internal subsystems** | Composer, hooks, plans — all native Node.js / TypeScript. |
 | **Zero npm dependency additions** | All new subsystems use native Node.js and TypeScript only. No new packages. |
 
 ## 30 skills — four tiers
@@ -146,13 +141,9 @@ openhermes-pkg/
 │   ├── instructions/      # SHELL.md
 │   ├── lib/               # Internal subsystems
 │   │   ├── composer/      # Prompt fragment composition
-│   │   ├── recovery/      # Auto-recovery with error patterns
-│   │   ├── memory/        # 4-tier hierarchical memory
-│   │   ├── sync/          # MVCC plan synchronization
 │   │   ├── hooks/         # Pluggable hook registry
 │   │   ├── plans/         # Plan file path resolution
-│   │   ├── sanity/        # Output degeneration detection
-│   │   └── background/    # Fire-and-forget command system
+│   │   └── ...            # guards/ (guard config)
 │   └── skills/            # 30 skill SKILL.md files (CORE/DEEP format)
 ├── lib/                   # harness-resolver.ts
 └── test/

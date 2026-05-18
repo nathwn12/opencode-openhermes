@@ -5,6 +5,25 @@ All notable changes to OpenHermes are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.13.0] - 2026-05-19
+
+### Removed
+
+- **5 dead subsystems nuked** (~2,735 lines of production code + ~1,950 test lines) — `harness/lib/sync/` (MVCC plan sync, file watcher), `harness/lib/background/` (child process manager, zombie cleanup), `harness/lib/memory/` (4-tier hierarchical memory, plan store), `harness/lib/recovery/` (9-category error recovery, patterns), `harness/lib/sanity/` (8 LLM output degeneration detectors). All were either unreferenced by any production code or wired but produced zero behavioral effect (recovery instructions were logged and discarded; memory system was never populated; sanity checks flagged anomalies that were logged and ignored).
+
+- **4 dead PostToolUse hooks** — `error-recovery-hook`, `memory-sync-hook`, `sanity-check-hook`, `subagent-failure-hook`. All were registered and fired on every tool use but their output (`injectRecovery`) was only written to OpenCode's log — never injected back into agent context.
+
+### Simplified
+
+- **Hook registry topological sort** — Replaced 110-line Kahn's algorithm (cycle detection, adjacency lists, dependency resolution) with a 20-line phase-grouped priority sort. All hooks had `dependencies: []` — the algorithm was never exercised.
+
+### Changed
+
+- **README.md, AGENTS.md, CHARTER.md, AUTOPILOT.md** — Updated to reflect the nuked subsystems. Subsystem count dropped from 9 to 3 (composer, hooks, plans). Hook count from 8 to 5.
+
+### Tests
+
+- Full suite: 200 tests passing (down from 307, reflecting removed tests for orphaned subsystems).
 
 ## [4.12.1] - 2026-05-19
 

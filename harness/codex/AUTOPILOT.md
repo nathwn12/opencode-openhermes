@@ -154,7 +154,7 @@ Every skill routes somewhere — no leaf nodes. Route by outcome, not convention
 ## Safety Valves
 
 ### Loop Guard (Mechanical)
-Enforced by the `route-tracking`, `delegation-depth`, and `subagent-failure` hooks — no LLM instruction needed.
+Enforced by the `route-tracking` and `delegation-depth` hooks — no LLM instruction needed.
 
 | Guard | Default | What it does |
 |---|---|---|
@@ -162,7 +162,6 @@ Enforced by the `route-tracking`, `delegation-depth`, and `subagent-failure` hoo
 | Unproductive hops | 8 | STOP after 8 consecutive no-artifact hops |
 | Delegation depth | 25 | STOP when sub-agent calls exceed 25 deep |
 | Consecutive anomalies | 2 | Escalate after 2 unhealthy outputs in a row |
-| Subagent failures | 5 | Surface BLOCKER after 5 consecutive task failures |
 
 On violation, the hook injects a structured error report with full context. Progressive warning at 60% and escalation at 80% of each limit.
 
@@ -185,7 +184,7 @@ Before each routing hop, check: "Can I proceed without guessing?" If the next sk
 
 ## Hook System
 
-Pluggable lifecycle hooks with topological sort. Hooks register with priority, phase (early/normal/late), and dependencies. Deterministic execution order via Kahn's algorithm.
+Pluggable lifecycle hooks. Hooks register with priority and phase (early/normal/late). Deterministic execution order via phase-grouped priority sort.
 
 ### Hook Lifecycle
 
@@ -202,7 +201,7 @@ PreToolUse Hook        ◄── PlanCheck, ShellDetect, DelegationDepth
 Tool / Sub-Agent Call
     │
     ▼
-PostToolUse Hook       ◄── ErrorRecovery, MemorySync
+PostToolUse Hook       ◄── (reserved for future use)
     │                       (phase: LATE)
     ▼
 Route Hook             ◄── ConfidenceGate
@@ -219,7 +218,7 @@ Session End Hook       ──► SessionHook.onSessionEnd()
 | Type | Interface | Purpose |
 |------|-----------|---------|
 | `PreToolUseHook` | `execute(context)` | Before sub-agent call — modify context, inject instructions, stop on loop guard |
-| `PostToolUseHook` | `execute(context, output)` | After sub-agent call — modify output, inject recovery actions, sync memory |
+| `PostToolUseHook` | `execute(context, output)` | After sub-agent call — modify output for route evidence |
 | `RouteHook` | `execute(context, route)` | During routing — modify destination, pause on low confidence |
 | `SessionHook` | `onSessionStart/End(context)` | Session lifecycle — setup/teardown |
 
@@ -235,9 +234,9 @@ Session End Hook       ──► SessionHook.onSessionEnd()
 
 1. **EARLY** — Plan verification, shell detection (priority 80-90)
 2. **NORMAL** — Depth tracking, confidence gating (priority 60-70)
-3. **LATE** — Error recovery, memory sync (priority 40-50)
+3. **LATE** — (reserved for future use)
 
-Within same phase, hooks run by priority DESC then topological dependency order.
+Within same phase, hooks run by priority DESC.
 
 ### Built-in Hooks
 
@@ -248,10 +247,6 @@ Within same phase, hooks run by priority DESC then topological dependency order.
 | `confidence-gate` | Route | NORMAL | 70 | Adjust route based on confidence level |
 | `delegation-depth` | PreToolUse | NORMAL | 60 | Loop guard — stops at depth >= max (default 25) |
 | `route-tracking` | Route | LATE | 55 | Enforce max skill repeats and unproductive hop limits mechanically |
-| `error-recovery` | PostToolUse | LATE | 50 | Match error patterns, inject recovery instructions |
-| `memory-sync` | PostToolUse | LATE | 40 | Sync task findings and decisions to plan file |
-| `subagent-failure` | PostToolUse | LATE | 45 | Track consecutive subagent failures, surface BLOCKER at threshold |
-| `sanity-check` | PostToolUse | LATE | 30 | Detect LLM output degeneration patterns, inject recovery on anomaly |
 
 ### Configuration
 
@@ -262,7 +257,7 @@ All hooks enabled by default. Disable individual hooks via `experimental.hooks` 
     "hooks": {
       "enabled": true,
       "plan_check": false,
-      "memory_sync": false
+      "delegation_depth": false
     }
   }
 }
@@ -273,7 +268,7 @@ All hooks enabled by default. Disable individual hooks via `experimental.hooks` 
 1. Create a hook implementing one of the four hook interfaces
 2. Import `HookRegistry` from `openhermes/harness/lib/hooks`
 3. Register via `HookRegistry.getInstance().registerPreTool(myHook)`
-4. Hooks are topologically sorted by phase, priority, and dependencies
+4. Hooks are sorted by phase order (EARLY → NORMAL → LATE), then priority DESC
 
 ## User Skills
 

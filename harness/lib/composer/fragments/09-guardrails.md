@@ -1,6 +1,6 @@
 ## Guardrails
 
-- All loop and safety limits are mechanically enforced by hooks (route-tracking, delegation-depth, subagent-failure). See AUTOPILOT.md §Safety Valves for limits and configuration.
+- All loop and safety limits are mechanically enforced by hooks (route-tracking, delegation-depth). See AUTOPILOT.md §Safety Valves for limits and configuration.
 - Before routing: if next skill's required input is missing and cannot be discovered → surface
 - Concrete, low-risk findings from review or investigation are implementation candidates, not report-only endpoints; dispatch to oh-builder immediately.
 - Confidence is evaluated once per session, not per routing hop — only re-evaluate when new user input arrives
