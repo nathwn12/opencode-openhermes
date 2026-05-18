@@ -5,6 +5,44 @@ All notable changes to OpenHermes are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.12.0] - 2026-05-19
+
+### Added
+
+- **Evidence-driven dynamic route resolution** — New `harness/lib/routing/` module with `RouteEvidence` schema (outcome + optional verification/action/work/target/reason), `resolveRoute()` with 5 evidence-aware decision rules over multi-candidate routes, and `consumeRouteGuidance()` that promotes `ROUTE_GUIDANCE:` JSON into `NEXT_ROUTE:` instructions.
+
+- **Three new built-in hooks**:
+  - `dynamic-route-hook` (PostToolUse, priority 20 LATE) — Parses `ROUTE_EVIDENCE:` from sub-agent output, runs `resolveRoute()`, appends `ROUTE_GUIDANCE:` with selected route.
+  - `next-route-hook` (RouteHook, priority 90 EARLY) — Rewrites the delegated route from runtime state, applying before other routing hooks.
+  - `subagent-failure-hook` (Error hook) — Tracks sub-agent failure counts per session, feeding into guard progression.
+
+- **Centralized GuardConfig** — `harness/lib/guards/guard-config.ts` replaces per-module `_routeTrackingConfig`/`_maxDelegationDepth` with a single config object consumed by route-tracking, delegation-depth, and subagent-failure hooks.
+
+- **oh-fusion pass route widened** — `route.pass` changed from `oh-skill-craft` to `[oh-skill-craft, oh-skills-link]` with `## Route evidence` section coaching emission. This lets the resolver select between skill crafting and discovery verification based on evidence.
+
+- **oh-review route evidence guidance** — `harness/skills/oh-review/SKILL.md` documents the `ROUTE_EVIDENCE:` JSON shape, coaching the agent to emit `verification`, `action`, `work`, and `reason` alongside `outcome` and `target`.
+
+### Changed
+
+- **Agent prompt fragments updated** — `04-task-flow.md` step 6 replaced with full `ROUTE_EVIDENCE:` schema + 5 runtime resolution rules. `09-guardrails.md` routing section rewritten with numbered priority (NEXT_ROUTE > ROUTE_GUIDANCE > frontmatter) and multi-candidate evidence rules. `02-delegation.md` updated for fusion discipline.
+
+- **Bootstrap.ts rewired** — Imports routing module, new hooks, and guard config. Replaces old `_routeTrackingConfig`/`_maxDelegationDepth` with centralized `_guardConfig`. Wires `dynamicRouteHook`, `nextRouteHook`, `subagentFailureHook` into the hook registry.
+
+- **Route-tracking and delegation-depth hooks refactored** — Both consume centralized GuardConfig instead of inline defaults.
+
+- **sync-release.ps1** — New release sync script in `scripts/` with drift detection, conventional-commit bump inference, CHANGELOG coverage check, and undeclared-version audit.
+
+### Removed
+
+- **Orphaned `v4.12.0` tag from `master` branch** — The tag pointed to a dead branch with unmerged Rust oh-tools work (accessible only via the tag). Cleaned up to prevent version confusion.
+
+### Tests
+
+- 12 routing tests covering all decision rules, frontmatter parsing, and guidance consumption.
+- Dynamic-route-hook evidence parsing tests in hooks.test.ts.
+- Bootstrap integration tests for runtime route decision flow.
+- **Full suite: 307 tests passing.**
+
 ## [4.11.3] - 2026-05-18
 
 ### Changed
@@ -97,6 +135,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Background Command System** — Fire-and-forget child process management with immediate task ID return, status polling, timeout enforcement, process kill, and automatic cleanup of completed tasks.
 - **Test Harness Infrastructure** — Reusable test utilities: disposable temp directories with Symbol.asyncDispose for auto-cleanup, typed factory functions for test objects, and restore-capable mocks for console, process exit, filesystem, event emitters, and abort controllers.
 
+[4.12.0]: https://github.com/nathwn12/openhermes/compare/v4.11.3...v4.12.0
 [4.11.1]: https://github.com/nathwn12/openhermes/compare/v4.11.0...v4.11.1
 [4.11.2]: https://github.com/nathwn12/openhermes/compare/v4.11.1...v4.11.2
 [4.11.3]: https://github.com/nathwn12/openhermes/compare/v4.11.2...v4.11.3
