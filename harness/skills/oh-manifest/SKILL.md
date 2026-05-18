@@ -29,3 +29,4 @@ Full build orchestration loop: pre-flight → plan → build → verify → loop
 | pass | → oh-planner |
 | fail | → oh-expert (diagnose loop failure) |
 | blocker | → surface with context and options |
+

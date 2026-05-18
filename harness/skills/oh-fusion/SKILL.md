@@ -48,13 +48,3 @@ Skill fusion pipeline: Discover → Analyze → Verdict → Approval Gate → In
 | Approval not yet granted | → surface |
 | Blocker | → surface |
 
-## Route evidence
-
-When this skill completes, emit `ROUTE_EVIDENCE:` as a JSON line in the output.
-Use this shape:
-- `outcome`: pass | fail | blocker
-- `target`: prefer `oh-skills-link` if the merged/standalone skill needs discovery verification; prefer `oh-skill-craft` if further skill development is needed
-- `verification`: "verified" if post-approval integration steps were run and confirmed, "unverified" otherwise
-- `action`: "done" if complete, "fixable" if the integration plan has open items
-- `work`: "implement" if skill crafting is still needed, "verify" if only discovery checks remain
-- `reason`: short explanation
