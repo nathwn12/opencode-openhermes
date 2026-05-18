@@ -5,7 +5,23 @@ All notable changes to OpenHermes are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [4.12.0] - 2026-05-19
+
+## [4.12.1] - 2026-05-19
+
+### Changed
+
+- **Route evidence centralized in orchestrator** — Per-skill `ROUTE_EVIDENCE:` guidance removed from individual SKILL.md files (`oh-review`, `oh-fusion`, etc.). Route evidence schema, emission coaching, and resolution rules now live exclusively in the central agent prompt fragments (`04-task-flow.md`, `09-guardrails.md`). This eliminates duplication and ensures route evidence evolves in one place.
+
+- **Changelog cleanup** — Removed obsolete Rust reference that had no place in the OpenHermes changelog.
+
+### Tests
+
+- **3 new test files added**:
+  - `test/guards/guard-config.test.ts` — Validates centralized GuardConfig construction, field access, and default values.
+  - `test/hooks/next-route-hook.test.ts` — Tests `nextRouteHook` wiring, route override behavior, and interaction with other RouteHook implementations.
+  - `test/hooks/subagent-failure-hook.test.ts` — Tests sub-agent failure tracking, threshold progression, and session-scoped counters.
+
+  Full suite: passing.
 
 ### Added
 
