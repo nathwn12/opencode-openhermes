@@ -11,5 +11,45 @@
    - Investigate multiple files for a bug → one sub-agent per file
    - Test + lint + typecheck → one sub-agent per check
    - Only serialize when tasks have true dependencies (B needs A's output)
-6. **Check outcome:** pass → skill's route.pass, fail → if the finding is concrete, low-risk, and fixable, dispatch to oh-builder immediately; otherwise skill's route.fail, blocker → surface findings
-7. **Route:** Next skill or surface/done. Do not ask. Concrete, low-risk, fixable findings should be delegated, not only surfaced.
+6. **Emit route evidence when skills complete.** After every completed sub-agent, emit a `ROUTE_EVIDENCE:` JSON line in the output with the richer schema:
+   - `outcome`: pass | fail | blocker (required)
+   - `target`: specific next skill name (optional — select from route candidates)
+   - `verification`: "verified" | "unverified" (optional)
+   - `action`: "done" | "fixable" | "needs-context" | "blocked" (optional)
+   - `work`: "implement" | "verify" | "ship" | "diagnose" | "surface" (optional)
+   - `reason`: short explanation (optional)
+
+   Example: `ROUTE_EVIDENCE: {"outcome":"pass","target":"oh-ship","verification":"verified","action":"done","work":"ship","reason":"All checks pass, ready to ship"}`
+
+   The runtime uses this evidence to select among multi-candidate routes:
+   - verified+done+ship → prefers `oh-ship` over `oh-gauntlet`
+   - unverified → prefers `oh-gauntlet` (needs more testing)
+   - fixable+implement → prefers `oh-builder` (fix before routing onward)
+   - explicit `target` in evidence → preferred when it's a valid candidate
+   - fallback → first declared candidate
+
+7. **Check outcome:** `NEXT_ROUTE: <skill>` takes highest priority, then evidence-driven `ROUTE_GUIDANCE` with `selected`, then static frontmatter routes. Concrete, low-risk, fixable findings dispatch to oh-builder immediately.
+
+8. **Route:** Next skill or surface/done. Do not ask.
+
+### Fusion Protocol
+
+When the task touches external skills or imported workflows:
+
+1. **Analyze first** — extract `OH gaps`, `OH wins`, and `missed patterns` from the source before proposing any edit.
+2. **Decide with a rubric** — merge into an existing `oh-*` skill when the capability is already present and the source mainly upgrades it; create a standalone `oh-*` skill when the capability is distinct, reusable, and not cleanly absorbed.
+3. **Resolve from context** — use the codebase and prior conversation first. Ask only if a blocker cannot be resolved from either.
+4. **Approval gate** — surface `merge verdict` and `action plan`. Do not edit the harness until the user approves that action.
+5. **Then route** — once approved, delegate the implementation path immediately.
+
+### Large-Codebase Verification
+
+When the user asks to VERIFY, STUDY, CHECK, AUDIT, REVIEW, or ANALYZE a large codebase:
+
+1. **Fire parallel readers immediately** — Spawn multiple sub-agents in parallel, each reading a different chunk of the codebase. Do NOT read files sequentially.
+
+2. **Prioritize high-value targets** — Config files, entry points, manifests, CI, existing instruction files, and framework configs first. Source code only if architecture is still unclear after reading configs.
+
+3. **Stop when confident** — If the parallel reads provide enough context to answer the user's question, surface findings and stop. Do not keep reading.
+
+4. **Signal before going deeper** — If context is still insufficient after the first wave of parallel reads, tell the user: *"I still need to see more — proceed?"* with a brief note on what's still unclear and what the next scan would cover. Only continue if they say yes.

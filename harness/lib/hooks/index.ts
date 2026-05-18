@@ -29,5 +29,14 @@ export { delegationDepthHook, resetDepthTracker } from "./builtins/delegation-de
 export { errorRecoveryHook } from "./builtins/error-recovery-hook.ts";
 export { memorySyncHook } from "./builtins/memory-sync-hook.ts";
 export { sanityCheckHook } from "./builtins/sanity-check-hook.ts";
+export { dynamicRouteHook } from "./builtins/dynamic-route-hook.ts";
+export { nextRouteHook } from "./builtins/next-route-hook.ts";
 export { routeTrackingHook, resetRouteTracker, getHopHistory } from "./builtins/route-tracking-hook.ts";
 export type { HopRecord, RouteTrackingConfig } from "./builtins/route-tracking-hook.ts";
+
+// Guard configuration
+export type { GuardConfig, GuardProgression, GuardLevel } from "../guards/guard-config.ts";
+export { DEFAULT_GUARD_CONFIG, checkGuardProgression, mergeGuardConfig } from "../guards/guard-config.ts";
+
+// Subagent failure hook
+export { subagentFailureHook, resetSubagentFailures, getSubagentFailureCount } from "./builtins/subagent-failure-hook.ts";

@@ -19,6 +19,7 @@ import {
   resetRouteTracker,
   getHopHistory,
   sanityCheckHook,
+  dynamicRouteHook,
 } from "./index.ts";
 import { AnomalyTracker } from "../sanity/anomaly-tracker.ts";
 import type {
@@ -30,6 +31,9 @@ import type {
   RouteHook,
   SessionHook,
 } from "./types.ts";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -137,6 +141,14 @@ function makeSessionHook(
 // ---------------------------------------------------------------------------
 
 describe("HookRegistry", () => {
+  const tmpDirs: string[] = [];
+
+  after(() => {
+    for (const dir of tmpDirs) {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   beforeEach(() => {
     HookRegistry.resetInstance();
     resetDepthTracker();
@@ -480,6 +492,82 @@ describe("HookRegistry", () => {
         "output",
       );
       assert.equal(result.recovery, "retry with backoff");
+    });
+
+    it("appends structured route guidance from output evidence", async () => {
+      const reg = HookRegistry.getInstance();
+      reg.registerPostTool(dynamicRouteHook);
+
+      const skillsDir = fs.mkdtempSync(path.join(os.tmpdir(), "oh-routing-hook-"));
+      tmpDirs.push(skillsDir);
+      const skillDir = path.join(skillsDir, "oh-review");
+      fs.mkdirSync(skillDir, { recursive: true });
+      fs.writeFileSync(path.join(skillDir, "SKILL.md"), `---
+name: oh-review
+route:
+  pass:
+    - oh-gauntlet
+    - oh-ship
+  fail: oh-builder
+  blocker: surface
+---\n`);
+
+      const result = await reg.executePostTool(
+        makeContext({ agent: "oh-review", _routingSkillsDir: skillsDir }),
+        'Review complete\nROUTE_EVIDENCE: {"outcome":"pass","target":"oh-ship"}',
+      );
+
+      assert.equal(result.result, HookResult.INJECT);
+      assert.ok(result.modifiedOutput?.includes("Review complete"));
+      assert.ok(result.modifiedOutput?.includes("ROUTE_GUIDANCE:"));
+
+      const guidanceLine = result.modifiedOutput
+        ?.split(/\r?\n/)
+        .find((line) => line.startsWith("ROUTE_GUIDANCE:"));
+      assert.ok(guidanceLine);
+      assert.deepEqual(JSON.parse(guidanceLine!.slice("ROUTE_GUIDANCE:".length).trim()), {
+        outcome: "pass",
+        candidates: ["oh-gauntlet", "oh-ship"],
+        selected: "oh-ship",
+        reason: 'Selected "oh-ship" from output evidence.',
+      });
+    });
+
+    it("ignores malformed structured route evidence safely", async () => {
+      const reg = HookRegistry.getInstance();
+      reg.registerPostTool(dynamicRouteHook);
+
+      const skillsDir = fs.mkdtempSync(path.join(os.tmpdir(), "oh-routing-hook-"));
+      tmpDirs.push(skillsDir);
+      const skillDir = path.join(skillsDir, "oh-review");
+      fs.mkdirSync(skillDir, { recursive: true });
+      fs.writeFileSync(path.join(skillDir, "SKILL.md"), `---
+name: oh-review
+route:
+  pass:
+    - oh-gauntlet
+    - oh-ship
+  fail: oh-builder
+  blocker: surface
+---\n`);
+
+      const output = 'Review complete\nROUTE_EVIDENCE: {"outcome":"pass","verification":"maybe"}';
+      const result = await reg.executePostTool(
+        makeContext({ agent: "oh-review", _routingSkillsDir: skillsDir }),
+        output,
+      );
+
+      assert.equal(result.result, HookResult.CONTINUE);
+      assert.equal(result.modifiedOutput, output);
+    });
+
+    it("leaves output unchanged when no route evidence is present", async () => {
+      const reg = HookRegistry.getInstance();
+      reg.registerPostTool(dynamicRouteHook);
+
+      const result = await reg.executePostTool(makeContext({ agent: "oh-review" }), "plain output");
+      assert.equal(result.result, HookResult.CONTINUE);
+      assert.equal(result.modifiedOutput, "plain output");
     });
   });
 

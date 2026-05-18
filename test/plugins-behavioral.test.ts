@@ -209,6 +209,18 @@ describe("BootstrapPlugin behavior", () => {
     tmpDirs.push(uniqueDir)
     const plugin = await mod.BootstrapPlugin({ directory: uniqueDir })
 
+    // Configure with guards that prevent route-tracking from interfering with depth test
+    // maxUnproductiveHops set above maxDelegationDepth so depth guard fires first
+    await plugin.config({
+      skills: { paths: [] },
+      agent: {},
+      command: {},
+      instructions: [],
+      experimental: {
+        hooks: { enabled: true, route_tracking: false },
+      },
+    })
+
     // Helper: simulate calling tool.execute.before with task tool
     // agent param distinguishes routes so route-tracking hooks don't prematurely stop
     async function callTaskHook(agent?: string): Promise<{ blocked: boolean; errorMsg?: string }> {

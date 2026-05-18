@@ -3,6 +3,7 @@ import assert from "node:assert/strict"
 import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
+import { HookRegistry } from "../harness/lib/hooks/index.ts"
 
 // ---------------------------------------------------------------------------
 // Bootstrap integration tests
@@ -37,6 +38,9 @@ describe("bootstrap integration", () => {
 
     // Built-in skills
     for (const s of ["oh-planner", "oh-builder", "oh-gauntlet", "oh-ship"]) {
+      const passRoute = s === "oh-planner"
+        ? "  pass:\n    - oh-gauntlet\n    - oh-ship"
+        : "  pass: oh-gauntlet"
       fs.mkdirSync(path.join(skillsDir, s), { recursive: true })
       fs.writeFileSync(path.join(skillsDir, s, "SKILL.md"), [
         "---",
@@ -44,7 +48,7 @@ describe("bootstrap integration", () => {
         `description: "Test skill ${s}"`,
         "tier: 3",
         "route:",
-        "  pass: oh-gauntlet",
+        passRoute,
         "  fail: oh-builder",
         "  blocker: surface",
         "---",
@@ -119,6 +123,141 @@ describe("bootstrap integration", () => {
     assert.ok(paths, "config.skills.paths should be defined")
     assert.ok(paths.some(p => p.includes("harness") && p.includes("skills")),
       "Built-in skills path should be registered")
+  })
+
+  it("tool.execute.after consumes dynamic route guidance in the real post-tool flow", async () => {
+    if (!tmpDir) {
+      tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "oh-test-"))
+      harnessDir = path.join(tmpDir, "harness")
+      skillsDir = path.join(harnessDir, "skills")
+
+      fs.mkdirSync(path.join(harnessDir, "codex"), { recursive: true })
+      fs.writeFileSync(path.join(harnessDir, "codex", "CHARTER.md"), "# Test Charter\n")
+      fs.mkdirSync(path.join(harnessDir, "instructions"), { recursive: true })
+      fs.writeFileSync(path.join(harnessDir, "codex", "AUTOPILOT.md"), "# Test Autopilot\n")
+      fs.mkdirSync(path.join(harnessDir, "commands"), { recursive: true })
+      fs.mkdirSync(path.join(harnessDir, "agents"), { recursive: true })
+      fs.writeFileSync(path.join(harnessDir, "agents", "openhermes.md"), "# OpenHermes\nTest agent.\n")
+
+      for (const s of ["oh-planner", "oh-builder", "oh-gauntlet", "oh-ship"]) {
+        fs.mkdirSync(path.join(skillsDir, s), { recursive: true })
+      const passRoute = s === "oh-planner"
+        ? "  pass:\n    - oh-gauntlet\n    - oh-ship"
+        : "  pass: oh-gauntlet"
+      fs.writeFileSync(path.join(skillsDir, s, "SKILL.md"), [
+        "---",
+        `name: ${s}`,
+        `description: \"Test skill ${s}\"`,
+        "tier: 3",
+        "route:",
+        passRoute,
+        "  fail: oh-builder",
+        "  blocker: surface",
+        "---",
+        ].join("\n") + "\n\n# Body\n")
+      }
+    }
+
+    const { BootstrapPlugin, setHarnessRootForTest, setPlanStorageDirForTest } = await import("../bootstrap.ts")
+    setHarnessRootForTest(harnessDir)
+    setPlanStorageDirForTest(path.join(tmpDir, "plans"))
+
+    const plugin = await BootstrapPlugin({ directory: tmpDir } as never)
+    await plugin.config!({
+      skills: { paths: [] },
+      command: {},
+      agent: {},
+      instructions: [],
+      experimental: {
+        hooks: { enabled: true },
+      },
+    } as Record<string, unknown>)
+
+    const output = {
+      content: [{
+        type: "text",
+        text: 'Planner finished\nROUTE_EVIDENCE: {"outcome":"pass","target":"oh-ship"}',
+      }],
+    }
+
+    await plugin["tool.execute.after"]!({ tool: "task", agent: "oh-planner" } as never, output as never)
+
+    const content = output.content[0]?.text
+    assert.equal(typeof content, "string")
+    assert.ok(content.includes("ROUTE_GUIDANCE:"), "route guidance should be appended to post-tool output")
+    assert.ok(content.includes('"selected":"oh-ship"'), "route guidance should resolve from the real skill file")
+    assert.ok(content.includes("NEXT_ROUTE: oh-ship"), "route guidance should be consumed into an explicit next route")
+  })
+
+  it("runtime next-route state reroutes the next delegation before the default first candidate", async () => {
+    if (!tmpDir) {
+      tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "oh-test-"))
+      harnessDir = path.join(tmpDir, "harness")
+      skillsDir = path.join(harnessDir, "skills")
+
+      fs.mkdirSync(path.join(harnessDir, "codex"), { recursive: true })
+      fs.writeFileSync(path.join(harnessDir, "codex", "CHARTER.md"), "# Test Charter\n")
+      fs.mkdirSync(path.join(harnessDir, "instructions"), { recursive: true })
+      fs.writeFileSync(path.join(harnessDir, "codex", "AUTOPILOT.md"), "# Test Autopilot\n")
+      fs.mkdirSync(path.join(harnessDir, "commands"), { recursive: true })
+      fs.mkdirSync(path.join(harnessDir, "agents"), { recursive: true })
+      fs.writeFileSync(path.join(harnessDir, "agents", "openhermes.md"), "# OpenHermes\nTest agent.\n")
+
+      for (const s of ["oh-planner", "oh-builder", "oh-gauntlet", "oh-ship"]) {
+        fs.mkdirSync(path.join(skillsDir, s), { recursive: true })
+        const passRoute = s === "oh-planner"
+          ? "  pass:\n    - oh-gauntlet\n    - oh-ship"
+          : "  pass: oh-gauntlet"
+        fs.writeFileSync(path.join(skillsDir, s, "SKILL.md"), [
+          "---",
+          `name: ${s}`,
+          `description: \"Test skill ${s}\"`,
+          "tier: 3",
+          "route:",
+          passRoute,
+          "  fail: oh-builder",
+          "  blocker: surface",
+          "---",
+        ].join("\n") + "\n\n# Body\n")
+      }
+    }
+
+    const { BootstrapPlugin, setHarnessRootForTest, setPlanStorageDirForTest } = await import("../bootstrap.ts")
+    setHarnessRootForTest(harnessDir)
+    setPlanStorageDirForTest(path.join(tmpDir, "plans"))
+    HookRegistry.resetInstance()
+
+    const plugin = await BootstrapPlugin({ directory: tmpDir } as never)
+    await plugin.config!({
+      skills: { paths: [] },
+      command: {},
+      agent: {},
+      instructions: [],
+      experimental: {
+        hooks: { enabled: true },
+      },
+    } as Record<string, unknown>)
+
+    const firstOutput = {
+      content: [{
+        type: "text",
+        text: 'Planner finished\nROUTE_EVIDENCE: {"outcome":"pass","target":"oh-ship"}',
+      }],
+    }
+
+    await plugin["tool.execute.after"]!({ tool: "task", agent: "oh-planner" } as never, firstOutput as never)
+
+    const nextInput: Record<string, unknown> = {
+      tool: "task",
+      agent: "oh-gauntlet",
+      description: "Continue execution",
+    }
+    const nextOutput: Record<string, unknown> = {}
+
+    await plugin["tool.execute.before"]!(nextInput as never, nextOutput as never)
+
+    assert.equal(nextOutput.isError, undefined)
+    assert.equal(nextInput.agent, "oh-ship", "stored next-route should override the default first candidate")
   })
 
   // -----------------------------------------------------------------------

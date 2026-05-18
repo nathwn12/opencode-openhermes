@@ -2,12 +2,17 @@
 // RouteTrackingHook — RouteHook, priority=55, phase=LATE
 //
 // Loop guard — mechanically enforce two limits:
-// 1. Same skill visited 5+ times in one chain
-// 2. 8+ consecutive unproductive hops
+// 1. Same skill visited N+ times in one chain (default 5)
+// 2. N+ consecutive unproductive hops (default 8)
+//
+// Config from _guardConfig (centralized) with fallback to _routeTrackingConfig
+// for backward compatibility. Progressive warning at thresholds before hard stop.
 // ---------------------------------------------------------------------------
 
 import { HookPhase, HookResult } from "../types.ts";
 import type { HookContext, RouteHook } from "../types.ts";
+import type { GuardConfig, GuardProgression } from "../../guards/guard-config.ts";
+import { checkGuardProgression, DEFAULT_GUARD_CONFIG } from "../../guards/guard-config.ts";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -56,6 +61,53 @@ export function getHopHistory(sessionId: string): HopRecord[] {
 const defaultArtifactCheck: (route: string) => boolean = () => false;
 
 // ---------------------------------------------------------------------------
+// Resolve max values from guard config with fallbacks
+// ---------------------------------------------------------------------------
+
+function resolveMaxValues(context: HookContext): {
+  maxSkillRepeats: number;
+  maxUnproductiveHops: number;
+  artifactCheck: (route: string) => boolean | Promise<boolean>;
+} {
+  // Primary: _guardConfig (centralized)
+  const gc: GuardConfig = context._guardConfig ?? DEFAULT_GUARD_CONFIG;
+  const maxSkillRepeats = gc.maxSkillRepeats;
+  const maxUnproductiveHops = gc.maxUnproductiveHops;
+
+  // Backward compat: _routeTrackingConfig overrides if present
+  const legacy = context._routeTrackingConfig as Partial<RouteTrackingConfig> | undefined;
+  const artifactCheck = legacy?.artifactCheck ?? defaultArtifactCheck;
+  const legacySkillRepeats = legacy?.maxSkillRepeats;
+  const legacyUnproductiveHops = legacy?.maxUnproductiveHops;
+
+  return {
+    maxSkillRepeats: legacySkillRepeats ?? maxSkillRepeats,
+    maxUnproductiveHops: legacyUnproductiveHops ?? maxUnproductiveHops,
+    artifactCheck,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Build optiRoute report helper
+// ---------------------------------------------------------------------------
+
+function buildOptiRouteReport(
+  state: RouteTrackingState,
+  reason: string,
+  maxSkillRepeats: number,
+  maxUnproductiveHops: number,
+) {
+  return {
+    reason,
+    chain: [...state.hops],
+    skillCounts: Object.fromEntries(state.skillCounts),
+    unproductiveCount: state.unproductiveCount,
+    maxSkillRepeats,
+    maxUnproductiveHops,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Hook
 // ---------------------------------------------------------------------------
 
@@ -88,12 +140,9 @@ export const routeTrackingHook: RouteHook = {
       sessionStates.set(sessionId, state);
     }
 
-    // Read config from context (or use defaults)
-    // Support both `_routeTrackingConfig` and `hooks.route_tracking.*` conventions
-    const config: Partial<RouteTrackingConfig> = context._routeTrackingConfig ?? {};
-    const maxSkillRepeats = config.maxSkillRepeats ?? 5;
-    const maxUnproductiveHops = config.maxUnproductiveHops ?? 8;
-    const artifactCheck = config.artifactCheck ?? defaultArtifactCheck;
+    // Resolve config values
+    const { maxSkillRepeats, maxUnproductiveHops, artifactCheck } = resolveMaxValues(context);
+    const gc: GuardConfig = context._guardConfig ?? DEFAULT_GUARD_CONFIG;
 
     // Record the hop
     const producedArtifact = await artifactCheck(route);
@@ -115,29 +164,35 @@ export const routeTrackingHook: RouteHook = {
       state.unproductiveCount += 1;
     }
 
-    // Check 1: Same skill repeated too many times
-    if (currentSkillCount >= maxSkillRepeats) {
-      context._optiRoute = {
-        reason: `Same skill "${route}" visited ${currentSkillCount} times (max ${maxSkillRepeats})`,
-        chain: [...state.hops],
-        skillCounts: Object.fromEntries(state.skillCounts),
-        unproductiveCount: state.unproductiveCount,
+    // Check 1: Same skill repeated too many times — with progressive warning
+    let progression = checkGuardProgression(currentSkillCount, maxSkillRepeats, gc);
+    if (progression.level === "warn" || progression.level === "escalate") {
+      // Progressive warning — annotate context but don't stop
+      context._guardProgression = progression;
+    }
+    if (progression.level === "stop") {
+      context._optiRoute = buildOptiRouteReport(
+        state,
+        `Same skill "${route}" visited ${currentSkillCount} times (max ${maxSkillRepeats})`,
         maxSkillRepeats,
         maxUnproductiveHops,
-      };
+      );
       return { result: HookResult.STOP };
     }
 
-    // Check 2: Too many consecutive unproductive hops
-    if (state.unproductiveCount >= maxUnproductiveHops) {
-      context._optiRoute = {
-        reason: `${state.unproductiveCount} consecutive unproductive hops (max ${maxUnproductiveHops})`,
-        chain: [...state.hops],
-        skillCounts: Object.fromEntries(state.skillCounts),
-        unproductiveCount: state.unproductiveCount,
+    // Check 2: Too many consecutive unproductive hops — with progressive warning
+    progression = checkGuardProgression(state.unproductiveCount, maxUnproductiveHops, gc);
+    if (progression.level === "warn" || progression.level === "escalate") {
+      // Progressive warning — annotate context but don't stop
+      context._guardProgression = progression;
+    }
+    if (progression.level === "stop") {
+      context._optiRoute = buildOptiRouteReport(
+        state,
+        `${state.unproductiveCount} consecutive unproductive hops (max ${maxUnproductiveHops})`,
         maxSkillRepeats,
         maxUnproductiveHops,
-      };
+      );
       return { result: HookResult.STOP };
     }
 

@@ -5,6 +5,32 @@ All notable changes to OpenHermes are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.11.3] - 2026-05-18
+
+### Changed
+
+- **Type safety hardened across hook system** — `HookContext` split into `HookContextBase` and `HookContextExtras` with explicit optional keys. Removed `as` casts throughout hooks, bootstrap, and sync modules. `HookContextPatch` type added for partial updates.
+
+- **Singleton pattern unified** — All singletons (`BackgroundManager`, `HookRegistry`, `MemoryManager`, `PlanFileWatcher`, `PlanSync`) now use `| null` typed static fields with proper null checks and `resetInstance()` that sets to `null` instead of `null as unknown as T`.
+
+### Removed
+
+- **Deprecated harness components** — Removed `harness/commands/oh-doctor.md`, `harness/commands/oh-log.md`, `scripts/oh-doctor.ps1`, and associated behavioral test from `test/plugins-behavioral.test.ts`. Updated `package.json` `files` field to exclude `scripts/` and `harness/commands/`.
+
+- **Dead `PlanStore.getMerged` method** — Placeholder implementation that always returned an empty array; removed entirely.
+
+- **Dead dependency `gpt-tokenizer`** — Cleaned up in `package-lock.json`.
+
+### Added
+
+- **`plan-location.ts` module** — Extracted plan file location logic from `bootstrap.ts` into a dedicated module under `harness/lib/plans/`, providing cleaner imports for hook modules and new `resolvePlanAccess`/`ensurePlanFile`/`readPlanSummary` functions.
+
+### Tests
+
+- Added `resetInstance` tests for `BackgroundManager` and `PlanFileWatcher`.
+- Added `plan-location` import test validating hook modules import without bootstrap cycle failure.
+- Updated composer tests to assert no hardcoded `harness/commands/` paths in `ETHOS.md` and `CONTEXT.md`.
+
 ## [4.11.2] - 2026-05-17
 
 ### Fixed
@@ -73,5 +99,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 [4.11.1]: https://github.com/nathwn12/openhermes/compare/v4.11.0...v4.11.1
 [4.11.2]: https://github.com/nathwn12/openhermes/compare/v4.11.1...v4.11.2
+[4.11.3]: https://github.com/nathwn12/openhermes/compare/v4.11.2...v4.11.3
 [4.11.0]: https://github.com/nathwn12/openhermes/compare/v4.10.0...v4.11.0
 [4.10.0]: https://github.com/nathwn12/openhermes/compare/v4.9.2...v4.10.0

@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/openhermes"><img src="https://img.shields.io/npm/v/openhermes?style=for-the-badge&label=version&color=FFD700" alt="v4.11.2"></a>
+  <a href="https://www.npmjs.com/package/openhermes"><img src="https://img.shields.io/npm/v/openhermes?style=for-the-badge&label=version&color=FFD700" alt="v4.11.3"></a>
   <a href="https://github.com/nathwn12/openhermes/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="License: MIT"></a>
   <a href="https://opencode.ai"><img src="https://img.shields.io/badge/runs%20on-OpenCode-6366f1?style=for-the-badge" alt="Runs on OpenCode"></a>
   <a href="https://github.com/nathwn12/openhermes"><img src="https://img.shields.io/badge/⭐%20star%20on-GitHub-181717?style=for-the-badge" alt="Star on GitHub"></a>
@@ -44,7 +44,7 @@ OpenHermes v4.11 ships with a hardened internal architecture — 8 subsystems wo
 | **MVCC Sync** | Atomic writes, version counters, conflict detection. Multiple sub-agents writing the same plan file — no data loss. |
 | **Sanity Checker** | 8 output degeneration detectors — repetition, gibberish, low diversity — with automatic escalation and recovery injection. |
 | **Background Cmd** | Fire-and-forget process spawning with timeout, status polling, and auto-cleanup. Non-blocking long-running tasks. |
-| **Test Harness** | Disposable temp dirs (Symbol.asyncDispose), factory builders, restore-capable mocks. Professional-grade test utilities. |
+| **Plan Location** | Resolves plan file paths per project with directory-per-project layout in `~/.local/share/openhermes/plans/`. |
 
 ---
 
@@ -76,10 +76,10 @@ The loop runs unsupervised because these never turn off:
 | **Shared operating model** | CHARTER + AUTOPILOT + CONTEXT + ETHOS injected every session. Every interaction grounded in the same rules. |
 | **CORE/DEEP skill format** | Every skill is a two-file system: CORE (SKILL.md) handles 80% of passes in one read. DEEP.md loads on demand for hard cases. |
 | **Plan file storage** | `~/.local/share/openhermes/plans/`. Survives `npm update`. |
-| **8 internal subsystems** | Compositor, hooks, memory, recovery, sync, sanity checks, background commands, test harness — all native Node.js / TypeScript. |
+| **8 internal subsystems** | Composer, recovery, memory, sync, hooks, plans, sanity, background — all native Node.js / TypeScript. |
 | **Zero npm dependency additions** | All new subsystems use native Node.js and TypeScript only. No new packages. |
 
-## 30 skills — three tiers
+## 30 skills — four tiers
 
 ### Tier 4 — Pipeline orchestrators
 Full multi-phase workflows:
@@ -150,6 +150,7 @@ openhermes-pkg/
 │   │   ├── memory/        # 4-tier hierarchical memory
 │   │   ├── sync/          # MVCC plan synchronization
 │   │   ├── hooks/         # Pluggable hook registry
+│   │   ├── plans/         # Plan file path resolution
 │   │   ├── sanity/        # Output degeneration detection
 │   │   └── background/    # Fire-and-forget command system
 │   └── skills/            # 30 skill SKILL.md files (CORE/DEEP format)

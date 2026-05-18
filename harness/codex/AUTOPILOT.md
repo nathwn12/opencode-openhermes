@@ -101,9 +101,10 @@ When in doubt between two classifications, choose the more structured one. If a 
 
 After every skill completes:
 1. Determine outcome: **pass** (completed), **fail** (issues found), **blocker** (unrecoverable)
-2. Read the skill's `route:` frontmatter (`route.pass`, `route.fail`, `route.blocker`)
-3. Route immediately by outcome — do not ask
-4. Repeat until blocker, completion (`done`), or surface (`surface`)
+2. If the completed skill output includes `NEXT_ROUTE: <skill>`, use that exact next skill immediately. If the output includes valid `ROUTE_GUIDANCE: {...}` with `selected`, use that selected route.
+3. Otherwise read the skill's `route:` frontmatter (`route.pass`, `route.fail`, `route.blocker`)
+4. Route immediately by outcome — do not ask
+5. Repeat until blocker, completion (`done`), or surface (`surface`)
 
 Routing is mandatory, not optional. Follow the skill's routing metadata. Do not deviate.
 
@@ -153,12 +154,17 @@ Every skill routes somewhere — no leaf nodes. Route by outcome, not convention
 ## Safety Valves
 
 ### Loop Guard (Mechanical)
-Enforced by the `route-tracking` hook — no LLM instruction needed.
+Enforced by the `route-tracking`, `delegation-depth`, and `subagent-failure` hooks — no LLM instruction needed.
 
-- **Same skill 5+ times** → STOP (configurable via `hooks.route_tracking.max_skill_repeats`)
-- **Unproductive hops** after 8 consecutive no-artifact hops → STOP (configurable via `hooks.route_tracking.max_unproductive_hops`)
+| Guard | Default | What it does |
+|---|---|---|
+| Same skill repeated | 5 | STOP when the same skill fires 5+ times in one chain |
+| Unproductive hops | 8 | STOP after 8 consecutive no-artifact hops |
+| Delegation depth | 25 | STOP when sub-agent calls exceed 25 deep |
+| Consecutive anomalies | 2 | Escalate after 2 unhealthy outputs in a row |
+| Subagent failures | 5 | Surface BLOCKER after 5 consecutive task failures |
 
-On violation, the hook injects an OptiRoute report with the full hop chain, skill counts, and the trigger reason. Orchestrator surfaces findings to the user.
+On violation, the hook injects a structured error report with full context. Progressive warning at 60% and escalation at 80% of each limit.
 
 ### Question Gate
 Before each routing hop, check: "Can I proceed without guessing?" If the next skill's input is missing and you cannot discover or create it independently — surface to user. Do not route into guaranteed failure. For plan issues, create the plan yourself — do not ask the user to do it.
@@ -240,15 +246,16 @@ Within same phase, hooks run by priority DESC then topological dependency order.
 | `plan-check` | PreToolUse | EARLY | 90 | Verify plan file exists before sub-agent delegation |
 | `shell-detect` | PreToolUse | EARLY | 80 | Detect platform, inject shell preamble context |
 | `confidence-gate` | Route | NORMAL | 70 | Adjust route based on confidence level |
-| `delegation-depth` | PreToolUse | NORMAL | 60 | Loop guard — stops at depth >= max (default 10-25) |
-| `route-tracking` | Route | LATE | 55 | Enforce max skill repeats (5) and unproductive hop limits (8) mechanically |
+| `delegation-depth` | PreToolUse | NORMAL | 60 | Loop guard — stops at depth >= max (default 25) |
+| `route-tracking` | Route | LATE | 55 | Enforce max skill repeats and unproductive hop limits mechanically |
 | `error-recovery` | PostToolUse | LATE | 50 | Match error patterns, inject recovery instructions |
 | `memory-sync` | PostToolUse | LATE | 40 | Sync task findings and decisions to plan file |
+| `subagent-failure` | PostToolUse | LATE | 45 | Track consecutive subagent failures, surface BLOCKER at threshold |
 | `sanity-check` | PostToolUse | LATE | 30 | Detect LLM output degeneration patterns, inject recovery on anomaly |
 
 ### Configuration
 
-All hooks enabled by default. Disable individual hooks via `openhermes.json`:
+All hooks enabled by default. Disable individual hooks via `experimental.hooks` in opencode.json:
 ```json
 {
   "experimental": {

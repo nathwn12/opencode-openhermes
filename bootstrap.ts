@@ -5,11 +5,13 @@ import type { Plugin } from "@opencode-ai/plugin"
 import { getHarnessDir, setHarnessRootForTest, resolveHarnessRoot } from "./lib/harness-resolver.ts"
 import { compose } from "./harness/lib/composer/index.ts"
 import { ensurePlanFile, findLatestPlanFile, planStorageDir, setPlanStorageDirForTest, resolvePlanAccess } from "./harness/lib/plans/plan-location.ts"
+import { clearRuntimeRouteDecision, consumeRouteGuidance, getRuntimeRouteDecision, rememberRuntimeRouteDecision } from "./harness/lib/routing/index.ts"
 
 // Hook system — pluggable lifecycle hooks with topological sort
 import {
   HookRegistry,
   HookResult,
+  nextRouteHook,
   planCheckHook,
   shellDetectHook,
   confidenceGateHook,
@@ -18,7 +20,11 @@ import {
   errorRecoveryHook,
   memorySyncHook,
   sanityCheckHook,
+  dynamicRouteHook,
   routeTrackingHook,
+  subagentFailureHook,
+  resetSubagentFailures,
+  DEFAULT_GUARD_CONFIG,
 } from "./harness/lib/hooks/index.ts"
 import type { HookContext } from "./harness/lib/hooks/index.ts"
 
@@ -222,13 +228,17 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
   // Ensure plan storage exists
   try { ensureDir(planStorageDir()) } catch {}
 
+
+
   return {
     config: async (config: OpenHermesConfig) => {
+
       // ── 1. Hooks System ─────────────────────────────────────────────────
       // Read experimental.hooks config from the raw config object
-      const hooksConfig = (config.experimental as Record<string, unknown> | undefined)?.hooks as
+      const experimental = config.experimental as Record<string, unknown> | undefined;
+      const hooksConfig = (experimental?.hooks as
         | Record<string, boolean>
-        | undefined
+        | undefined)
       const hooksEnabled = (hooksConfig?.enabled ?? true) as boolean
 
       if (hooksEnabled) {
@@ -238,11 +248,18 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
         if (hooksConfig?.plan_check ?? true) reg.registerPreTool(planCheckHook)
         if (hooksConfig?.shell_detect ?? true) reg.registerPreTool(shellDetectHook)
         if (hooksConfig?.delegation_depth ?? true) reg.registerPreTool(delegationDepthHook)
+        reg.registerRoute(nextRouteHook)
         if (hooksConfig?.confidence_gate ?? true) reg.registerRoute(confidenceGateHook)
         if (hooksConfig?.error_recovery ?? true) reg.registerPostTool(errorRecoveryHook)
         if (hooksConfig?.memory_sync ?? true) reg.registerPostTool(memorySyncHook)
         if (hooksConfig?.sanity_check ?? true) reg.registerPostTool(sanityCheckHook)
-        if (hooksConfig?.route_tracking ?? true) reg.registerRoute(routeTrackingHook)
+        if (hooksConfig?.dynamic_route ?? true) reg.registerPostTool(dynamicRouteHook)
+        if (hooksConfig?.route_tracking ?? true) {
+          reg.registerRoute(routeTrackingHook)
+        } else {
+          reg.unregister("route-tracking")
+        }
+        if (hooksConfig?.subagent_failure ?? true) reg.registerPostTool(subagentFailureHook)
 
         await logToOC("info", `hooks: ${reg.getPreToolHooks().length + reg.getPostToolHooks().length + reg.getRouteHooks().length} registered`)
       } else {
@@ -353,9 +370,10 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
       // creates plans on demand (see Task Flow step 1 in agent prompt).
       // Auto-creation produced ghost skeletons like plan-004.
 
-      // Reset delegation depth on session start/error
+      // Reset delegation depth and subagent failures on session start/error
       if (typed.type === "session.created" || typed.type === "session.error") {
         resetDepthTracker()
+        resetSubagentFailures()
       }
     },
 
@@ -371,6 +389,7 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
         // Access optional fields from input (SDK may include these at runtime)
         const inputAny = input as Record<string, unknown>
         const agentName = typeof inputAny.agent === "string" ? inputAny.agent : "unknown"
+        const pendingNextRoute = getRuntimeRouteDecision(ctx.directory) ?? undefined
 
         // Build hook context from input and current session state
         const hookContext: HookContext = {
@@ -380,11 +399,9 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
           sessions: new Map(),
           _confidenceLevel: typeof inputAny.confidence === "string" ? inputAny.confidence : undefined,
           _confidenceExchanges: 0,
-          _maxDelegationDepth: 25,
-          _routeTrackingConfig: {
-            maxSkillRepeats: 5,
-            maxUnproductiveHops: 30,    // higher than max delegation depth (25) so depth guard fires first
-          },
+          _guardConfig: DEFAULT_GUARD_CONFIG,
+          _nextRoute: pendingNextRoute,
+          _routingSkillsDir: skillsDir,
         }
 
         // Run all registered PreToolUse hooks (plan check, shell detect, delegation depth)
@@ -404,7 +421,7 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
           const errOutput = output as { args: unknown; isError?: boolean; content?: unknown[] }
           errOutput.isError = true
           const message = (preToolResult.modifiedContext?._depthError as string)
-            ?? "LOOP GUARD: Delegation depth exceeded (max 25). " +
+            ?? `LOOP GUARD: Delegation depth exceeded (max ${DEFAULT_GUARD_CONFIG.maxDelegationDepth}). ` +
                "Surface to orchestrator with findings and stop delegating."
           errOutput.content = [{ type: "text", text: message }]
           return
@@ -455,6 +472,16 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
           errOutput.content = [{ type: "text", text: `ROUTE GUARD: ${optiReport}\n\nSurface to orchestrator with findings and stop delegating.` }]
         }
 
+        if (routeResult.modifiedRoute) {
+          const concreteRoute = routeResult.modifiedRoute.split("?")[0] ?? routeResult.modifiedRoute
+          if (concreteRoute && concreteRoute !== agentName) {
+            inputAny.agent = concreteRoute
+          }
+          if (pendingNextRoute?.selected && concreteRoute === pendingNextRoute.selected) {
+            clearRuntimeRouteDecision(ctx.directory)
+          }
+        }
+
         if (routeResult.result === HookResult.INJECT && routeResult.modifiedRoute) {
           // Confidence gate wants to inject a confirmation/pause into routing.
           // Parse the modifiedRoute for markers and inject into task description/prompt.
@@ -500,12 +527,14 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
           sessions: new Map(),
           _confidenceLevel: typeof inputAny.confidence === "string" ? inputAny.confidence : undefined,
           _confidenceExchanges: 0,
-          _maxDelegationDepth: 25,
+          _guardConfig: DEFAULT_GUARD_CONFIG,
+          _routingSkillsDir: skillsDir,
         }
  
         // Extract output text from tool result
         // output.content may be array of content blocks, or a string, or undefined
         const outputAny = output as Record<string, unknown> | undefined
+        const mutableOutput = (output ?? {}) as Record<string, unknown>
         let outputText = ""
         if (outputAny?.content) {
           const content = outputAny.content
@@ -530,6 +559,22 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
           // Log when hooks signal issues (INJECT = anomaly/error detected by a hook)
           if (postToolResult.result === HookResult.INJECT) {
             await logToOC("warn", "PostTool INJECT: hooks detected issues in tool output")
+          }
+
+          const routedOutput = consumeRouteGuidance(postToolResult.modifiedOutput ?? outputText)
+          const finalOutput = routedOutput.output
+          const runtimeNextRoute = rememberRuntimeRouteDecision(ctx.directory, finalOutput)
+
+          if (finalOutput !== outputText) {
+            if (typeof outputAny?.content === "string") {
+              mutableOutput.content = finalOutput
+            } else {
+              mutableOutput.content = [{ type: "text", text: finalOutput }]
+            }
+          }
+
+          if (runtimeNextRoute) {
+            mutableOutput._nextRoute = runtimeNextRoute
           }
 
           // memorySyncHook catches its own errors (best-effort sync),

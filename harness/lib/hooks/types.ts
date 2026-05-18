@@ -24,7 +24,6 @@ export interface HookContextExtras {
   _shellType?: string;
   _shellPreamble?: string;
 
-  _maxDelegationDepth?: number;
   _delegationDepth?: number;
   _depthExceeded?: boolean;
   _depthError?: string;
@@ -32,11 +31,13 @@ export interface HookContextExtras {
   _confidenceLevel?: "HIGH" | "MEDIUM" | "LOW" | string;
   _confidenceExchanges?: number;
 
-  _routeTrackingConfig?: {
-    maxSkillRepeats?: number;
-    maxUnproductiveHops?: number;
-    artifactCheck?: (route: string) => boolean | Promise<boolean>;
-  };
+  // Guard configuration (centralized — replaces _routeTrackingConfig and _maxDelegationDepth)
+  _guardConfig?: import("../guards/guard-config.ts").GuardConfig;
+  _guardProgression?: import("../guards/guard-config.ts").GuardProgression;
+
+  // Subagent failure tracking
+  _subagentFailures?: number;
+  _subagentFailureThreshold?: number;
   _optiRoute?: {
     reason: string;
     chain: Array<{
@@ -52,6 +53,8 @@ export interface HookContextExtras {
 
   _memorySyncCount?: number;
   _recoveryAttempt?: number;
+  _routingSkillsDir?: string;
+  _nextRoute?: import("../routing/index.ts").RuntimeRouteDecision;
 
   [key: string]: unknown;
 }

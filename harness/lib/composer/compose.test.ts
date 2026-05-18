@@ -56,7 +56,7 @@ describe("composer", () => {
     const taskFlow = mod.composeFragment("04-task-flow")
     assert.ok(taskFlow.startsWith("## Task Flow"), "task-flow starts with Task Flow")
     assert.ok(taskFlow.includes("dispatch to oh-builder immediately"), "task-flow prefers immediate implementation dispatch")
-    assert.ok(taskFlow.includes("concrete, low-risk, and fixable"), "task-flow keeps the low-risk fix gate explicit")
+    assert.ok(taskFlow.includes("Concrete, low-risk, fixable"), "task-flow keeps the low-risk fix gate explicit")
 
     // 05-confidence
     const confidence = mod.composeFragment("05-confidence")
