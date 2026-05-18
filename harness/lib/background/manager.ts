@@ -28,7 +28,7 @@ interface TaskEntry {
 // ---------------------------------------------------------------------------
 
 export class BackgroundManager {
-  private static instance: BackgroundManager;
+  private static instance: BackgroundManager | null = null;
   private tasks = new Map<string, TaskEntry>();
   private cleanupTimer: ReturnType<typeof setInterval> | null = null;
 
@@ -52,7 +52,7 @@ export class BackgroundManager {
     const inst = BackgroundManager.instance;
     if (inst) {
       inst.destroy();
-      BackgroundManager.instance = null as unknown as BackgroundManager;
+      BackgroundManager.instance = null;
     }
   }
 

@@ -18,7 +18,7 @@ import type {
 // ---------------------------------------------------------------------------
 
 export class MemoryManager {
-  private static instance: MemoryManager;
+  private static instance: MemoryManager | null = null;
 
   private entries: Map<MemoryLevel, MemoryEntry[]> = new Map();
   private config: MemoryConfig;
@@ -46,7 +46,7 @@ export class MemoryManager {
 
   /** Reset singleton — used in tests for isolation. */
   static resetInstance(): void {
-    MemoryManager.instance = null as unknown as MemoryManager;
+    MemoryManager.instance = null;
   }
 
   // -----------------------------------------------------------------------

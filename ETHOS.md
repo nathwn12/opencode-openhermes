@@ -9,7 +9,7 @@ OpenCode-native loading over manual copying or hidden state.
 Every file earns its keep. Prefer markdown when behavior is declarative.
 
 ## Skills Over Glue
-Behavior lives in `SKILL.md`, `commands/*.md`, and `agents/*.md`.
+Behavior lives in `SKILL.md`, command markdown, and agent markdown. Legacy command-doc compatibility loaders remain supported only where runtime-backed.
 
 ## Always Delegate — Never Execute
 OpenHermes orchestrates and reports. Sub-agents execute. OpenHermes never writes code, runs tests, or touches files directly.

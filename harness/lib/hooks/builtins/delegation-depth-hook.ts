@@ -36,7 +36,7 @@ export const delegationDepthHook: PreToolUseHook = {
     depthTrackers.set(sessionId, currentDepth);
 
     // The configured limit (can be overridden via context)
-    const maxDepth = (context._maxDelegationDepth as number) ?? 5;
+    const maxDepth = context._maxDelegationDepth ?? 5;
 
     if (currentDepth >= maxDepth) {
       return {

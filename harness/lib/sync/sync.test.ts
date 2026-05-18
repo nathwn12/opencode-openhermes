@@ -776,6 +776,11 @@ describe("PlanFileWatcher", () => {
       await delay(800);
 
       const countDuringPause = callbacks.length;
+      assert.equal(
+        countDuringPause,
+        0,
+        "pause should suppress callbacks while active",
+      );
 
       // Resume
       watcher.resume();
@@ -785,10 +790,31 @@ describe("PlanFileWatcher", () => {
       await fs.promises.writeFile(filePath, content + "\n\n\n\n", "utf8");
       await delay(800);
 
-      // The pause should have prevented the first write's callback
-      // (but note: fs.watch on Windows may batch events; we verify pause
-      //  at least prevented the callback that would have fired during pause)
-      assert.ok(watcher.paused === false, "watcher should not be paused after resume");
+      assert.ok(
+        callbacks.length > countDuringPause,
+        "resume should allow new callbacks; paused changes are not replayed",
+      );
+      assert.equal(watcher.paused, false);
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it("resetInstance returns a fresh watcher with cleared state", async () => {
+    const content = makePlanContent([{ num: 1, title: "Reset" }]);
+    const { dir, cleanup } = await createTestPlan(content);
+
+    try {
+      const watcher = PlanFileWatcher.getInstance();
+      watcher.watch(dir, () => {});
+      watcher.pause();
+
+      PlanFileWatcher.resetInstance();
+
+      const fresh = PlanFileWatcher.getInstance();
+      assert.notEqual(fresh, watcher);
+      assert.equal(fresh.paused, false);
+      assert.equal(fresh.watchedDirectories().length, 0);
     } finally {
       await cleanup();
     }

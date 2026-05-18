@@ -46,7 +46,7 @@ User config, plugins, MCP, permissions, TUI, local skills, overlays — locked u
 - **T0**: Check confidence → auto-classify → auto-route → execute
 - **T1**: Check result → route next by outcome
 - **T2**: If blocked → diagnose → retry with narrower scope
-- **T3**: If still blocked → surface with findings, options, what is needed
+- **T3**: If still blocked → surface findings, options, and what is needed
 
 ## Self-Diagnosis
 

@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/openhermes"><img src="https://img.shields.io/npm/v/openhermes?style=for-the-badge&label=version&color=FFD700" alt="v4.11.1"></a>
+  <a href="https://www.npmjs.com/package/openhermes"><img src="https://img.shields.io/npm/v/openhermes?style=for-the-badge&label=version&color=FFD700" alt="v4.11.2"></a>
   <a href="https://github.com/nathwn12/openhermes/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="License: MIT"></a>
   <a href="https://opencode.ai"><img src="https://img.shields.io/badge/runs%20on-OpenCode-6366f1?style=for-the-badge" alt="Runs on OpenCode"></a>
   <a href="https://github.com/nathwn12/openhermes"><img src="https://img.shields.io/badge/⭐%20star%20on-GitHub-181717?style=for-the-badge" alt="Star on GitHub"></a>
@@ -72,7 +72,7 @@ The loop runs unsupervised because these never turn off:
 |---|---|
 | **Self-driving loop** | Type once. OpenHermes classifies, delegates, and routes — no pauses, no asking permission, no verbosity. |
 | **30 specialist skills** | Planning → building → testing → browser → security → review → shipping → retro. Every dev cycle phase. |
-| **Auto-detected user skills** | Drop a skill in `~/.agents/skills/`. OpenHermes finds it. Same name as a built-in? Your version wins. Survives `npm update`. |
+| **Auto-detected user skills** | Drop a skill in `~/.agents/skills/` or `~/.config/opencode/skills/`. OpenHermes finds it. Same name as a built-in? Your version wins. Survives `npm update`. |
 | **Shared operating model** | CHARTER + AUTOPILOT + CONTEXT + ETHOS injected every session. Every interaction grounded in the same rules. |
 | **CORE/DEEP skill format** | Every skill is a two-file system: CORE (SKILL.md) handles 80% of passes in one read. DEEP.md loads on demand for hard cases. |
 | **Plan file storage** | `~/.local/share/openhermes/plans/`. Survives `npm update`. |
@@ -143,7 +143,6 @@ openhermes-pkg/
 ├── harness/
 │   ├── agents/            # Agent manifests (OpenHermes primary)
 │   ├── codex/             # CHARTER, AUTOPILOT
-│   ├── commands/          # Slash commands
 │   ├── instructions/      # SHELL.md
 │   ├── lib/               # Internal subsystems
 │   │   ├── composer/      # Prompt fragment composition

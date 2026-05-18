@@ -8,13 +8,58 @@ export enum HookPhase {
   LATE = 2,
 }
 
-export interface HookContext {
+export interface HookContextBase {
   sessionId: string;
   agent: string;
   directory: string;
   sessions: Map<string, unknown>;
+}
+
+export interface HookContextExtras {
+  _planCheck?: "missing" | "found";
+  _planFilePath?: string;
+  _planCheckInstruction?: string;
+
+  _shellPlatform?: string;
+  _shellType?: string;
+  _shellPreamble?: string;
+
+  _maxDelegationDepth?: number;
+  _delegationDepth?: number;
+  _depthExceeded?: boolean;
+  _depthError?: string;
+
+  _confidenceLevel?: "HIGH" | "MEDIUM" | "LOW" | string;
+  _confidenceExchanges?: number;
+
+  _routeTrackingConfig?: {
+    maxSkillRepeats?: number;
+    maxUnproductiveHops?: number;
+    artifactCheck?: (route: string) => boolean | Promise<boolean>;
+  };
+  _optiRoute?: {
+    reason: string;
+    chain: Array<{
+      skill: string;
+      timestamp: number;
+      producedArtifact: boolean;
+    }>;
+    skillCounts: Record<string, number>;
+    unproductiveCount: number;
+    maxSkillRepeats: number;
+    maxUnproductiveHops: number;
+  };
+
+  _memorySyncCount?: number;
+  _recoveryAttempt?: number;
+
   [key: string]: unknown;
 }
+
+export type HookContext = HookContextBase & HookContextExtras;
+
+export type HookContextPatch = Partial<HookContextBase> &
+  Partial<HookContextExtras>;
 
 export interface HookMetadata {
   name: string;
@@ -34,7 +79,7 @@ export interface PreToolUseHook {
   metadata: HookMetadata;
   execute(
     context: HookContext,
-  ): Promise<{ result: HookResult; modifiedContext?: Partial<HookContext> }>;
+  ): Promise<{ result: HookResult; modifiedContext?: HookContextPatch }>;
 }
 
 export interface PostToolUseHook {

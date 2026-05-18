@@ -115,7 +115,12 @@ Routing is mandatory, not optional. Follow the skill's routing metadata. Do not 
 | `[oh-a, oh-b]` | Route to one of — choose by context |
 | `surface` | Report findings to user, end chain |
 | `done` | Task complete — terminal |
-| `mode` | Mode switch — return to caller after toggle |
+
+### Internal Switches
+
+| Value | Meaning |
+|---|---|
+| `mode` | Internal switch — return to caller after toggle |
 
 ### Routing Flow
 
@@ -143,7 +148,7 @@ oh-ship ──pass──→ surface ──→ [end, results presented]
           fail──→ oh-expert ──→ oh-builder ──→ oh-gauntlet
 ```
 
-Every skill routes somewhere — no leaf nodes. Route by outcome, not convention. Default fallback: surface to user. The only true terminal is `oh-handoff`.
+Every skill routes somewhere — no leaf nodes. Route by outcome, not convention. Default fallback: surface to user. `surface` and `done` are terminal route values; `oh-handoff` is the handoff skill that ends the chain by design.
 
 ## Safety Valves
 
@@ -153,7 +158,7 @@ Enforced by the `route-tracking` hook — no LLM instruction needed.
 - **Same skill 5+ times** → STOP (configurable via `hooks.route_tracking.max_skill_repeats`)
 - **Unproductive hops** after 8 consecutive no-artifact hops → STOP (configurable via `hooks.route_tracking.max_unproductive_hops`)
 
-On violation, the hook injects an OptiRoute report with the full hop chain, skill counts, and the trigger reason. Orchestrator surfaces to user with findings.
+On violation, the hook injects an OptiRoute report with the full hop chain, skill counts, and the trigger reason. Orchestrator surfaces findings to the user.
 
 ### Question Gate
 Before each routing hop, check: "Can I proceed without guessing?" If the next skill's input is missing and you cannot discover or create it independently — surface to user. Do not route into guaranteed failure. For plan issues, create the plan yourself — do not ask the user to do it.
@@ -270,5 +275,5 @@ Skills in `~/.agents/skills/` and `~/.config/opencode/skills/` auto-discover on 
 **User skills in the routing loop:**
 - Appear in available skills list, loadable via skill tool on demand
 - Their `route:` frontmatter drives routing identically to built-in skills
-- Any skill can route to a user skill (built-in `route.pass` pointing to `oh-deploy` routes there)
+- Any skill can route to a user skill when the route target matches an installed user skill name
 - No registration step — add `route:` frontmatter and it participates automatically

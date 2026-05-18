@@ -23,6 +23,7 @@ import {
 import { AnomalyTracker } from "../sanity/anomaly-tracker.ts";
 import type {
   HookContext,
+  HookContextPatch,
   HookMetadata,
   PreToolUseHook,
   PostToolUseHook,
@@ -34,7 +35,7 @@ import type {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function makeContext(overrides?: Partial<HookContext>): HookContext {
+function makeContext(overrides?: HookContextPatch): HookContext {
   return {
     sessionId: "test-session",
     agent: "oh-builder",
@@ -51,7 +52,7 @@ function makePreToolHook(
     ctx: HookContext,
   ) => Promise<{
     result: HookResult;
-    modifiedContext?: Partial<HookContext>;
+    modifiedContext?: HookContextPatch;
   }>,
 ): PreToolUseHook {
   return {
@@ -381,6 +382,9 @@ describe("HookRegistry", () => {
 
       const result = await reg.executePreTool(makeContext());
       assert.equal(result.result, HookResult.CONTINUE);
+      assert.equal(result.modifiedContext?.sessionId, "test-session");
+      assert.equal(result.modifiedContext?.agent, "oh-builder");
+      assert.equal(result.modifiedContext?.directory, "/tmp/test-project");
       assert.equal(result.modifiedContext?._track, "ran");
     });
 
@@ -724,17 +728,9 @@ describe("HookRegistry", () => {
         const result = await routeTrackingHook.execute(ctx, "oh-builder");
         assert.equal(result.result, HookResult.STOP);
         assert.ok(ctx._optiRoute);
-        assert.ok(
-          (ctx._optiRoute as Record<string, unknown>).reason as string,
-        );
-        assert.ok(
-          ((ctx._optiRoute as Record<string, unknown>).reason as string).includes(
-            "oh-builder",
-          ),
-        );
-        assert.ok(
-          ((ctx._optiRoute as Record<string, unknown>).chain as unknown[]).length === 5,
-        );
+        assert.ok(ctx._optiRoute.reason);
+        assert.ok(ctx._optiRoute.reason.includes("oh-builder"));
+        assert.ok(ctx._optiRoute.chain.length === 5);
       });
 
       it("stops on 8th unproductive hop (default max 8)", async () => {
@@ -757,11 +753,7 @@ describe("HookRegistry", () => {
         const result = await routeTrackingHook.execute(ctx, "oh-builder");
         assert.equal(result.result, HookResult.STOP);
         assert.ok(ctx._optiRoute);
-        assert.ok(
-          ((ctx._optiRoute as Record<string, unknown>).reason as string).includes(
-            "unproductive",
-          ),
-        );
+        assert.ok(ctx._optiRoute.reason.includes("unproductive"));
       });
 
       it("productive hop resets unproductive counter", async () => {
@@ -875,11 +867,7 @@ describe("HookRegistry", () => {
         const result = await routeTrackingHook.execute(ctx, "oh-gauntlet");
         assert.equal(result.result, HookResult.STOP);
         assert.ok(ctx._optiRoute);
-        assert.ok(
-          ((ctx._optiRoute as Record<string, unknown>).reason as string).includes(
-            "unproductive",
-          ),
-        );
+        assert.ok(ctx._optiRoute.reason.includes("unproductive"));
       });
     });
   });

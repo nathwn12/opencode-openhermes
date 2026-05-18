@@ -23,6 +23,8 @@ AGENTS.md, CLAUDE.md, CONTRIBUTING.md, CONTEXT.md, ADRs, eslint/biome/prettier c
 ### 5. Aggregate
 Present under `## Standards` / `## Spec`. Do not merge. End with total + worst issue.
 
+Concrete, low-risk, fixable findings should be converted into implementation work and dispatched to oh-builder immediately instead of stopping as report-only notes.
+
 ### Safety Check (inline before spawning)
 - SQL injection, LLM trust boundary violations, conditional side effects (test vs prod), hardcoded secrets
 - Block immediately if critical — do not spawn sub-agents.

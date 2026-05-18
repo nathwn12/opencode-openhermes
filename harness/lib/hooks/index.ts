@@ -7,7 +7,10 @@ export {
   HookResult,
 } from "./types.ts";
 export type {
+  HookContextBase,
+  HookContextExtras,
   HookContext,
+  HookContextPatch,
   HookMetadata,
   PreToolUseHook,
   PostToolUseHook,

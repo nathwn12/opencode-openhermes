@@ -7,7 +7,7 @@
 
 import { HookPhase, HookResult } from "../types.ts";
 import type { HookContext, PreToolUseHook } from "../types.ts";
-import { findLatestPlanFile } from "../../../../bootstrap.ts";
+import { resolvePlanAccess } from "../../plans/plan-location.ts";
 
 export const planCheckHook: PreToolUseHook = {
   metadata: {
@@ -19,7 +19,7 @@ export const planCheckHook: PreToolUseHook = {
   },
 
   async execute(context: HookContext) {
-    const planFile = findLatestPlanFile(context.directory);
+    const planFile = resolvePlanAccess(context.directory)?.path ?? null;
 
     if (!planFile) {
       return {

@@ -25,9 +25,7 @@ export const confidenceGateHook: RouteHook = {
 
   async execute(context: HookContext, route: string) {
     // Read confidence state from context if available
-    const confidenceLevel: string | undefined = context._confidenceLevel as
-      | string
-      | undefined;
+    const confidenceLevel = context._confidenceLevel;
 
     if (!confidenceLevel) {
       // No confidence gate info — pass through unchanged
@@ -37,7 +35,7 @@ export const confidenceGateHook: RouteHook = {
     // Store the confidence assessment for routing decisions
     const state: ConfidenceGateState = {
       level: confidenceLevel as ConfidenceGateState["level"],
-      exchanges: (context._confidenceExchanges as number) ?? 0,
+      exchanges: context._confidenceExchanges ?? 0,
       lastAction: "assessed",
     };
 

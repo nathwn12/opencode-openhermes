@@ -11,5 +11,5 @@
    - Investigate multiple files for a bug → one sub-agent per file
    - Test + lint + typecheck → one sub-agent per check
    - Only serialize when tasks have true dependencies (B needs A's output)
-6. **Check outcome:** pass → skill's route.pass, fail → skill's route.fail, blocker → surface with findings
-7. **Route:** Next skill or surface/done. Do not ask.
+6. **Check outcome:** pass → skill's route.pass, fail → if the finding is concrete, low-risk, and fixable, dispatch to oh-builder immediately; otherwise skill's route.fail, blocker → surface findings
+7. **Route:** Next skill or surface/done. Do not ask. Concrete, low-risk, fixable findings should be delegated, not only surfaced.

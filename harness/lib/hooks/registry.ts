@@ -18,7 +18,7 @@ import { HookPhase, HookResult } from "./types.ts";
 // ---------------------------------------------------------------------------
 
 export class HookRegistry {
-  private static instance: HookRegistry;
+  private static instance: HookRegistry | null = null;
 
   private preToolHooks: PreToolUseHook[] = [];
   private postToolHooks: PostToolUseHook[] = [];
@@ -37,7 +37,7 @@ export class HookRegistry {
 
   /** Reset singleton — used in tests for isolation. */
   static resetInstance(): void {
-    HookRegistry.instance = null as unknown as HookRegistry;
+    HookRegistry.instance = null;
   }
 
   // -----------------------------------------------------------------------
@@ -139,7 +139,7 @@ export class HookRegistry {
    */
   async executePreTool(
     context: HookContext,
-  ): Promise<{ result: HookResult; modifiedContext?: Partial<HookContext> }> {
+  ): Promise<{ result: HookResult; modifiedContext?: HookContext }> {
     const sorted = this.topologicalSort(this.preToolHooks);
     let currentContext = context;
     let hasInjection = false;

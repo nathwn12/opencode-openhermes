@@ -118,27 +118,38 @@ export function checkOutputSanity(
   // ═══════════════════════════════════════════════════════════════════
 
   // ── 6. Excessive JSON/error stack lines ─────────────────────────
-  const errorStackLines = text.split(/\r?\n/).filter(
-    (l) => l.includes("Error:") || l.trim().startsWith("at ") || l.includes("Exception:"),
-  );
-  if (errorStackLines.length > 5) {
+  const lines = text.split(/\r?\n/);
+  let errorStackLineCount = 0;
+  const repetitionLines: string[] = [];
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (line.includes("Error:") || trimmed.startsWith("at ") || line.includes("Exception:")) {
+      errorStackLineCount++;
+    }
+
+    if (trimmed.length > 10) {
+      repetitionLines.push(line);
+    }
+  }
+
+  if (errorStackLineCount > 5) {
     return {
       isHealthy: false,
       severity: "warning",
-      reason: `Error stack bleed detected: ${errorStackLines.length} error/stack lines`,
+      reason: `Error stack bleed detected: ${errorStackLineCount} error/stack lines`,
       patternName: "error_stack_bleed",
     };
   }
 
   // ── 7. Line-by-line repetition ──────────────────────────────────
-  const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 10);
-  if (lines.length > 10) {
-    const uniqueLines = new Set(lines);
-    if (uniqueLines.size < lines.length * 0.2) {
+  if (repetitionLines.length > 10) {
+    const uniqueLines = new Set(repetitionLines);
+    if (uniqueLines.size < repetitionLines.length * 0.2) {
       return {
         isHealthy: false,
         severity: "warning",
-        reason: `Excessive line repetition: ${uniqueLines.size} unique lines out of ${lines.length} (${(uniqueLines.size / lines.length * 100).toFixed(0)}% unique)`,
+        reason: `Excessive line repetition: ${uniqueLines.size} unique lines out of ${repetitionLines.length} (${(uniqueLines.size / repetitionLines.length * 100).toFixed(0)}% unique)`,
         patternName: "line_repetition",
       };
     }

@@ -4,6 +4,7 @@ import os from "node:os"
 import type { Plugin } from "@opencode-ai/plugin"
 import { getHarnessDir, setHarnessRootForTest, resolveHarnessRoot } from "./lib/harness-resolver.ts"
 import { compose } from "./harness/lib/composer/index.ts"
+import { ensurePlanFile, findLatestPlanFile, planStorageDir, setPlanStorageDirForTest, resolvePlanAccess } from "./harness/lib/plans/plan-location.ts"
 
 // Hook system — pluggable lifecycle hooks with topological sort
 import {
@@ -19,6 +20,7 @@ import {
   sanityCheckHook,
   routeTrackingHook,
 } from "./harness/lib/hooks/index.ts"
+import type { HookContext } from "./harness/lib/hooks/index.ts"
 
 const OPENHERMES_AGENT = "OpenHermes"
 
@@ -29,18 +31,7 @@ const USER_SKILL_DIRS: ReadonlyArray<string> = [
   path.join(os.homedir(), ".claude", "skills"),      // Claude Code backward compat
 ]
 
-// Canonical storage under OpenCode's data directory — survives npm updates
-let _planStorageOverride: string | undefined
-export function setPlanStorageDirForTest(dir: string | undefined): void { _planStorageOverride = dir }
-function planStorageDir(): string {
-  return _planStorageOverride ?? path.join(os.homedir(), ".local", "share", "openhermes", "plans")
-}
-
-function getProjectName(projectDir: string): string {
-  return path.basename(projectDir)
-}
-
-export { resolveHarnessRoot, setHarnessRootForTest, getHarnessDir, ensurePlanFile, findLatestPlanFile }
+export { resolveHarnessRoot, setHarnessRootForTest, getHarnessDir, ensurePlanFile, findLatestPlanFile, setPlanStorageDirForTest }
 
 function parseFrontmatter(raw: string | undefined): Record<string, string> {
   const frontmatter: Record<string, string> = {}
@@ -140,46 +131,6 @@ function uniqueStrings(existing: string[] = [], additions: string[] = []): strin
 }
 
 
-function findLatestPlanFile(projectDir: string): string | null {
-  const projectName = getProjectName(projectDir)
-  const storage = planStorageDir()
-  const projectDirPath = path.join(storage, projectName)
-  if (!fs.existsSync(projectDirPath)) return null
-  let latest: string | null = null
-  let highest = -1
-  try {
-    for (const entry of fs.readdirSync(projectDirPath)) {
-      const m = entry.match(/^plan-(\d{3})\.md$/)
-      if (m) {
-        const n = parseInt(m[1], 10)
-        if (n > highest) {
-          highest = n
-          latest = path.join(projectDirPath, entry)
-        }
-      }
-    }
-  } catch {
-    return null
-  }
-  return latest
-}
-
-function readPlanFromFile(filePath: string): string | null {
-  if (!fs.existsSync(filePath)) return null
-  const source = fs.readFileSync(filePath, "utf8")
-  const status = source.match(/^Status:\s*(.+)$/m)?.[1]?.trim()
-  const objective = source.match(/^Objective:\s*(.+)$/m)?.[1]?.trim()
-  if (!status && !objective) return null
-  const parts = [status ? `status=${status}` : null, objective ? `objective=${objective}` : null].filter(Boolean)
-  return `Active plan: ${parts.join(" | ")}`
-}
-
-function readPlanSummary(projectDir: string): string | null {
-  const planFile = findLatestPlanFile(projectDir)
-  if (!planFile) return null
-  return readPlanFromFile(planFile)
-}
-
 function ensureDir(dir: string): void {
   try {
     if (!fs.existsSync(dir)) {
@@ -192,68 +143,6 @@ function ensureDir(dir: string): void {
   }
 }
 
-/**
- * Ensure a plan file exists for the project.
- * Creates a skeleton plan if none exists or if the latest is complete/abandoned.
- * Reuses an existing active or in-progress plan.
- * Returns the path to the plan file.
- */
-function ensurePlanFile(projectDir: string): string {
-  const projectName = getProjectName(projectDir)
-  const storage = planStorageDir()
-  const projectDirPath = path.join(storage, projectName)
-  ensureDir(projectDirPath)
-
-  // Reuse active or in-progress plan
-  const latest = findLatestPlanFile(projectDir)
-  if (latest) {
-    const content = fs.readFileSync(latest, "utf8")
-    const status = content.match(/^Status:\s*(.+)$/m)?.[1]?.trim()
-    if (status === "active" || status === "in-progress") {
-      return latest
-    }
-  }
-
-  // Determine next sequence number
-  let nextSeq = 1
-  if (latest) {
-    const m = path.basename(latest).match(/^plan-(\d{3})\.md$/)
-    if (m) nextSeq = parseInt(m[1], 10) + 1
-  }
-
-  const seq = String(nextSeq).padStart(3, "0")
-  const planId = `${projectName}/plan-${seq}.md`
-  const planPath = path.join(projectDirPath, `plan-${seq}.md`)
-  const now = new Date().toISOString().replace("T", " ").slice(0, 16)
-
-  const content = [
-    `# PLAN: ${projectName}`,
-    "",
-    `Plan ID: ${planId}`,
-    `Project: ${projectName}`,
-    `Status: active`,
-    `Created: ${now}`,
-    `Updated: ${now}`,
-    `Project Path: ${projectDir}`,
-    `Plan Path: ${planPath}`,
-    `Objective: (pending classification)`,
-    "",
-    "## Tasks",
-    "",
-    "- [ ] (discoverable — pending classification)",
-    "",
-  ].join("\n")
-
-  try {
-    fs.writeFileSync(planPath, content, "utf8")
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err)
-    console.error(`[openhermes] Failed to write plan file ${planPath}: ${msg}`)
-    // Don't throw — let the plan system degrade gracefully
-  }
-  return planPath
-}
-
 export function buildCompactionContext(projectDir: string): string[] {
   const context = [
     "OpenHermes: native-first, verify before claim, always delegate, concise over verbose.",
@@ -261,7 +150,7 @@ export function buildCompactionContext(projectDir: string): string[] {
     "Preserve blockers, current task, and next steps; do not invent durable state.",
   ]
 
-  const planSummary = readPlanSummary(projectDir)
+  const planSummary = resolvePlanAccess(projectDir)?.summary
   if (planSummary) context.push(planSummary)
 
   return context
@@ -445,7 +334,7 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
             question: "allow",           // CAN ask user questions
             websearch: "allow",          // CAN search web for research context
             external_directory: {         // CAN read/write plan files outside worktree
-              "~/.local/share/opencode/openhermes/**": "allow",
+              "~/.local/share/openhermes/plans/**": "allow",
             },
           },
         },
@@ -484,7 +373,7 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
         const agentName = typeof inputAny.agent === "string" ? inputAny.agent : "unknown"
 
         // Build hook context from input and current session state
-        const hookContext = {
+        const hookContext: HookContext = {
           sessionId: ctx.directory,           // project directory as session key
           agent: agentName,
           directory: ctx.directory,
@@ -499,7 +388,7 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
         }
 
         // Run all registered PreToolUse hooks (plan check, shell detect, delegation depth)
-        let preToolResult: any
+        let preToolResult: { result: HookResult; modifiedContext?: HookContext }
         try {
           preToolResult = await reg.executePreTool(hookContext)
         } catch (err) {
@@ -546,7 +435,7 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
         // Run all registered RouteHooks — the agent/skill being delegated to IS the route
         // This fires confidence-gate (inject confirm/question on MEDIUM/LOW confidence)
         // and route-tracking (guard against infinite routing loops)
-        let routeResult: any
+        let routeResult: { result: HookResult; modifiedRoute?: string }
         try {
           routeResult = await reg.executeRoute(hookContext, agentName)
         } catch (err) {
@@ -560,9 +449,8 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
           // Loop guard triggered by route-tracking hook
           const errOutput = output as { args: unknown; isError?: boolean; content?: unknown[] }
           errOutput.isError = true
-          const ctxAny = hookContext as Record<string, unknown>
-          const optiReport = ctxAny._optiRoute
-            ? JSON.stringify(ctxAny._optiRoute, null, 2)
+          const optiReport = hookContext._optiRoute
+            ? JSON.stringify(hookContext._optiRoute, null, 2)
             : "Route guard: Excessive or unproductive routing detected."
           errOutput.content = [{ type: "text", text: `ROUTE GUARD: ${optiReport}\n\nSurface to orchestrator with findings and stop delegating.` }]
         }
@@ -605,7 +493,7 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
         const agentName = typeof inputAny.agent === "string" ? inputAny.agent : "unknown"
 
         // Build hook context from input and current session state
-        const hookContext = {
+        const hookContext: HookContext = {
           sessionId: ctx.directory,
           agent: agentName,
           directory: ctx.directory,

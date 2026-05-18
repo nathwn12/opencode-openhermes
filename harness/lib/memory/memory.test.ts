@@ -410,12 +410,6 @@ describe("PlanStore", () => {
     assert.ok(content.includes("Do something"));
   });
 
-  // ---- 21: getMerged returns empty for now --------------------------------
-
-  it("getMerged returns empty for now", async () => {
-    const result = await PlanStore.getMerged("session-1");
-    assert.deepEqual(result, []);
-  });
 });
 
 // ---------------------------------------------------------------------------

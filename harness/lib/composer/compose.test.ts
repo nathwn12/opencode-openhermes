@@ -55,6 +55,8 @@ describe("composer", () => {
     // 04-task-flow
     const taskFlow = mod.composeFragment("04-task-flow")
     assert.ok(taskFlow.startsWith("## Task Flow"), "task-flow starts with Task Flow")
+    assert.ok(taskFlow.includes("dispatch to oh-builder immediately"), "task-flow prefers immediate implementation dispatch")
+    assert.ok(taskFlow.includes("concrete, low-risk, and fixable"), "task-flow keeps the low-risk fix gate explicit")
 
     // 05-confidence
     const confidence = mod.composeFragment("05-confidence")
@@ -81,6 +83,15 @@ describe("composer", () => {
     const guardrails = mod.composeFragment("09-guardrails")
     assert.ok(guardrails.startsWith("## Guardrails"), "guardrails starts with Guardrails")
     assert.ok(guardrails.includes("## Routing"), "guardrails includes Routing")
+    assert.ok(guardrails.includes("dispatch to oh-builder immediately"), "guardrails prefer immediate implementation dispatch")
+
+    const ethos = fs.readFileSync(path.resolve(__dirname, "..", "..", "..", "ETHOS.md"), "utf8")
+    assert.ok(!ethos.includes("harness/commands/"), "ethos no longer hard-codes harness/commands path")
+    assert.ok(ethos.includes("command markdown"), "ethos keeps the command-doc concept")
+
+    const context = fs.readFileSync(path.resolve(__dirname, "..", "..", "..", "CONTEXT.md"), "utf8")
+    assert.ok(!context.includes("harness/commands/"), "context no longer hard-codes harness/commands path")
+    assert.ok(context.includes("legacy compatibility loaders"), "context preserves compatibility note")
   })
 
   it("composeFragment throws for unknown fragment", () => {

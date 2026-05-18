@@ -3,7 +3,7 @@
 ## Terms
 **OpenHermes** — OpenCode-native orchestration layer for this package.
 **Skill** — A `SKILL.md` loaded on demand through OpenCode's skill tool.
-**Command** — A slash command backed by package-local markdown in `harness/commands/`.
+**Command** — A slash command backed by package-local command markdown; legacy compatibility loaders remain only where runtime-backed.
 **Agent** — A primary or subagent definition loaded through OpenCode config.
 **Instruction** — Markdown loaded through `AGENTS.md` or `opencode.json` instructions.
 **Bootstrap** — The first-message context injected by the OpenHermes plugin.

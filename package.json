@@ -1,6 +1,6 @@
 {
   "name": "openhermes",
-  "version": "4.11.2",
+  "version": "4.11.3",
   "description": "Autonomous agent orchestration for OpenCode.",
   "type": "module",
   "license": "MIT",
@@ -22,11 +22,9 @@
     "ETHOS.md",
     "CONTEXT.md",
     "lib/",
-    "scripts/",
     "harness/codex/",
     "harness/instructions/",
     "harness/skills/",
-    "harness/commands/",
     "harness/agents/",
     "harness/lib/"
   ],

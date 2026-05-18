@@ -31,7 +31,7 @@ export const errorRecoveryHook: PostToolUseHook = {
     const errorContext: ErrorContext = {
       sessionId: context.sessionId,
       error: new Error(output.slice(0, 500)), // Truncate for classification
-      attempt: (context._recoveryAttempt as number) ?? 0,
+      attempt: context._recoveryAttempt ?? 0,
       timestamp: Date.now(),
       agent: context.agent,
     };

@@ -15,7 +15,7 @@ const DEBOUNCE_MS = 500; // Debounce window for file-change events
 // ---------------------------------------------------------------------------
 
 export class PlanFileWatcher {
-  private static instance: PlanFileWatcher;
+  private static instance: PlanFileWatcher | null = null;
 
   /** Active fs.FSWatcher instances keyed by directory path. */
   private watchers = new Map<string, fs.FSWatcher>();
@@ -44,7 +44,7 @@ export class PlanFileWatcher {
     const inst = PlanFileWatcher.instance;
     if (inst) {
       inst.destroy();
-      PlanFileWatcher.instance = null as unknown as PlanFileWatcher;
+      PlanFileWatcher.instance = null;
     }
   }
 
@@ -123,6 +123,7 @@ export class PlanFileWatcher {
   /**
    * Pause change-notification without losing watch-registrations.
    * While paused, events are still debounced but callbacks are suppressed.
+   * Missed changes are not queued or replayed on resume.
    */
   pause(): void {
     this._paused = true;
@@ -130,7 +131,7 @@ export class PlanFileWatcher {
 
   /**
    * Resume change-notification after a pause.
-   * Pending debounced callbacks will fire on the next event.
+   * Only future events will notify callbacks.
    */
   resume(): void {
     this._paused = false;

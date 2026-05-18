@@ -231,26 +231,6 @@ export class PlanStore {
     }
   }
 
-  /**
-   * Merge parent context entries for child sessions.
-   * Returns all entries from both parent and current session context.
-   */
-  static async getMerged(
-    sessionId: string,
-    parentSessionId?: string,
-  ): Promise<MemoryEntry[]> {
-    const all: MemoryEntry[] = [];
-
-    // For now, this is a placeholder that returns empty — real merging
-    // requires the caller to provide plan paths. This stub hooks into
-    // the intended architecture without dictating I/O strategy.
-    if (parentSessionId) {
-      // In a real implementation, we would look up the parent session's
-      // plan file and merge its memory entries with the child's.
-    }
-
-    return all;
-  }
 }
 
 // ---------------------------------------------------------------------------

@@ -34,7 +34,7 @@ function normalizeEol(text: string): string {
 // ---------------------------------------------------------------------------
 
 export class PlanSync {
-  private static instance: PlanSync;
+  private static instance: PlanSync | null = null;
 
   private constructor() {}
 
@@ -48,7 +48,7 @@ export class PlanSync {
 
   /** Reset singleton — used in tests to get a clean slate. */
   static resetInstance(): void {
-    PlanSync.instance = null as unknown as PlanSync;
+    PlanSync.instance = null;
   }
 
   // -----------------------------------------------------------------------
@@ -286,24 +286,19 @@ export class PlanSync {
     // Parse per-entry metadata (version, description, status)
     const entryMeta = new Map<string, Record<string, string>>();
     for (const line of metaLines) {
-      const ev = line.match(/^entry-(task-\d+)-version:\s*(\d+)$/i);
-      if (ev) {
-        const m = entryMeta.get(ev[1]) ?? {};
-        m.version = ev[2];
-        entryMeta.set(ev[1], m);
+      const keyMatch = line.match(/^entry-(task-\d+)-(version|description|status):\s*(.+)$/i);
+      if (!keyMatch) continue;
+
+      const m = entryMeta.get(keyMatch[1]) ?? {};
+      if (keyMatch[2] === "status") {
+        m.status = keyMatch[3].trim().toLowerCase();
+      } else if (keyMatch[2] === "description") {
+        m.description = keyMatch[3].trim();
+      } else {
+        m.version = keyMatch[3].trim();
       }
-      const ed = line.match(/^entry-(task-\d+)-description:\s*(.+)$/i);
-      if (ed) {
-        const m = entryMeta.get(ed[1]) ?? {};
-        m.description = ed[2].trim();
-        entryMeta.set(ed[1], m);
-      }
-      const es = line.match(/^entry-(task-\d+)-status:\s*(.+)$/i);
-      if (es) {
-        const m = entryMeta.get(es[1]) ?? {};
-        m.status = es[2].trim().toLowerCase();
-        entryMeta.set(es[1], m);
-      }
+
+      entryMeta.set(keyMatch[1], m);
     }
 
     // ---- 2. Find relevant sections ----
@@ -374,6 +369,8 @@ export class PlanSync {
    * each starting with `### Task N:`.
    */
   private splitTaskBlocks(tasksContent: string): string[] {
+    if (!tasksContent.includes("### Task ")) return [];
+
     // Split on lines starting with `### `
     const parts = tasksContent.split(/\n(?=### )/);
     return parts.filter((p) => /^###\s+Task\s+\d+\s*:/m.test(p));
@@ -392,16 +389,16 @@ export class PlanSync {
     completedContent: string | null,
     activeContent: string | null,
   ): SyncPlanEntry["status"] {
+    const taskRef = new RegExp(`Task\\s+${taskNum}\\s*:`, "i");
+
     // Check Completed section
-    if (completedContent) {
-      const re = new RegExp(`Task\\s+${taskNum}\\s*:`, "i");
-      if (re.test(completedContent)) return "completed";
+    if (completedContent && taskRef.test(completedContent)) {
+      return "completed";
     }
 
     // Check Active Task section
-    if (activeContent) {
-      const re = new RegExp(`Task\\s+${taskNum}\\s*:`, "i");
-      if (re.test(activeContent)) return "in_progress";
+    if (activeContent && taskRef.test(activeContent)) {
+      return "in_progress";
     }
 
     // Check success-criteria checkboxes

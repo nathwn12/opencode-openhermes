@@ -71,6 +71,25 @@ describe("BackgroundManager", () => {
     assert.equal(done!.exitCode, 0);
   });
 
+  it("resetInstance returns a fresh manager with cleared state", async () => {
+    const mgr = BackgroundManager.getInstance();
+    const id = mgr.run({
+      command: IS_WIN ? "powershell.exe" : "sleep",
+      args: IS_WIN
+        ? ["-NoProfile", "-Command", "Start-Sleep -Seconds 30"]
+        : ["30"],
+      timeout: 0,
+    });
+
+    await waitForStatus(mgr, id, "running");
+
+    BackgroundManager.resetInstance();
+
+    const fresh = BackgroundManager.getInstance();
+    assert.notEqual(fresh, mgr);
+    assert.equal(fresh.list().length, 0);
+  });
+
   // ---- 3: capture stdout -------------------------------------------------
 
   it("captures stdout from a simple command", async () => {

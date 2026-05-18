@@ -10,8 +10,11 @@ import path from "node:path"
 
 const SKILLS_DIR = path.resolve(import.meta.dirname, "..", "harness", "skills")
 
-/** Route terminals — valid non-skill targets. */
-const TERMINALS = new Set(["surface", "done", "mode"])
+/** Route terminals — valid non-skill terminal targets. */
+const TERMINALS = new Set(["surface", "done"])
+
+/** Internal switches — valid non-skill routing controls. */
+const INTERNAL_SWITCHES = new Set(["mode"])
 
 /**
  * Entry points — skills the autopilot loads directly from the
@@ -224,7 +227,7 @@ describe("routing graph", () => {
   })
 
   // ---- 2: Route existence ---------------------------------------------
-  it("every route target is a real skill or valid terminal", () => {
+  it("every route target is a real skill, valid terminal, or internal switch", () => {
     // Collect user skill names
     const userSkills = new Set<string>()
     for (const dir of [
@@ -243,6 +246,7 @@ describe("routing graph", () => {
       for (const key of ["pass", "fail", "blocker"] as const) {
         for (const target of meta.route[key]) {
           if (TERMINALS.has(target)) continue
+          if (INTERNAL_SWITCHES.has(target)) continue
           if (skillNames.has(target)) continue
           if (userSkills.has(target)) continue
           failures.push(`${name}.route.${key} → "${target}"`)
@@ -358,15 +362,15 @@ describe("routing graph", () => {
   })
 
   // ---- 6: Mode skill validation ---------------------------------------
-  it("mode skills route correctly (pass=mode, fail=mode, blocker=surface)", () => {
+  it("internal-switch skills route correctly (pass=mode, fail=mode, blocker=surface)", () => {
     for (const name of ["oh-freeze", "oh-guard"]) {
       const meta = skills.get(name)
       assert.ok(meta, `${name} not found`)
       for (const target of meta!.route.pass) {
-        assert.equal(target, "mode", `${name}.route.pass should be "mode"`)
+        assert.equal(target, "mode", `${name}.route.pass should be internal switch "mode"`)
       }
       for (const target of meta!.route.fail) {
-        assert.equal(target, "mode", `${name}.route.fail should be "mode"`)
+        assert.equal(target, "mode", `${name}.route.fail should be internal switch "mode"`)
       }
     }
   })

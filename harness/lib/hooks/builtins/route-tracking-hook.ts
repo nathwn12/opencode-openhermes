@@ -90,8 +90,7 @@ export const routeTrackingHook: RouteHook = {
 
     // Read config from context (or use defaults)
     // Support both `_routeTrackingConfig` and `hooks.route_tracking.*` conventions
-    const config =
-      (context._routeTrackingConfig ?? {}) as RouteTrackingConfig;
+    const config: Partial<RouteTrackingConfig> = context._routeTrackingConfig ?? {};
     const maxSkillRepeats = config.maxSkillRepeats ?? 5;
     const maxUnproductiveHops = config.maxUnproductiveHops ?? 8;
     const artifactCheck = config.artifactCheck ?? defaultArtifactCheck;

@@ -9,7 +9,7 @@ import { HookPhase, HookResult } from "../types.ts";
 import type { HookContext, PostToolUseHook } from "../types.ts";
 import { MemoryManager } from "../../memory/memory-manager.ts";
 import { PlanStore } from "../../memory/plan-store.ts";
-import { findLatestPlanFile } from "../../../../bootstrap.ts";
+import { resolvePlanAccess } from "../../plans/plan-location.ts";
 import { MemoryLevel } from "../../memory/interfaces.ts";
 
 export const memorySyncHook: PostToolUseHook = {
@@ -23,7 +23,7 @@ export const memorySyncHook: PostToolUseHook = {
 
   async execute(context: HookContext, output: string) {
     // Sync memory entries to plan file
-    const planFile = findLatestPlanFile(context.directory);
+    const planFile = resolvePlanAccess(context.directory)?.path ?? null;
     if (!planFile) {
       // No plan file to sync to — skip silently
       return { result: HookResult.CONTINUE };
