@@ -1,6 +1,6 @@
 ---
 name: oh-grill
-description: "Stress-test plans and designs through relentless Socratic questioning. Sharpens assumptions, flags blind spots, updates domain docs."
+description: "Multi-perspective plan stress-test. Spawns parallel lens sub-agents (CEO/Eng/Design/DX), computes compound confidence score, routes to execution when marble clarity (≥8/10 + contradictions resolved) is achieved."
 mode: subagent
 ---
 
@@ -33,22 +33,18 @@ Before committing to a plan. "Writing exactly what I asked for and it's still wr
 
 ## Modes
 
-### Mode A: Grill (quick)
-1. Read plan/design doc
-2. Interview one decision at a time — each answer reveals new branches
-3. Resolve each branch before moving on
-4. Surface: contradictions, blind spots, unstated assumptions, ambiguous terms
-5. Propose recommended answer per decision
-6. Output: verified plan with flagged ambiguities
+### Mode C: Orchestrated Grill (default)
+1. Load applicable lenses from `lenses/` directory (select by plan type)
+2. Spawn parallel sub-agents — one per perspective lens (CEO, Eng, Design, DX)
+3. Each returns: score (0-10), prioritized concerns, recommended changes
+4. Aggregate: compound = Σ(weight × score) / Σ(weights). Deduplicate concerns.
+5. Evaluate gate: contradictions resolved AND compound ≥ 8/10?
+   - Yes → emit ROUTE_EVIDENCE with confidence → oh-builder
+   - No → emit ROUTE_EVIDENCE with contradictions → oh-planner
+6. Output: verified plan with compound score, per-lens breakdown, flagged contradictions
 
-### Mode B: Grill with Docs (thorough)
-Same + persists to CONTEXT.md, ADRs, and DDD ubiquitous-language glossary.
-
-1. Load CONTEXT.md + ADRs
-2. Grill decision tree — each resolution may: update CONTEXT.md terms, create ADR, flag glossary ambiguity
-3. **Ubiquitous Language extraction** — scan for domain nouns/verbs/concepts. Identify: same word different concepts, different words same concept, vague terms. Propose canonical glossary with grouped tables. Write example dialogue (3-5 exchanges). Flag ambiguities.
-4. Persist CONTEXT.md changes immediately as language firms
-5. Output: updated CONTEXT.md + ADRs + UBIQUITOUS_LANGUAGE.md (if significant) + verified plan
+### Mode A: Quick Grill (single lens)
+Same as Mode C but single lens only (defaults to Eng). For small plans or quick sanity checks.
 
 ## Technique
 - One question at a time

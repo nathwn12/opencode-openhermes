@@ -4,48 +4,79 @@
 
 Before committing to a plan. "Writing exactly what I asked for and it's still wrong" = design concept not shared. Cheaper in conversation than in code.
 
-**Example:** User shares a plan. You respond with: "Have you considered the failure mode where X happens?" — then walk through the grill modes.
+**Example:** User shares a plan. The orchestrator loads oh-grill, which spawns 4 parallel lens sub-agents. Each returns a score and concerns. Oh-grill aggregates, computes compound confidence, and either advances to execution or routes back for revision.
 
 ## When NOT to Use
 
-- Clear vetted plan needing execution
+- Clear vetted plan needing execution (route directly to oh-builder)
 - User needs builder, not critic
 - Trivial decisions
 
-## Modes / Workflow
+## Orchestration Flow
 
-### Mode A: Grill (quick)
+```
+Plan artifact → oh-grill
+    ├── lens/ceo.md → sub-agent → score + concerns
+    ├── lens/eng.md → sub-agent → score + concerns
+    ├── lens/design.md → sub-agent → score + concerns
+    └── lens/dx.md → sub-agent → score + concerns
+    ↓
+Aggregate: compound = Σ(weight × score) / Σ(weights)
+    ↓
+Gate: compound ≥ 8 AND contradictions resolved?
+    ├── Yes → ROUTE_EVIDENCE: {confidence, target: "oh-builder"}
+    └── No  → ROUTE_EVIDENCE: {confidence, target: "oh-planner", contradictions}
+```
 
-1. Read plan/design doc
-2. Interview one decision at a time — each answer reveals new branches
-3. Resolve each branch before moving on
-4. Surface: contradictions, blind spots, unstated assumptions, ambiguous terms
-5. Propose recommended answer per decision
-6. Output: verified plan with flagged ambiguities
+### Lens Selection
 
-### Mode B: Grill with Docs (thorough)
+Not all lenses apply to every plan:
+- **Backend-only change** → CEO + Eng only (skip design + DX)
+- **UI/UX change** → CEO + Eng + Design + DX (all four)
+- **API change** → CEO + Eng + DX (skip design)
+- **Infrastructure change** → Eng only
 
-Same + persists to CONTEXT.md, ADRs, and DDD ubiquitous-language glossary.
+The orchestrator selects lenses based on the plan's "type" hint or by scanning for UI/API/infra keywords.
 
-1. Load CONTEXT.md + ADRs
-2. Grill decision tree — each resolution may: update CONTEXT.md terms, create ADR, flag glossary ambiguity
-3. **Ubiquitous Language extraction** — scan for domain nouns/verbs/concepts. Identify: same word different concepts, different words same concept, vague terms. Propose canonical glossary with grouped tables. Write example dialogue (3-5 exchanges). Flag ambiguities.
-4. Persist CONTEXT.md changes immediately as language firms
-5. Output: updated CONTEXT.md + ADRs + UBIQUITOUS_LANGUAGE.md (if significant) + verified plan
+### ROUTE_EVIDENCE Output
 
-## Technique
+After aggregation, emit a single ROUTE_EVIDENCE line:
 
-- One question at a time
-- Propose recommended answer per decision
-- Walk full decision tree before accepting
-- Reference CONTEXT.md glossary for ambiguous terms
-- Cross-reference ADRs for architecture decisions
+```json
+ROUTE_EVIDENCE: {"outcome":"pass","confidence":8.4,"target":"oh-builder","verification":"unverified","action":"done","work":"implement","reason":"4/4 lenses passed, compound 8.4/10, 0 unresolved contradictions"}
+```
+
+For sub-threshold:
+```json
+ROUTE_EVIDENCE: {"outcome":"fail","confidence":6.2,"target":"oh-planner","verification":"unverified","action":"fixable","work":"diagnose","reason":"CEO scores 7, Eng scores 5 — architecture concern unresolved"}
+```
+
+## Compound Scoring Model
+
+Each lens file has a `weight` in its frontmatter (0.0-1.0). Lenses not selected contribute 0 weight.
+
+```
+compound = (ceo.weight × ceo.score +
+            eng.weight × eng.score +
+            design.weight × design.score +
+            dx.weight × dx.score) /
+           (ceo.weight + eng.weight + design.weight + dx.weight)
+```
+
+Default weights (all 4 lenses active): CEO 0.3, Eng 0.3, Design 0.2, DX 0.2.
+
+## Techniques
+
+- Spawn lens sub-agents in parallel — do NOT run sequentially
+- Each lens gets ONLY its own instruction file — no cross-contamination
+- Deduplicate concerns before presenting (same concern from different lenses → higher severity)
+- Propose recommended resolution per conflicting concern
+- One question per branch, resolve before moving on
 
 ## Anti-patterns
 
+- Running lenses sequentially instead of in parallel
 - Grilling for sake of grilling
 - Questions you could answer by reading plan/codebase
-- ADRs for trivial decisions
-- Polishing CONTEXT.md before concepts settled
-- Updating terms mid-discussion (let conversation resolve)
 - Not distinguishing "must resolve now" vs "figure out later"
+- Persisting confidence scores to plan files (they're ephemeral)

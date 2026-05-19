@@ -95,7 +95,7 @@ Span multiple phases and coordinate other skills:
 | Skill | Purpose |
 |---|---|
 | **oh-browser** | Browser automation via agent-browser CLI. Navigate pages, fill forms, take screenshots, scrape data, test web apps. |
-| **oh-grill** | Stress-test plans through relentless Socratic questioning |
+| **oh-grill** | Multi-perspective plan stress-test: delegates to CEO/Eng/Design/DX lenses in parallel, computes compound confidence (≥8/10), routes to full-speed execution when marble clarity achieved |
 | **oh-plan-review** | Multi-lens review: Engineering, Design, DX, Strategy |
 | **oh-planner** | Brainstorm, architect, autoplan, decision pipeline |
 | **oh-security** | Audit: secrets, supply chain, CI/CD, OWASP, LLM security |

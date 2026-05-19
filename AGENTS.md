@@ -99,6 +99,24 @@ Canonical: `~/.local/share/openhermes/plans/<project-name>/plan-{nnn>.md`
 - Sequential numbering (001, 002, 003...)
 - Plan file creation is the agent's responsibility — bootstrap does NOT auto-create (prevents ghost skeletons)
 
+## Task Dependency Convention
+
+For parallel build execution, plan tasks use lightweight inline annotations:
+
+```markdown
+## Tasks
+
+- [ ] auth module     [depends: none,       coupling: low]
+- [ ] payment gateway [depends: none,       coupling: low]
+- [ ] dashboard UI    [depends: auth,       coupling: high]
+- [ ] README update   [depends: dashboard,  coupling: low]
+```
+
+- `depends`: task name this depends on, or `none` for root tasks
+- `coupling`: `low` (safe to parallelize in separate worktree) or `high` (must be same worktree, serial)
+
+oh-builder reads this DAG and decides parallelism: low-coupling tasks spawn parallel sub-agents in git worktrees; high-coupling tasks run serially in the primary worktree. Plans without annotations execute serially (backward compatible).
+
 ## Windows Notes
 
 - CI runs on Ubuntu (`ubuntu-latest`) even though dev uses Windows

@@ -5,6 +5,26 @@ All notable changes to OpenHermes are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.14.0] - 2026-05-20
+
+### Added
+
+- **Multi-perspective plan grilling** — oh-grill now orchestrates 4 parallel lens sub-agents (CEO/Eng/Design/DX), each with weighted 0-10 scoring rubrics stored in `lenses/` directory. Drop-in extensible: add `lenses/security.md` to include a security perspective.
+- **Marble clarity confidence gate** — oh-grill computes compound confidence score and auto-advances to execution when contradictions are resolved AND confidence ≥ 8/10. Routing resolved dynamically via ROUTE_EVIDENCE.
+- **Non-blocking tiered transparency** — ≥9.5 = HIGH (silent), 8-9.4 = MEDIUM (echo), <8 = LOW (loop + flag contradictions). Maps to existing AUTOPILOT.md confidence hierarchy.
+- **Plan-driven parallel execution** — Task dependency convention (`[depends: none, coupling: low]`) lets oh-builder parallelize low-coupling tasks across git worktrees via oh-worktree. Backward compatible: plans without annotations execute serially.
+
+### Changed
+
+- **oh-grill SKILL.md** — route.pass now multi-candidate `[oh-builder, oh-planner]`. Fail route routes to oh-planner (not oh-expert). Only routing graph change in this release.
+- **oh-grill DEEP.md** — Added orchestration flow diagram, lens selection rules, compound scoring formula, ROUTE_EVIDENCE examples.
+- **AUTOPILOT.md** — Routing diagram updated to show confidence-gated transition and lens orchestration box.
+- **README.md, AGENTS.md, docs/HOW-IT-WORKS.md, harness/agents/oh-grill.md** — Updated to reflect new routing flow.
+
+### Tests
+
+- Full suite: 222 tests passing (unchanged). Routing graph tests require zero assertion changes — multi-candidate pass routes already validated.
+
 ## [4.13.0] - 2026-05-19
 
 ### Removed

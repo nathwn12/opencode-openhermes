@@ -143,8 +143,15 @@ Routing is mandatory, not optional. Follow the skill's routing metadata. Do not 
 ## Routing Graph
 
 ```
-oh-planner ──pass──→ oh-grill ──pass──→ oh-planner (revise) ──→ oh-manifest
-              fail──→ oh-planner (revise)
+oh-planner ──pass──→ oh-grill ──pass (≥8/10)──→ oh-builder
+              pass (<8/10)──→ oh-planner (revise)  fail──→ oh-planner (revise)
+
+             ╔════════════════════════════════════╗
+             ║  oh-grill spawns parallel lenses:  ║
+             ║  CEO + Eng + Design + DX           ║
+             ║  compound = Σ(weight × score)       ║
+             ║  gate: ≥8/10 → oh-builder           ║
+             ╚════════════════════════════════════╝
 
 oh-manifest → oh-planner → oh-builder → oh-gauntlet → oh-ship
                 ↑_____________________________|      │

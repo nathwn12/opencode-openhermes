@@ -36,7 +36,9 @@ Dispatch to target skill subagent
 ### Skill Pipeline Flow
 
 ```
-oh-planner → oh-grill → oh-planner (revise) → oh-manifest → oh-builder → oh-gauntlet → oh-ship → [oh-retro, oh-docs] → oh-retro → oh-planner (loop)
+oh-planner → oh-grill ──(≥8/10)──→ oh-builder → oh-gauntlet → oh-ship → [oh-retro, oh-docs]
+             └──(<8/10)──→ oh-planner (revise)
+oh-grill spawns 4 parallel lenses (CEO + Eng + Design + DX), computes compound confidence
                                                                                                              │
                                                                                                              └── oh-docs → oh-retro → oh-planner (loop)
 ```
