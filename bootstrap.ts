@@ -2,7 +2,7 @@ import path from "node:path"
 import fs from "node:fs"
 import os from "node:os"
 import type { Plugin } from "@opencode-ai/plugin"
-import { getHarnessDir, setHarnessRootForTest, resolveHarnessRoot } from "./lib/harness-resolver.ts"
+import { getHarnessDir, setHarnessRootForTest, resolveHarnessRoot, resolveOpenCodePackageDir } from "./lib/harness-resolver.ts"
 import { compose } from "./harness/lib/composer/index.ts"
 import { buildSkillsIndex, formatSkillsIndexFragment } from "./harness/lib/skills-index/index.ts"
 import { ensurePlanFile, findLatestPlanFile, planStorageDir, setPlanStorageDirForTest, resolvePlanAccess } from "./harness/lib/plans/plan-location.ts"
@@ -35,7 +35,7 @@ const USER_SKILL_DIRS: ReadonlyArray<string> = [
   path.join(os.homedir(), ".claude", "skills"),      // Claude Code backward compat
 ]
 
-export { resolveHarnessRoot, setHarnessRootForTest, getHarnessDir, ensurePlanFile, findLatestPlanFile, setPlanStorageDirForTest }
+export { resolveHarnessRoot, setHarnessRootForTest, getHarnessDir, ensurePlanFile, findLatestPlanFile, setPlanStorageDirForTest, resolveOpenCodePackageDir }
 
 function parseFrontmatter(raw: string | undefined): Record<string, string> {
   const frontmatter: Record<string, string> = {}
@@ -271,19 +271,20 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
 
       await logToOC("info", `skills: ${allPaths.length} path(s)`)
 
-      // Build condensed skills index for the agent prompt — replaces verbose XML
+      // Build condensed skills index for the agent prompt — no file write,
+      // passed in-memory to the composer as a dynamic fragment.
+      let skillsIndexFragment: string | undefined
       try {
         const skillsIndex = buildSkillsIndex(allPaths)
-        const indexPath = path.join(hDir, "lib", "composer", "fragments", "10-skills-index.md")
-        const indexContent = formatSkillsIndexFragment(skillsIndex)
-        fs.writeFileSync(indexPath, indexContent, "utf8")
+        skillsIndexFragment = formatSkillsIndexFragment(skillsIndex)
       } catch (err) {
         console.error(`[openhermes] Failed to generate skills index: ${err instanceof Error ? err.message : String(err)}`)
       }
 
       // Register harness docs as native OpenCode instructions — no prompt-embedding needed
+      // codex/ files stay on disk for harness-resolver marker validation but their content
+      // is no longer loaded as instructions — the composed fragments carry the distilled runtime.
       config.instructions = uniqueStrings(config.instructions ?? [], [
-        path.join(hDir, "codex"),
         path.join(hDir, "instructions"),
       ])
 
@@ -294,7 +295,7 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
       let openHermesPrompt: string
       const injectSelfKnowledge = (prompt: string): string => {
         try {
-          const pkgDir = import.meta.dirname
+          const pkgDir = resolveOpenCodePackageDir() ?? import.meta.dirname
           const pkg = JSON.parse(fs.readFileSync(path.resolve(pkgDir, "package.json"), "utf-8"))
           return `OpenHermes v${pkg.version} | Install: ${pkgDir} | Harness: ${hDir}\n\n${prompt}`
         } catch {
@@ -302,7 +303,9 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
         }
       }
       try {
-        openHermesPrompt = injectSelfKnowledge(compose())
+        openHermesPrompt = injectSelfKnowledge(compose({
+          dynamicFragments: skillsIndexFragment ? { "10-skills-index": skillsIndexFragment } : undefined,
+        }))
       } catch {
         openHermesPrompt = loadedAgents[OPENHERMES_AGENT]?.prompt ?? "You are OpenHermes."
         openHermesPrompt = injectSelfKnowledge(openHermesPrompt)

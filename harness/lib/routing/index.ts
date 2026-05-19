@@ -19,3 +19,10 @@ export type {
   SkillRouteMap,
   SkillRoutingFrontmatter,
 } from "./types.ts";
+export {
+  CLASSIFICATION_MATRIX,
+  DIRECT_USER_SKILLS,
+  ENTRY_POINTS,
+  ROUTING_GRAPH,
+  SAFETY_VALVES,
+} from "./routing-graph.ts";

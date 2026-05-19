@@ -16,10 +16,10 @@ Before committing to a plan. "Writing exactly what I asked for and it's still wr
 
 ```
 Plan artifact → oh-grill
-    ├── lens/ceo.md → sub-agent → score + concerns
-    ├── lens/eng.md → sub-agent → score + concerns
-    ├── lens/design.md → sub-agent → score + concerns
-    └── lens/dx.md → sub-agent → score + concerns
+    ├── lenses/ceo.md → sub-agent → score + concerns
+    ├── lenses/eng.md → sub-agent → score + concerns
+    ├── lenses/design.md → sub-agent → score + concerns
+    └── lenses/dx.md → sub-agent → score + concerns
     ↓
 Aggregate: compound = Σ(weight × score) / Σ(weights)
     ↓

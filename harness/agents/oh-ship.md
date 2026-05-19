@@ -4,25 +4,7 @@ description: "Ship pipeline — test, conditional bump, commit, push to current 
 mode: subagent
 ---
 
-## Shell Pre-flight (Windows)
-
-You are on Windows. Before ANY command execution, detect your shell:
-- `$PSVersionTable` exists → PowerShell (`powershell` or `pwsh`)
-- `%CMDCMDLINE%` is set → CMD  
-- `$0` or `$BASH` → Bash (Git Bash)
-
-Operation → required shell:
-- File ops (`Remove-Item`, `New-Item`), scoop, `.ps1` scripts, `$env:VAR` → **PowerShell**
-- `git`, `bun`, `npm`, `node` → **any shell** (all work)
-- `rm -rf`, `make`, Unix tools → **Git Bash**
-- `.bat`/`.cmd` files → **CMD**
-
-Wrong shell? Switch:
-- → PowerShell: `powershell.exe -NoProfile -Command "..."`
-- → Git Bash: `& "C:\Program Files\Git\bin\bash.exe" -c "..."`
-- → CMD: `cmd.exe /c "..."`
-
-Always know before you go.
+> **Shell Pre-flight**: See [SHELL.md](../instructions/SHELL.md) for shell detection and selection instructions before running commands.
 
 # oh-ship
 
@@ -31,26 +13,30 @@ Code ready to ship. Ships to the **current branch**. PRs are only created when e
 
 ## Workflow
 
-1. **Pre-flight** — run tests, lint, typecheck. If any fail, stop and surface.
+1. **Pre-flight** — run tests, lint, typecheck. Stop and surface if any fail.
 
-2. **Version bump (conditional)** — check if a version bump is applicable:
-   - If `package.json` or `VERSION` exists and user mentioned a release/bump → semver bump
-   - If no version file exists or user didn't request a bump → skip
-   - If unsure whether to bump → ask the user
+2. **Version bump (conditional)** — if `package.json` or `VERSION` exists and user mentioned a release/bump → semver bump. Skip or ask if unsure.
 
-3. **Changelog** — generate from commits since last tag. Polish: consistent tense, group by type (features, fixes, breaking). Skip if no tag history.
+3. **Changelog** — generate from commits since last tag. Polish: consistent tense, group by type. Skip if no tag history.
 
-4. **Commit** — stage all changes. Commit message uses conventional commit format with **vague, professional descriptions** — do not leak implementation details. Use the git-commit skill conventions: `<type>[scope]: <short description>`.
+4. **Commit — choose mode:**
+   a. **Fresh commit**: stage all changes. Conventional commit format, vague professional descriptions.
+   b. **Amend**: rewrite HEAD commit message only. No staging needed. Requires force push in step 6.
 
-5. **Push to current branch** — `git push origin <current-branch>`. Always the current branch. Never assume a different target.
+5. **Fast-path check** — if user intent is unambiguous ("ship to dev", "push to branch", "amend the message", "deploy"):
+   → Execute directly. Skip option presentation.
+   If vague: present options (Merge locally, Push + PR, Keep branch, or Discard).
 
-6. **PR (only if requested)** — if the user explicitly said "create a PR", "open a pull request", or similar → create PR with summary and test evidence. If the change is very large, you may **suggest** a PR, but do not create one without explicit user confirmation.
+6. **Push to current branch** — `git push origin <current-branch>`.
+   If rejected after amend → verify divergence is local-only, then `git push --force-with-lease origin <current-branch>`. Verify remote matches local after push.
 
-7. **Deploy** — trigger deploy (platform-specific). If no deploy target is configured, skip.
+7. **PR (only if requested)** — if user said "create a PR", create with summary and test evidence. Never auto-create.
 
-8. **Verify** — smoke test or health check if applicable.
+8. **Deploy (if configured)** — trigger deploy, skip if no target.
 
-9. **Post-ship docs sync** — cross-reference diff against README, CHANGELOG, ARCHITECTURE.md, CONTRIBUTING.md. Update to match what shipped.
+9. **Verify** — smoke test or health check.
+
+10. **Post-ship docs sync** — cross-reference diff against README, CHANGELOG, ARCHITECTURE.md, CONTRIBUTING.md. Update to match what shipped.
 
 ## Branch Protocol
 
@@ -74,3 +60,7 @@ Before these operations, ALWAYS confirm the branch with the user:
 - Merging without user instruction
 - Deploy without post-deploy verification
 - Not tagging releases
+- Amending without force pushing
+- Using `--force` instead of `--force-with-lease`
+- Not verifying remote sync after force push
+- Force-pushing to main/master

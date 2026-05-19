@@ -51,15 +51,46 @@ export function composeFragment(name: string): string {
  * If a phases filter is provided, only fragments whose name includes
  * any of the given phase strings are included.
  *
+ * If dynamicFragments is provided, those fragment names override or
+ * supplement the fragments on disk. Dynamic fragments are checked first
+ * before falling back to reading from the fragments directory.
+ *
  * @param options.phases - Optional list of phase strings to filter fragments by.
  *                         A fragment is included if its name includes any phase string.
+ * @param options.dynamicFragments - Optional map of fragment name → content
+ *                                   for fragments provided in-memory. These
+ *                                   take priority over disk-based fragments.
  */
-export function compose(options?: { phases?: string[] }): string {
-  const files = options?.phases
-    ? fragmentFiles().filter(f => options.phases!.some(p => path.basename(f).includes(p)))
-    : fragmentFiles()
+export function compose(options?: { phases?: string[]; dynamicFragments?: Record<string, string> }): string {
+  const dyn = options?.dynamicFragments ?? {}
+  const phases = options?.phases
 
-  return files
-    .map(f => fs.readFileSync(f, "utf8").trimEnd())
+  // Collect all fragment names (disk + dynamic)
+  const names = new Set<string>()
+  for (const f of fragmentFiles()) {
+    names.add(path.basename(f, ".md"))
+  }
+  for (const key of Object.keys(dyn)) {
+    names.add(key)
+  }
+
+  // Sort and optionally filter by phase.
+  // When phases is explicitly provided (even empty), apply filtering.
+  // An empty phases array means "no fragments match" → empty output.
+  let sorted = [...names].sort()
+  if (phases !== undefined) {
+    sorted = phases.length > 0
+      ? sorted.filter(name => phases.some(p => name.includes(p)))
+      : []
+  }
+
+  return sorted
+    .map(name => {
+      // Dynamic fragments take priority
+      if (dyn[name] !== undefined) return dyn[name]
+      // Fall back to reading from disk
+      const filePath = path.join(FRAGMENTS_DIR, `${name}.md`)
+      return fs.readFileSync(filePath, "utf8").trimEnd()
+    })
     .join("\r\n\r\n")
 }

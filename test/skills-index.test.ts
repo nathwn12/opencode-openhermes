@@ -69,15 +69,15 @@ describe("skills index", () => {
   })
 
   // -----------------------------------------------------------------------
-  // 1. Generates index for all 33 OH built-in skills
+  // 1. Generates index for all 31 OH built-in skills
   // -----------------------------------------------------------------------
-  it("generates index for all 33 OH built-in skills", () => {
+  it("generates index for all 31 OH built-in skills", () => {
     const realSkillsDir = path.resolve(import.meta.dirname, "..", "harness", "skills")
     const index = buildSkillsIndex([realSkillsDir])
 
-    // Should have at least 33 entries — allow for future additions
+    // Should have at least 31 entries — allow for future additions
     const count = Object.keys(index).length
-    assert.ok(count >= 33, `Expected >= 33 skills, got ${count}`)
+    assert.ok(count >= 31, `Expected >= 31 skills, got ${count}`)
 
     // Verify some known skills exist
     assert.ok("oh-planner" in index, "oh-planner should be in index")
@@ -85,35 +85,41 @@ describe("skills index", () => {
     assert.ok("oh-gauntlet" in index, "oh-gauntlet should be in index")
     assert.ok("oh-ship" in index, "oh-ship should be in index")
 
-    // Verify basic structure
+    // Verify every entry has a route
     for (const [skillName, entry] of Object.entries(index)) {
-      assert.ok(typeof entry.description === "string", `${skillName} should have description`)
-      assert.ok(entry.description.length > 0, `${skillName} description should not be empty`)
-      assert.ok(["core", "dynamic", "niche"].includes(entry.tier), `${skillName} tier should be valid`)
+      assert.ok(entry.route !== undefined, `${skillName} should have a route`)
+      assert.ok(Array.isArray(entry.route.pass) || typeof entry.route.pass === "string",
+        `${skillName} route.pass should be string or string[]`)
+      assert.ok(Array.isArray(entry.route.fail) || typeof entry.route.fail === "string",
+        `${skillName} route.fail should be string or string[]`)
+      assert.ok(Array.isArray(entry.route.blocker) || typeof entry.route.blocker === "string",
+        `${skillName} route.blocker should be string or string[]`)
     }
   })
 
   // -----------------------------------------------------------------------
-  // 2. Tier assignment: skills in OH harness path get "core"
+  // 2. Route extraction: routes are correctly parsed from SKILL.md
   // -----------------------------------------------------------------------
-  it("assigns core tier to skills in OH harness path", () => {
-    // Create a skill in a path that we'll pass as first (built-in) dir
-    writeSkill(path.join(tmpDir, "builtin", "skills"), "oh-test-core", {
-      description: "A core skill for testing",
-    }, { pass: "surface", fail: "surface", blocker: "surface" })
+  it("correctly extracts route targets from SKILL.md", () => {
+    writeSkill(path.join(tmpDir, "routes"), "oh-test-routes", {
+      description: "A test skill",
+    }, {
+      pass: ["oh-gauntlet", "oh-builder"],
+      fail: "oh-investigate",
+      blocker: "surface",
+    })
 
-    // Create a skill in a second (user) path
-    writeSkill(path.join(tmpDir, "external", "skills"), "oh-test-niche", {
-      description: "A niche skill for testing",
-    }, { pass: "surface", fail: "surface", blocker: "surface" })
+    const index = buildSkillsIndex([path.join(tmpDir, "routes")])
 
-    const index = buildSkillsIndex([
-      path.join(tmpDir, "builtin", "skills"),
-      path.join(tmpDir, "external", "skills"),
-    ])
-
-    assert.equal(index["oh-test-core"]?.tier, "core", "Skill in first path should be core")
-    assert.equal(index["oh-test-niche"]?.tier, "niche", "Skill in external path should be niche")
+    assert.ok("oh-test-routes" in index, "Skill should be in index")
+    const entry = index["oh-test-routes"]
+    assert.ok(entry?.route, "Entry should have route")
+    assert.deepEqual(entry!.route.pass, ["oh-gauntlet", "oh-builder"],
+      "pass should be array with both targets")
+    assert.equal(entry!.route.fail, "oh-investigate",
+      "fail should be single string")
+    assert.equal(entry!.route.blocker, "surface",
+      "blocker should be single string")
   })
 
   // -----------------------------------------------------------------------
@@ -124,16 +130,17 @@ describe("skills index", () => {
     const dir2 = path.join(tmpDir, "override-b")
 
     writeSkill(dir1, "oh-conflict", {
-      description: "Original description",
-    }, { pass: "surface", fail: "surface", blocker: "surface" })
+      description: "Original",
+    }, { pass: "oh-gauntlet", fail: "oh-investigate", blocker: "surface" })
 
     writeSkill(dir2, "oh-conflict", {
-      description: "Overridden description",
+      description: "Overridden",
     }, { pass: "surface", fail: "surface", blocker: "surface" })
 
     const index = buildSkillsIndex([dir1, dir2])
-    assert.equal(index["oh-conflict"]?.description, "Overridden description",
-      "Later path should override earlier path")
+    assert.ok(index["oh-conflict"]?.route, "Entry should have route")
+    assert.equal(index["oh-conflict"]!.route.pass, "surface",
+      "Later path's route should override earlier path's route")
   })
 
   // -----------------------------------------------------------------------
@@ -183,19 +190,19 @@ describe("skills index", () => {
   })
 
   // -----------------------------------------------------------------------
-  // 7. Index output is valid JSON and < 5000 bytes for 33 skills
+  // 7. Index output is valid JSON and < 5000 bytes for 31 skills
   // -----------------------------------------------------------------------
   it("compact JSON is valid and under 5000 bytes for all OH skills", () => {
     const realSkillsDir = path.resolve(import.meta.dirname, "..", "harness", "skills")
     const index = buildSkillsIndex([realSkillsDir])
 
-    // Use the compact serializer with abbreviated keys (d/t/r) and route-as-array
+    // Use the route-only serializer with abbreviated key (r) and route-as-array
     const json = serializeCompactJson(index)
 
     // Validate it's parseable JSON
     assert.doesNotThrow(() => JSON.parse(json), "Output should be valid JSON")
 
-    // Check size
+    // Check size — now expected to be much smaller without descriptions/tiers
     const byteLen = Buffer.byteLength(json, "utf8")
     assert.ok(byteLen < 5000, `Compact JSON should be < 5000 bytes, got ${byteLen}`)
   })
@@ -206,8 +213,6 @@ describe("skills index", () => {
   it("formatSkillsIndexFragment produces markdown with embedded JSON", () => {
     const index: SkillsIndex = {
       "oh-test": {
-        description: "A test skill for coverage",
-        tier: "core",
         route: { pass: "surface", fail: "surface", blocker: "surface" },
       },
     }
@@ -216,18 +221,20 @@ describe("skills index", () => {
     assert.ok(fragment.startsWith("## Skills Index"), "Should start with heading")
     assert.ok(fragment.includes("```json"), "Should contain JSON code block")
     assert.ok(fragment.includes("```"), "Should close code block")
-    assert.ok(fragment.includes("A test skill"), "Should contain description")
-    assert.ok(fragment.includes("core"), "Should contain tier")
-    assert.ok(fragment.includes("d=description"), "Should contain key legend")
+    assert.ok(fragment.includes("r=route"), "Should contain key legend")
+    assert.ok(!fragment.includes("A test skill"), "Should NOT contain description")
+    assert.ok(!fragment.includes("d=description"), "Should NOT contain old d=description legend")
+    assert.ok(!fragment.includes("t=tier"), "Should NOT contain old t=tier legend")
 
     // Verify the JSON portion is parseable and uses compact format
     const jsonMatch = fragment.match(/```json\n([\s\S]*?)```/)
     assert.ok(jsonMatch, "Should have a JSON block")
     const parsed = JSON.parse(jsonMatch[1]!)
     assert.ok(parsed["oh-test"], "Parsed JSON should have oh-test key")
-    // Compact keys
-    assert.equal(parsed["oh-test"].d, "A test skill for coverage", "Compact key 'd' should hold description")
-    assert.equal(parsed["oh-test"].t, "core", "Compact key 't' should hold tier")
+    // Should only have route key 'r' — no 'd' or 't'
+    assert.equal(parsed["oh-test"].d, undefined, "Should NOT have old 'd' key")
+    assert.equal(parsed["oh-test"].t, undefined, "Should NOT have old 't' key")
+    assert.ok("r" in parsed["oh-test"], "Should have route key 'r'")
     // Route as array [pass, fail, blocker]
     assert.ok(Array.isArray(parsed["oh-test"].r), "Route should be serialized as array")
     assert.equal(parsed["oh-test"].r[0], "surface", "Route[0] should be pass target")

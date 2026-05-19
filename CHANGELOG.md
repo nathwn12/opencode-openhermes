@@ -5,6 +5,26 @@ All notable changes to OpenHermes are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.15.0] - 2026-05-20
+
+### Streamlined
+- Dropped `codex/` (AUTOPILOT.md + CHARTER.md) from always-loaded instructions — inlined 6 unique lines into 09-guardrails.md. Saves ~5,300 tokens/session.
+- Shrunk skills index to route-only format (no descriptions, no tiers). 5KB → 1.9KB. Saves ~2,000 tokens/session.
+- Encoded routing graph in TypeScript (`routing-graph.ts`) — removed prose duplication from AUTOPILOT.md.
+- Stripped CONTEXT.md from 27 lines to 5 lines — removed stale 4-Tier Memory reference.
+
+### Maintained
+- Merged oh-guard + oh-freeze into one skill (freeze mode in oh-guard).
+- Merged oh-skills-link + oh-skills-list into one skill (list + verify modes).
+- Deduplicated shell boilerplate from 15 agent manifests into single SHELL.md reference.
+- Fixed test teardown pattern — cleanup moved from named `it()` tests to `after()` hooks across 5 test files.
+
+### Fixed
+- Unified duplicate frontmatter parsers into shared `skill-frontmatter-parser.ts`.
+- Fixed oh-grill `lens/` path mismatch (singular `lens/` → `lenses/`).
+- Moved skills index from file-write at bootstrap to in-memory dynamic fragment (works in read-only installs).
+- Stale AGENTS.md comments corrected (30-skill → 31-skill, 4 subsystems → 6 subsystems).
+
 ## [4.14.0] - 2026-05-20
 
 ### Added
@@ -190,6 +210,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Background Command System** — Fire-and-forget child process management with immediate task ID return, status polling, timeout enforcement, process kill, and automatic cleanup of completed tasks.
 - **Test Harness Infrastructure** — Reusable test utilities: disposable temp directories with Symbol.asyncDispose for auto-cleanup, typed factory functions for test objects, and restore-capable mocks for console, process exit, filesystem, event emitters, and abort controllers.
 
+[4.15.0]: https://github.com/nathwn12/openhermes/compare/v4.14.0...v4.15.0
+[4.14.0]: https://github.com/nathwn12/openhermes/compare/v4.13.0...v4.14.0
+[4.13.0]: https://github.com/nathwn12/openhermes/compare/v4.12.1...v4.13.0
+[4.12.1]: https://github.com/nathwn12/openhermes/compare/v4.12.0...v4.12.1
 [4.12.0]: https://github.com/nathwn12/openhermes/compare/v4.11.3...v4.12.0
 [4.11.1]: https://github.com/nathwn12/openhermes/compare/v4.11.0...v4.11.1
 [4.11.2]: https://github.com/nathwn12/openhermes/compare/v4.11.1...v4.11.2

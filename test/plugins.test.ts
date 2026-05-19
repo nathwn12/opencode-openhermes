@@ -1,4 +1,4 @@
-import { describe, it, before } from "node:test"
+import { describe, it, before, after } from "node:test"
 import assert from "node:assert/strict"
 import fs from "node:fs"
 import os from "node:os"
@@ -21,6 +21,11 @@ describe("bootstrap helpers", () => {
 
   before(async () => {
     mod = await import("../bootstrap.ts")
+  })
+
+  after(() => {
+    const modTyped = mod as { setHarnessRootForTest?: (dir: string | undefined) => void }
+    modTyped.setHarnessRootForTest?.(undefined)
   })
 
   it("re-exports harness resolver helpers", async () => {
@@ -66,6 +71,5 @@ describe("bootstrap helpers", () => {
     }
     modTyped.setHarnessRootForTest("/custom/harness")
     assert.equal(modTyped.getHarnessDir(), "/custom/harness")
-    modTyped.setHarnessRootForTest(undefined)
   })
 })

@@ -84,7 +84,7 @@ describe("RouteCache", () => {
   })
 
   // -----------------------------------------------------------------------
-  // 1. initialize() with real OH skills dir — all 33+ skills cached
+  // 1. initialize() with real OH skills dir — all 31+ skills cached
   // -----------------------------------------------------------------------
   it("caches all real OH skills with valid frontmatter", () => {
     RouteCache.resetInstance()
@@ -92,12 +92,12 @@ describe("RouteCache", () => {
     const realSkillsDir = path.resolve(import.meta.dirname, "..", "harness", "skills")
     cache.initialize(realSkillsDir, [])
 
-    // Should have at least 33 entries
+    // Should have at least 31 entries
     let count = 0
     for (const _ of cache.entries()) {
       count++
     }
-    assert.ok(count >= 33, `Expected >= 33 cached skills, got ${count}`)
+    assert.ok(count >= 31, `Expected >= 31 cached skills, got ${count}`)
 
     // Each entry has valid frontmatter with name, description, and route
     for (const [name, meta] of cache.entries()) {
@@ -199,7 +199,7 @@ describe("RouteCache", () => {
     for (const _ of cache.entries()) {
       countBefore++
     }
-    assert.ok(countBefore >= 33, "should have cached entries before clear")
+    assert.ok(countBefore >= 31, "should have cached entries before clear")
 
     cache.invalidate()
 

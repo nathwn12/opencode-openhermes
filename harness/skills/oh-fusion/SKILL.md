@@ -3,7 +3,7 @@ name: oh-fusion
 description: "Use when the user has an existing skill, finds a skill in their .agents/skills, or wants to bring an external capability into OH as a skill."
 tier: 3
 route:
-  pass: [oh-skill-craft, oh-skills-link]
+  pass: [oh-skill-craft, oh-skills-list]
   fail: surface
   blocker: surface
 ---
@@ -30,7 +30,7 @@ Skill fusion pipeline: Discover → Analyze → Verdict → Approval Gate → In
    - `approval gate`
 6. Resolve from code and prior conversation first. Ask only if a blocker remains.
 7. After approval, adapt to OH-native form and route directly to implementation.
-8. Verify discovery with `oh-skills-link` when a new or renamed skill is added.
+8. Verify discovery with `oh-skills-list` (verify mode) when a new or renamed skill is added.
 
 ## Merge Rubric
 
@@ -43,7 +43,7 @@ Skill fusion pipeline: Discover → Analyze → Verdict → Approval Gate → In
 | Outcome | Route |
 |---------|-------|
 | Approved merge or standalone plan | → oh-skill-craft |
-| New or renamed skill needs discovery check | → oh-skills-link |
+| New or renamed skill needs discovery check | → oh-skills-list |
 | Analysis: discard | → surface |
 | Approval not yet granted | → surface |
 | Blocker | → surface |

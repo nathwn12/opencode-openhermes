@@ -1,5 +1,10 @@
 import fs from "node:fs";
-import type { RouteOutcome, SkillRouteMap, SkillRoutingFrontmatter } from "./types.ts";
+import type { SkillRouteMap, SkillRoutingFrontmatter } from "./types.ts";
+import {
+  extractFrontmatter as sharedExtractFrontmatter,
+  parseSkillFrontmatter as sharedParseSkillFrontmatter,
+} from "../skills-index/skill-frontmatter-parser.ts";
+import type { SkillFrontmatterResult } from "../skills-index/skill-frontmatter-parser.ts";
 
 const EMPTY_ROUTES: SkillRouteMap = {
   pass: [],
@@ -7,107 +12,31 @@ const EMPTY_ROUTES: SkillRouteMap = {
   blocker: [],
 };
 
-function stripQuotes(value: string): string {
-  return value.trim().replace(/^['"]|['"]$/g, "");
-}
-
-function parseRouteValue(value: string): string[] {
-  const trimmed = value.trim();
-  if (!trimmed) return [];
-
-  if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
-    return trimmed
-      .slice(1, -1)
-      .split(",")
-      .map((entry) => stripQuotes(entry))
-      .filter(Boolean);
-  }
-
-  return [stripQuotes(trimmed)].filter(Boolean);
-}
-
-function isRouteOutcome(value: string): value is RouteOutcome {
-  return value === "pass" || value === "fail" || value === "blocker";
-}
-
+/**
+ * Extract the raw frontmatter string (content between `---` markers).
+ * Delegates to the shared canonical parser.
+ */
 export function extractFrontmatter(source: string): string | null {
-  const match = source.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/);
-  return match?.[1] ?? null;
+  return sharedExtractFrontmatter(source);
 }
 
+/**
+ * Parse SKILL.md frontmatter into structured routing data.
+ * Delegates to the shared canonical parser.
+ */
 export function parseSkillFrontmatter(source: string): SkillRoutingFrontmatter | null {
-  const rawFrontmatter = extractFrontmatter(source);
-  if (!rawFrontmatter) return null;
-
-  const route: SkillRouteMap = {
-    pass: [],
-    fail: [],
-    blocker: [],
-  };
-
-  let name: string | undefined;
-  let description: string | undefined;
-  let tier: string | undefined;
-  let inRouteBlock = false;
-  let activeRouteKey: RouteOutcome | null = null;
-
-  for (const rawLine of rawFrontmatter.split(/\r?\n/)) {
-    const line = rawLine.trimEnd();
-    const trimmed = line.trim();
-
-    if (!trimmed) continue;
-
-    if (/^route:\s*$/.test(trimmed)) {
-      inRouteBlock = true;
-      activeRouteKey = null;
-      continue;
-    }
-
-    if (inRouteBlock) {
-      const routeMatch = line.match(/^\s{2,}(pass|fail|blocker):\s*(.*)$/);
-      if (routeMatch && isRouteOutcome(routeMatch[1])) {
-        activeRouteKey = routeMatch[1];
-        route[activeRouteKey].push(...parseRouteValue(routeMatch[2]));
-        continue;
-      }
-
-      const listMatch = line.match(/^\s{4,}-\s+(.+)$/);
-      if (listMatch && activeRouteKey) {
-        route[activeRouteKey].push(stripQuotes(listMatch[1]));
-        continue;
-      }
-
-      if (!/^\s/.test(line)) {
-        inRouteBlock = false;
-        activeRouteKey = null;
-      } else {
-        activeRouteKey = null;
-        continue;
-      }
-    }
-
-    const fieldMatch = line.match(/^(name|description|tier):\s*(.+)$/);
-    if (!fieldMatch) continue;
-
-    const value = stripQuotes(fieldMatch[2]);
-    switch (fieldMatch[1]) {
-      case "name":
-        name = value;
-        break;
-      case "description":
-        description = value;
-        break;
-      case "tier":
-        tier = value;
-        break;
-    }
-  }
+  const result: SkillFrontmatterResult | null = sharedParseSkillFrontmatter(source);
+  if (!result) return null;
 
   return {
-    name,
-    description,
-    tier,
-    route,
+    name: result.name,
+    description: result.description,
+    tier: result.tier,
+    route: {
+      pass: [...result.route.pass],
+      fail: [...result.route.fail],
+      blocker: [...result.route.blocker],
+    },
   };
 }
 

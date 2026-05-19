@@ -19,7 +19,18 @@ Check if a version bump is applicable:
 Generate from commits since last tag. Polish: consistent tense, group by type (features, fixes, breaking). Skip if no tag history.
 
 ### 4. Commit
-Stage all changes. Commit message uses conventional commit format with **vague, professional descriptions** — do not leak implementation details. Use the git-commit skill conventions: `<type>[scope]: <short description>`.
+
+**Fresh commit (default):**
+- Stage all changes: `git add -A`
+- Conventional commit: `<type>[scope]: <vague professional description>`
+- Multi-line body with bullet points if needed
+- Keep description under 72 characters
+
+**Amend (user said "amend", "reword", "change message"):**
+- Do NOT stage new changes (this is message-only unless user says otherwise)
+- Reuse the working tree: `git commit --amend -m "<new message>"`
+- Amending rewrites HEAD — the commit hash changes
+- This requires force push in step 6 (non-fast-forward)
 
 ## Environment & Options (Steps 5–6)
 
@@ -36,6 +47,21 @@ GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
 | `GIT_DIR == GIT_COMMON` | Normal repo | Standard 4 |
 | `GIT_DIR != GIT_COMMON`, named branch | Worktree | Standard 4 |
 | `GIT_DIR != GIT_COMMON`, detached HEAD | Externally managed | Reduced 3 |
+
+### 5. Fast-Path Check
+
+Execute without ceremony when user intent is clear:
+- "ship to dev" → push to current branch, no options presented
+- "push to dev" → push to current branch, no options presented
+- "deploy to prod" → push + deploy, no options presented
+- "amend the message" → amend + force push, no options presented
+
+Present options when intent is vague:
+- "what should I do with this?" → show 4 options
+- "ship it" without branch target → ask for confirmation
+- Any mention of PR → always ask for PR details regardless
+
+**Ceremony is the enemy of speed. If the user told you what to do, do it.**
 
 ### 6. Option Presentation
 Core principle: Verify → Detect → Present → Execute → Clean up.
@@ -65,6 +91,30 @@ Which option?
 - **Option 2 (Push + PR):** Continue to Steps 7–11 (Push, PR, Deploy, Verify, Docs Sync).
 - **Option 3 (Keep):** Report "Keeping branch `<name>`." No cleanup. Stop.
 - **Option 4 (Discard):** Require typed "discard" confirmation. On confirm, run Provenance-Based Cleanup, then `git branch -D <branch>`. Done.
+
+### 6. Push
+
+**Normal push:**
+```bash
+git push origin <current-branch>
+```
+
+**After amend (non-fast-forward rejection):**
+```bash
+# 1. Check divergence is local-only (no one else pushed)
+git log --oneline origin/<current-branch>..HEAD
+
+# 2. Force push with lease (safest — rejects if remote changed)
+git push --force-with-lease origin <current-branch>
+
+# 3. Verify sync
+git branch -vv | grep <current-branch>
+```
+
+**Safety rules:**
+- Only force-push to `dev` or feature branches. NEVER to `main`/`master`.
+- `--force-with-lease` is mandatory over `--force` (lease checks remote hasn't changed)
+- After force push, verify local and remote are at the same commit
 
 ## Push & Deploy (Steps 7–11)
 
@@ -139,3 +189,8 @@ Before these operations, ALWAYS confirm the branch with the user:
 - Running `git worktree remove` from inside the worktree
 - Cleaning up harness-owned worktrees (provenance check required)
 - Discarding work without typed confirmation
+- Amending without force pushing (push will be rejected)
+- Using `--force` instead of `--force-with-lease`
+- Staging new changes during a message-only amend
+- Not verifying remote sync after force push
+- Force-pushing to main/master

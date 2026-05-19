@@ -3,7 +3,7 @@ name: oh-skill-craft
 description: "Use when a new OH skill needs to be created, existing skill needs review against standards, or an external capability should be integrated as a skill. Meta-skill for growing the harness."
 tier: 2
 route:
-  pass: oh-skills-link
+  pass: oh-skills-list
   fail: oh-expert
   blocker: surface
 ---
@@ -26,6 +26,6 @@ Create new agent skills for the OpenHermes harness.
 
 | Outcome | Route |
 |---------|-------|
-| pass | → oh-skills-link (verify discovery) |
+| pass | → oh-skills-list (verify discovery) |
 | fail | → oh-expert (diagnose) |
 | blocker | → surface |

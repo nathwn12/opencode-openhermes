@@ -19,7 +19,7 @@ function countActualFragments(): number {
 
 describe("composer", () => {
   let mod: {
-    compose: (opts?: { phases?: string[] }) => string
+    compose: (opts?: { phases?: string[]; dynamicFragments?: Record<string, string> }) => string
     composeFragment: (name: string) => string
     listFragments: () => string[]
   }
@@ -181,5 +181,56 @@ describe("composer", () => {
       "delegation and permissions separated by \\r\\n\\r\\n")
   })
 
+  it("compose() with dynamicFragments overrides disk fragment of same name", () => {
+    const diskIdentity = mod.composeFragment("01-identity")
+
+    const overridden = mod.compose({
+      dynamicFragments: { "01-identity": "OVERRIDDEN CONTENT" },
+    })
+
+    assert.ok(overridden.includes("OVERRIDDEN CONTENT"),
+      "dynamic fragment should replace disk fragment")
+    assert.ok(!overridden.includes(diskIdentity.slice(0, 50)),
+      "disk fragment content should NOT appear when overridden")
+    assert.ok(overridden.includes("\r\n\r\n"),
+      "dynamic fragments should still be joined with separator")
+  })
+
+  it("compose() with dynamicFragments adds new fragment when no disk file exists", () => {
+    const composed = mod.compose({
+      dynamicFragments: { "99-test-dynamic": "## Dynamic Fragment\n\nIn-memory only content." },
+    })
+
+    assert.ok(composed.includes("## Dynamic Fragment"),
+      "dynamic fragment with no disk file should be included")
+    assert.ok(composed.includes("In-memory only content."),
+      "content from dynamic fragment should appear in output")
+  })
+
+  it("compose() with dynamicFragments sorts new fragments into correct ordinal position", () => {
+    const composed = mod.compose({
+      dynamicFragments: { "10-skills-index": "## Skills Index\n\nTest skills index content." },
+    })
+
+    // 10-skills-index should appear after 09-guardrails
+    const guardrailsIdx = composed.indexOf("## Guardrails")
+    const skillsIdx = composed.indexOf("## Skills Index")
+    assert.ok(guardrailsIdx >= 0, "guardrails should be present")
+    assert.ok(skillsIdx >= 0, "skills index should be present")
+    assert.ok(skillsIdx > guardrailsIdx,
+      "10-skills-index should appear after 09-guardrails (sorted by name)")
+  })
+
+  it("compose() with dynamicFragments respects phases filter", () => {
+    const identityOnly = mod.compose({
+      phases: ["identity"],
+      dynamicFragments: { "10-skills-index": "## Skills Index\n\nTest content." },
+    })
+
+    assert.ok(identityOnly.includes("You are OpenHermes"),
+      "filtered identity should still include identity fragment")
+    assert.ok(!identityOnly.includes("## Skills Index"),
+      "dynamic fragment name '10-skills-index' should not match phase 'identity'")
+  })
 
 })

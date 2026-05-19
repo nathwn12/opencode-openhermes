@@ -22,10 +22,13 @@ describe("plan-numbering hook", () => {
     hook = mod.planNumberingHook;
   });
 
-  after(() => {
+  after(async () => {
     for (const d of tmpDirs) {
       fs.rmSync(d, { recursive: true, force: true });
     }
+    // Reset global test state so other test files are not affected
+    const { setPlanStorageDirForTest } = await import("../bootstrap.ts");
+    setPlanStorageDirForTest(undefined);
   });
 
   function makeStorageDir(): string {
@@ -115,9 +118,6 @@ describe("plan-numbering hook", () => {
       `Expected CONTINUE but got ${result.result}, output: ${result.modifiedOutput}`,
     );
     assert.equal(result.modifiedOutput, undefined);
-
-    // Cleanup
-    setPlanStorageDirForTest(undefined);
   });
 
   // -----------------------------------------------------------------------
@@ -143,9 +143,6 @@ describe("plan-numbering hook", () => {
     assert.match(result.modifiedOutput!, /plan-008\.md/);
     assert.match(result.modifiedOutput!, /Fixed plan file path/);
     assert.doesNotMatch(result.modifiedOutput!, /plan-001\.md/);
-
-    // Cleanup
-    setPlanStorageDirForTest(undefined);
   });
 
   // -----------------------------------------------------------------------
@@ -177,9 +174,6 @@ describe("plan-numbering hook", () => {
     const body = result.modifiedOutput!.slice(warningEnd + 1);
     const bodyMatches = body.match(/plan-006\.md/g);
     assert.equal(bodyMatches?.length, 2, "Both original occurrences should be replaced in the body");
-
-    // Cleanup
-    setPlanStorageDirForTest(undefined);
   });
 
   // -----------------------------------------------------------------------
@@ -219,9 +213,6 @@ describe("plan-numbering hook", () => {
     // The content should be the original plan-001 content
     const content = fs.readFileSync(rightFilePath, "utf8");
     assert.match(content, /Plan ID:/);
-
-    // Cleanup
-    setPlanStorageDirForTest(undefined);
   });
 
   // -----------------------------------------------------------------------
@@ -243,9 +234,6 @@ describe("plan-numbering hook", () => {
       HookResult.CONTINUE,
       "Should return CONTINUE when no plans exist to validate against",
     );
-
-    // Cleanup
-    setPlanStorageDirForTest(undefined);
   });
 
   // -----------------------------------------------------------------------
@@ -273,8 +261,5 @@ describe("plan-numbering hook", () => {
     assert.doesNotMatch(result.modifiedOutput!, /plan-001\.md/);
     assert.doesNotMatch(result.modifiedOutput!, /plan-005\.md/);
     assert.match(result.modifiedOutput!, /plan-011\.md/);
-
-    // Cleanup
-    setPlanStorageDirForTest(undefined);
   });
 });

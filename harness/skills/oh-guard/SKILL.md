@@ -1,6 +1,6 @@
 ---
 name: oh-guard
-description: "Safety confirmation mode that warns before destructive operations."
+description: "Safety confirmation mode that warns before destructive operations. Can also restrict file edits to a specific directory (equivalent to oh-freeze)."
 tier: 2
 route:
   pass: mode

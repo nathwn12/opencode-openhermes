@@ -29,6 +29,10 @@ describe("BootstrapPlugin behavior", () => {
     for (const d of tmpDirs) {
       fs.rmSync(d, { recursive: true, force: true })
     }
+    // Reset global test state so other test files are not affected
+    if (mod) {
+      mod.setPlanStorageDirForTest(undefined)
+    }
   })
 
   function makePlanStorageDir(): string {
@@ -84,7 +88,6 @@ describe("BootstrapPlugin behavior", () => {
     ].join("\n"), storageDir)
 
     const context = buildCompactionContext(projectDir)
-    setPlanStorageDirForTest(undefined)
     assert.ok(context.some(line => line.includes("verify before claim")))
     assert.ok(context.some(line => line.includes("Active plan: status=active | objective=Keep context intact across compaction")))
   })
@@ -117,7 +120,6 @@ describe("BootstrapPlugin behavior", () => {
     const output = { context: [] as string[] }
 
     await plugin["experimental.session.compacting"]({ sessionID: "s-1" }, output)
-    setPlanStorageDirForTest(undefined)
 
     assert.ok(output.context.some(line => line.includes("verify before claim")))
     assert.ok(output.context.some(line => line.includes("Active plan: status=active | objective=keep context")))
@@ -133,7 +135,6 @@ describe("BootstrapPlugin behavior", () => {
     const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), "oh-test-project-"))
 
     const planPath = ensurePlanFile(projectDir)
-    setPlanStorageDirForTest(undefined)
 
     assert.ok(fs.existsSync(planPath), "plan file was created")
     const content = fs.readFileSync(planPath, "utf8")
@@ -154,7 +155,6 @@ describe("BootstrapPlugin behavior", () => {
 
     const firstPath = ensurePlanFile(projectDir)
     const secondPath = ensurePlanFile(projectDir)
-    setPlanStorageDirForTest(undefined)
 
     assert.equal(firstPath, secondPath, "reuses same plan file path when active")
     assert.equal(path.basename(firstPath), "plan-001.md", "plan basename is 001")
@@ -177,7 +177,6 @@ describe("BootstrapPlugin behavior", () => {
 
     // Now ensurePlanFile should create a new one
     const secondPlan = ensurePlanFile(projectDir)
-    setPlanStorageDirForTest(undefined)
 
     assert.notEqual(firstPlan, secondPlan, "creates new plan when latest is complete")
     assert.ok(fs.existsSync(secondPlan), "second plan file exists")
@@ -195,7 +194,6 @@ describe("BootstrapPlugin behavior", () => {
     const projectDir = fs.mkdtempSync(path.join(os.tmpdir(), "oh-no-plan-"))
 
     const context = buildCompactionContext(projectDir)
-    setPlanStorageDirForTest(undefined)
 
     // Should still return operating doctrine even with no plan file
     assert.ok(context.length >= 1, "should return context even without a plan")
@@ -299,7 +297,6 @@ describe("BootstrapPlugin behavior", () => {
     const content2 = fs.readFileSync(plan2, "utf8").replace("Status: active", "Status: complete")
     fs.writeFileSync(plan2, content2)
     const plan3 = ensurePlanFile(projectDir)
-    setPlanStorageDirForTest(undefined)
 
     assert.match(plan3, /plan-003\.md$/, "third plan is 003")
   })

@@ -1,4 +1,4 @@
-import { describe, it } from "node:test"
+import { describe, it, before, after } from "node:test"
 import assert from "node:assert/strict"
 import fs from "node:fs"
 import os from "node:os"
@@ -18,9 +18,9 @@ describe("bootstrap integration", () => {
   let tempUserSkillName: string
 
   // -----------------------------------------------------------------------
-  // Setup
+  // Setup & teardown (hooks, not tests — runs even on failure)
   // -----------------------------------------------------------------------
-  it("setUp: creates temp harness", () => {
+  before(async () => {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "oh-test-"))
     harnessDir = path.join(tmpDir, "harness")
     skillsDir = path.join(harnessDir, "skills")
@@ -53,6 +53,22 @@ describe("bootstrap integration", () => {
         "  blocker: surface",
         "---",
       ].join("\n") + "\n\n# Body\n")
+    }
+
+    // Initialize global test state explicitly at the start
+    const { setHarnessRootForTest, setPlanStorageDirForTest } = await import("../bootstrap.ts")
+    setHarnessRootForTest(harnessDir)
+    setPlanStorageDirForTest(path.join(tmpDir, "plans"))
+  })
+
+  after(async () => {
+    // Reset global test overrides so other test files are not affected
+    const { setHarnessRootForTest, setPlanStorageDirForTest } = await import("../bootstrap.ts")
+    setHarnessRootForTest(undefined)
+    setPlanStorageDirForTest(undefined)
+
+    if (tmpDir && fs.existsSync(tmpDir)) {
+      fs.rmSync(tmpDir, { recursive: true, force: true })
     }
   })
 
@@ -126,37 +142,6 @@ describe("bootstrap integration", () => {
   })
 
   it("tool.execute.after consumes dynamic route guidance in the real post-tool flow", async () => {
-    if (!tmpDir) {
-      tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "oh-test-"))
-      harnessDir = path.join(tmpDir, "harness")
-      skillsDir = path.join(harnessDir, "skills")
-
-      fs.mkdirSync(path.join(harnessDir, "codex"), { recursive: true })
-      fs.writeFileSync(path.join(harnessDir, "codex", "CHARTER.md"), "# Test Charter\n")
-      fs.mkdirSync(path.join(harnessDir, "instructions"), { recursive: true })
-      fs.writeFileSync(path.join(harnessDir, "codex", "AUTOPILOT.md"), "# Test Autopilot\n")
-      fs.mkdirSync(path.join(harnessDir, "commands"), { recursive: true })
-      fs.mkdirSync(path.join(harnessDir, "agents"), { recursive: true })
-      fs.writeFileSync(path.join(harnessDir, "agents", "openhermes.md"), "# OpenHermes\nTest agent.\n")
-
-      for (const s of ["oh-planner", "oh-builder", "oh-gauntlet", "oh-ship"]) {
-        fs.mkdirSync(path.join(skillsDir, s), { recursive: true })
-      const passRoute = s === "oh-planner"
-        ? "  pass:\n    - oh-gauntlet\n    - oh-ship"
-        : "  pass: oh-gauntlet"
-      fs.writeFileSync(path.join(skillsDir, s, "SKILL.md"), [
-        "---",
-        `name: ${s}`,
-        `description: \"Test skill ${s}\"`,
-        "tier: 3",
-        "route:",
-        passRoute,
-        "  fail: oh-builder",
-        "  blocker: surface",
-        "---",
-        ].join("\n") + "\n\n# Body\n")
-      }
-    }
 
     const { BootstrapPlugin, setHarnessRootForTest, setPlanStorageDirForTest } = await import("../bootstrap.ts")
     setHarnessRootForTest(harnessDir)
@@ -190,37 +175,6 @@ describe("bootstrap integration", () => {
   })
 
   it("runtime next-route state reroutes the next delegation before the default first candidate", async () => {
-    if (!tmpDir) {
-      tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "oh-test-"))
-      harnessDir = path.join(tmpDir, "harness")
-      skillsDir = path.join(harnessDir, "skills")
-
-      fs.mkdirSync(path.join(harnessDir, "codex"), { recursive: true })
-      fs.writeFileSync(path.join(harnessDir, "codex", "CHARTER.md"), "# Test Charter\n")
-      fs.mkdirSync(path.join(harnessDir, "instructions"), { recursive: true })
-      fs.writeFileSync(path.join(harnessDir, "codex", "AUTOPILOT.md"), "# Test Autopilot\n")
-      fs.mkdirSync(path.join(harnessDir, "commands"), { recursive: true })
-      fs.mkdirSync(path.join(harnessDir, "agents"), { recursive: true })
-      fs.writeFileSync(path.join(harnessDir, "agents", "openhermes.md"), "# OpenHermes\nTest agent.\n")
-
-      for (const s of ["oh-planner", "oh-builder", "oh-gauntlet", "oh-ship"]) {
-        fs.mkdirSync(path.join(skillsDir, s), { recursive: true })
-        const passRoute = s === "oh-planner"
-          ? "  pass:\n    - oh-gauntlet\n    - oh-ship"
-          : "  pass: oh-gauntlet"
-        fs.writeFileSync(path.join(skillsDir, s, "SKILL.md"), [
-          "---",
-          `name: ${s}`,
-          `description: \"Test skill ${s}\"`,
-          "tier: 3",
-          "route:",
-          passRoute,
-          "  fail: oh-builder",
-          "  blocker: surface",
-          "---",
-        ].join("\n") + "\n\n# Body\n")
-      }
-    }
 
     const { BootstrapPlugin, setHarnessRootForTest, setPlanStorageDirForTest } = await import("../bootstrap.ts")
     setHarnessRootForTest(harnessDir)
@@ -368,17 +322,4 @@ describe("bootstrap integration", () => {
     assert.ok(context.some(c => c.includes("Active plan")))
   })
 
-  // -----------------------------------------------------------------------
-  // Teardown
-  // -----------------------------------------------------------------------
-  it("tearDown: removes temp dir and resets global state", async () => {
-    // Reset any global test overrides so other test files are not affected
-    const { setHarnessRootForTest, setPlanStorageDirForTest } = await import("../bootstrap.ts")
-    setHarnessRootForTest(undefined)
-    setPlanStorageDirForTest(undefined)
-
-    if (tmpDir && fs.existsSync(tmpDir)) {
-      fs.rmSync(tmpDir, { recursive: true, force: true })
-    }
-  })
 })

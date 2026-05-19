@@ -142,33 +142,17 @@ Routing is mandatory, not optional. Follow the skill's routing metadata. Do not 
 
 ## Routing Graph
 
-```
-oh-planner ──pass──→ oh-grill ──pass (≥8/10)──→ oh-builder
-              pass (<8/10)──→ oh-planner (revise)  fail──→ oh-planner (revise)
+The routing graph is encoded as deterministic TypeScript data in
+[`harness/lib/routing/routing-graph.ts`](../lib/routing/routing-graph.ts) —
+the `ROUTING_GRAPH` constant. This is the single source of truth for all
+routing edges. It is automatically extracted from each skill's `SKILL.md`
+frontmatter (every skill declares `route.pass`, `route.fail`, `route.blocker`).
 
-             ╔════════════════════════════════════╗
-             ║  oh-grill spawns parallel lenses:  ║
-             ║  CEO + Eng + Design + DX           ║
-             ║  compound = Σ(weight × score)       ║
-             ║  gate: ≥8/10 → oh-builder           ║
-             ╚════════════════════════════════════╝
-
-oh-manifest → oh-planner → oh-builder → oh-gauntlet → oh-ship
-                ↑_____________________________|      │
-                │              ┌───────────────────  │
-                │              │                    │
-                ├── oh-expert ←┘              fail  │
-                │                                    ▼
-                └──────── oh-retro ←──────────────── pass
-
-oh-ship ──pass──→ [oh-retro, oh-docs] ──→ oh-docs ──pass──→ oh-retro
-          fail──→ oh-expert ──→ oh-builder ──→ oh-gauntlet
-
-oh-retro ──pass──→ oh-planner
-          fail──→ oh-handoff
-```
-
-Every skill routes somewhere — no leaf nodes. Route by outcome, not convention. Default fallback: surface to user. `surface` and `done` are terminal route values; `oh-handoff` is the handoff skill that ends the chain by design. oh-docs, oh-learn, and oh-pdf are post-ship/standalone terminal skills; oh-retro routes back to oh-planner for continuous cycle.
+Every skill routes somewhere — no leaf nodes. Route by outcome, not convention.
+Default fallback: surface to user. `surface` and `done` are terminal route
+values; `oh-handoff` is the handoff skill that ends the chain by design.
+oh-docs, oh-learn, and oh-pdf are post-ship/standalone terminal skills;
+oh-retro routes back to oh-planner for continuous cycle.
 
 ## Safety Valves
 

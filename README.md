@@ -67,7 +67,7 @@ The loop runs unsupervised because these never turn off:
 | Capability | Why it matters |
 |---|---|
 | **Self-driving loop** | Type once. OpenHermes classifies, delegates, and routes — no pauses, no asking permission, no verbosity. |
-| **33 specialist skills** | Planning → building → testing → browser → security → review → shipping → retro. Every dev cycle phase. |
+| **31 specialist skills** | Planning → building → testing → browser → security → review → shipping → retro. Every dev cycle phase. |
 | **Auto-detected user skills** | Drop a skill in `~/.agents/skills/` or `~/.config/opencode/skills/`. OpenHermes finds it. Same name as a built-in? Your version wins. Survives `npm update`. |
 | **Shared operating model** | CHARTER + AUTOPILOT + CONTEXT + ETHOS injected every session. Every interaction grounded in the same rules. |
 | **CORE/DEEP skill format** | Every skill is a two-file system: CORE (SKILL.md) handles 80% of passes in one read. DEEP.md loads on demand for hard cases. |
@@ -76,7 +76,7 @@ The loop runs unsupervised because these never turn off:
 | **Shared reference library** | `harness/reference/` — design blacklist, font bans, confidence tiers, shared protocols. Edit in one place, consumed by every skill. Zero duplication. |
 | **Zero npm dependency additions** | All new subsystems use native Node.js and TypeScript only. No new packages. |
 
-## 33 skills — four tiers
+## 31 skills — four tiers
 
 ### Tier 4 — Pipeline orchestrators
 Full multi-phase workflows:
@@ -124,8 +124,7 @@ Single-purpose, one thing well:
 | **oh-issue** | Break a plan/spec/PRD into independently-grabbable issues |
 | **oh-learn** | Persist and manage project learnings: record, review, search, prune, export across sessions |
 | **oh-prd** | Conversation → PRD → GitHub issue |
-| **oh-freeze** | Restrict file edits to a specific directory |
-| **oh-guard** | Safety confirmation — warn before destructive operations |
+| **oh-guard** | Safety confirmation + freeze mode — warn before destructive operations, restrict edits to a directory |
 | **oh-skills-link** | Verify OpenCode discovers the skill directory |
 | **oh-skills-list** | List all available `oh-*` skills |
 

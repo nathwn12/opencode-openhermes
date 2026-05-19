@@ -50,9 +50,8 @@ const ENTRY_POINTS = new Set([
  */
 const DIRECT_USER_SKILLS = new Set([
   "oh-browser",     // "browser automation", "open a website", "scrape data"
-  "oh-freeze",      // "freeze editing", "restrict to"
   "oh-full-output", // "full output", "complete code"
-  "oh-guard",       // "confirm", "safety check"
+  "oh-guard",       // "confirm", "safety check", "restrict edits to"
   "oh-init",        // "init project", "initialize"
   "oh-issue",       // "create issue", "break into issues"
   "oh-prd",         // "write PRD", "product requirements"
@@ -213,8 +212,8 @@ describe("routing graph", () => {
   }
 
   // ---- 1: Parse sanity ------------------------------------------------
-  it("parses all 33 skill files", () => {
-    assert.ok(skills.size >= 33, `Expected >= 33 skills, got ${skills.size}`)
+  it("parses all 31 skill files", () => {
+    assert.ok(skills.size >= 31, `Expected >= 31 skills, got ${skills.size}`)
   })
 
   it("all expected entry points exist", () => {
@@ -357,7 +356,6 @@ describe("routing graph", () => {
     const expected = [
       "oh-builder ↔ oh-gauntlet",       // build → test fails → fix
       "oh-grill ↔ oh-planner",          // plan → stress-test → revise
-      "oh-skill-craft ↔ oh-skills-link", // craft → link → craft if link fails
     ].sort()
 
     assert.deepEqual(actual, expected,
@@ -366,7 +364,7 @@ describe("routing graph", () => {
 
   // ---- 6: Mode skill validation ---------------------------------------
   it("internal-switch skills route correctly (pass=mode, fail=mode, blocker=surface)", () => {
-    for (const name of ["oh-freeze", "oh-guard"]) {
+    for (const name of ["oh-guard"]) {
       const meta = skills.get(name)
       assert.ok(meta, `${name} not found`)
       for (const target of meta!.route.pass) {

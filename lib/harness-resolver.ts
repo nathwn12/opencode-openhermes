@@ -3,6 +3,7 @@
 
 import path from "node:path"
 import fs from "node:fs"
+import os from "node:os"
 import { fileURLToPath } from "node:url"
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -51,6 +52,39 @@ function hasRequiredHarnessFiles(root: string): boolean {
   return REQUIRED_HARNESS_FILES.every(parts => fs.existsSync(path.join(root, ...parts)))
 }
 
+/**
+ * Resolve the OpenHermes package directory from OpenCode's plugin cache.
+ * Scans ~/.cache/opencode/packages/ for any directory whose name contains
+ * both "openhermes" and "nathwn12", then checks for
+ * node_modules/openhermes/package.json inside.
+ *
+ * This makes resolution robust across distribution channels (regular vs #dev)
+ * without depending on import.meta.url encoding behavior.
+ *
+ * Returns the resolved package directory path, or null if not found.
+ */
+export function resolveOpenCodePackageDir(): string | null {
+  const cacheDir = path.join(os.homedir(), ".cache", "opencode", "packages")
+  if (!fs.existsSync(cacheDir)) return null
+
+  try {
+    const entries = fs.readdirSync(cacheDir, { withFileTypes: true })
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue
+      const name = entry.name
+      if (name.includes("openhermes") && name.includes("nathwn12")) {
+        const pkgDir = path.join(cacheDir, name, "node_modules", "openhermes")
+        if (fs.existsSync(path.join(pkgDir, "package.json"))) {
+          return path.resolve(pkgDir)
+        }
+      }
+    }
+  } catch {
+    // Directory unreadable — not a fatal error
+  }
+  return null
+}
+
 export function resolveHarnessRoot({
   currentDir = PKG_DIR,
   execPath = process.execPath,
@@ -62,6 +96,15 @@ export function resolveHarnessRoot({
   cwd?: string
   candidateRoots?: string[]
 } = {}): string {
+  // Check OpenCode plugin cache first — distribution-agnostic, handles #dev paths
+  const cachePkgDir = resolveOpenCodePackageDir()
+  if (cachePkgDir) {
+    const cacheHarness = path.join(cachePkgDir, "harness")
+    if (hasRequiredHarnessFiles(cacheHarness)) {
+      return cacheHarness
+    }
+  }
+
   const roots = candidateRoots ?? buildHarnessCandidates(currentDir, cwd)
   for (const root of roots) {
     if (hasRequiredHarnessFiles(root)) return root
