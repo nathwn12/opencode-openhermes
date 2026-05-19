@@ -540,11 +540,6 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
         try {
           const postToolResult = await reg.executePostTool(hookContext, outputText)
 
-          // Surface recovery instructions from PostTool hooks
-          if (postToolResult.recovery) {
-            await logToOC("warn", `PostTool recovery instruction:\n${postToolResult.recovery}`)
-          }
-
           // Log when hooks signal issues (INJECT = anomaly/error detected by a hook)
           if (postToolResult.result === HookResult.INJECT) {
             await logToOC("warn", "PostTool INJECT: hooks detected issues in tool output")
