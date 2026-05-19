@@ -1,6 +1,6 @@
 {
   "targets": [
-    { "path": "package.json", "kind": "jsonField", "field": "version" }
+    { "path": "package.json", "kind": "jsonField", "field": "version", "label": "package.json (version)" }
   ],
   "audit": {
     "exclude": [".git", "node_modules"]
