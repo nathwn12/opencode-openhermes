@@ -4,8 +4,10 @@ import os from "node:os"
 import type { Plugin } from "@opencode-ai/plugin"
 import { getHarnessDir, setHarnessRootForTest, resolveHarnessRoot } from "./lib/harness-resolver.ts"
 import { compose } from "./harness/lib/composer/index.ts"
+import { buildSkillsIndex, formatSkillsIndexFragment } from "./harness/lib/skills-index/index.ts"
 import { ensurePlanFile, findLatestPlanFile, planStorageDir, setPlanStorageDirForTest, resolvePlanAccess } from "./harness/lib/plans/plan-location.ts"
 import { clearRuntimeRouteDecision, consumeRouteGuidance, getRuntimeRouteDecision, rememberRuntimeRouteDecision } from "./harness/lib/routing/index.ts"
+import { RouteCache } from "./harness/lib/routing/route-cache.ts"
 
 // Hook system — pluggable lifecycle hooks with topological sort
 import {
@@ -18,6 +20,7 @@ import {
   delegationDepthHook,
   resetDepthTracker,
   dynamicRouteHook,
+  planNumberingHook,
   routeTrackingHook,
   DEFAULT_GUARD_CONFIG,
 } from "./harness/lib/hooks/index.ts"
@@ -246,6 +249,7 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
         reg.registerRoute(nextRouteHook)
         if (hooksConfig?.confidence_gate ?? true) reg.registerRoute(confidenceGateHook)
         if (hooksConfig?.dynamic_route ?? true) reg.registerPostTool(dynamicRouteHook)
+        if (hooksConfig?.plan_numbering ?? true) reg.registerPostTool(planNumberingHook)
         if (hooksConfig?.route_tracking ?? true) {
           reg.registerRoute(routeTrackingHook)
         } else {
@@ -262,7 +266,20 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
       const allPaths = [skillsDir, ...userSkillPaths]
       config.skills.paths = uniqueStrings(config.skills.paths || [], allPaths)
 
+      // Initialize route cache — caches all SKILL.md frontmatter at bootstrap for zero-I/O routing
+      RouteCache.getInstance().initialize(skillsDir, userSkillPaths)
+
       await logToOC("info", `skills: ${allPaths.length} path(s)`)
+
+      // Build condensed skills index for the agent prompt — replaces verbose XML
+      try {
+        const skillsIndex = buildSkillsIndex(allPaths)
+        const indexPath = path.join(hDir, "lib", "composer", "fragments", "10-skills-index.md")
+        const indexContent = formatSkillsIndexFragment(skillsIndex)
+        fs.writeFileSync(indexPath, indexContent, "utf8")
+      } catch (err) {
+        console.error(`[openhermes] Failed to generate skills index: ${err instanceof Error ? err.message : String(err)}`)
+      }
 
       // Register harness docs as native OpenCode instructions — no prompt-embedding needed
       config.instructions = uniqueStrings(config.instructions ?? [], [
@@ -401,6 +418,7 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
           _guardConfig: DEFAULT_GUARD_CONFIG,
           _nextRoute: pendingNextRoute,
           _routingSkillsDir: skillsDir,
+          _routeCache: RouteCache.getInstance(),
         }
 
         // Run all registered PreToolUse hooks (plan check, shell detect, delegation depth)
@@ -528,6 +546,7 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
           _confidenceExchanges: 0,
           _guardConfig: DEFAULT_GUARD_CONFIG,
           _routingSkillsDir: skillsDir,
+          _routeCache: RouteCache.getInstance(),
         }
  
         // Extract output text from tool result

@@ -12,9 +12,9 @@ User Request
 Orchestrator (classifies task, loads skill)
      │
      ├── Skill SKILL.md frontmatter defines routes:
-     │     pass → [oh-ship, oh-gauntlet]
-     │     fail → oh-planner
-     │     blocker → surface
+│     pass → [oh-retro, oh-docs]
+│     fail → [oh-expert, oh-builder]
+│     blocker → surface
      │
      ▼
 Route Resolver (harness/lib/routing/route-resolver.ts)
@@ -32,6 +32,16 @@ Dispatch to target skill subagent
 - `harness/lib/routing/route-resolver.ts` — resolves route candidates from skill frontmatter
 - `harness/lib/routing/route-guidance.ts` — applies NEXT_ROUTE overrides and evidence
 - `harness/lib/routing/skill-frontmatter.ts` — parses pass/fail/blocker from SKILL.md
+
+### Skill Pipeline Flow
+
+```
+oh-planner → oh-grill → oh-planner (revise) → oh-manifest → oh-builder → oh-gauntlet → oh-ship → [oh-retro, oh-docs] → oh-retro → oh-planner (loop)
+                                                                                                             │
+                                                                                                             └── oh-docs → oh-retro → oh-planner (loop)
+```
+
+Skills not in the main pipeline route to surface (terminal), done (terminal), or mode (internal switch). All 33 skills form a closed loop with no orphans, dead ends, or self-loops.
 
 ## 2. Hook Lifecycle
 
@@ -129,7 +139,25 @@ Output: complete agent prompt consumed by the LLM
 - `harness/lib/composer/fragments/` — 9 content fragments
 - `harness/agents/openhermes.md` — agent manifest declaring fragments
 
-## 5. Full Request Lifecycle (ASCII Overview)
+## 5. Reference Library
+
+`harness/reference/design-blacklist.md` — shared constants consumed by multiple skills:
+- AI Slop blacklist (11 items) — lazy gradients, generic hero, cluttered cards, etc.
+- Hard bans (23 items) — lorem ipsum, tiny text, heavy shadows, etc.
+- Font blacklist — bans sans-serif-system stack and other generic fonts
+- Confidence tiers — HIGH/MEDIUM/LOW for auto-fix vs ask decisions
+- Happy talk detection — regex patterns for empty marketing language
+- Code slop guidelines — what-to-fix vs what-to-skip for AI-generated code
+
+Skills consuming the reference:
+- oh-facade (design audit, AI Slop Score)
+- oh-review (design checklist)
+- oh-health (optional slop-scan)
+- oh-refactor (what-to-fix/what-to-skip)
+
+Edit in `reference/design-blacklist.md`, all consumers update immediately.
+
+## 6. Full Request Lifecycle (ASCII Overview)
 
 ```
 ┌─────────────────────────────────────────────────────┐
@@ -160,3 +188,4 @@ Output: complete agent prompt consumed by the LLM
 | Hooks | Plugin extensibility points | `harness/lib/hooks/builtins/` |
 | Plans | Canonical task tracking | `harness/lib/plans/plan-location.ts` |
 | Composer | Agent prompt assembly | `harness/lib/composer/compose.ts` |
+| References | Shared constants for skills | `harness/reference/design-blacklist.md` |

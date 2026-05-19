@@ -53,6 +53,7 @@ export interface HookContextExtras {
 
   _routingSkillsDir?: string;
   _nextRoute?: import("../routing/index.ts").RuntimeRouteDecision;
+  _routeCache?: import("../routing/route-cache.ts").RouteCache;
 
   [key: string]: unknown;
 }

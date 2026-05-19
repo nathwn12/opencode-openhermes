@@ -40,6 +40,7 @@ OpenHermes ships with a focused internal architecture — 3 subsystems working t
 | **Prompt Composer** | 9 modular fragments joined at runtime → byte-identical. Add a fragment, never edit the composition code. |
 | **Hook Registry** | Pluggable pre-tool, post-tool, route, and session hooks with priority-sort ordering. 7 built-in hooks, zero routing boilerplate. |
 | **Plan Location** | Resolves plan file paths per project with directory-per-project layout in `~/.local/share/openhermes/plans/`. |
+| **Reference Library** | Shared constants and protocols consumed by skills: AI slop blacklist, font blacklist, hard bans, confidence tiers. Single source of truth — edit once, update all consumers. |
 
 ---
 
@@ -66,15 +67,16 @@ The loop runs unsupervised because these never turn off:
 | Capability | Why it matters |
 |---|---|
 | **Self-driving loop** | Type once. OpenHermes classifies, delegates, and routes — no pauses, no asking permission, no verbosity. |
-| **30 specialist skills** | Planning → building → testing → browser → security → review → shipping → retro. Every dev cycle phase. |
+| **33 specialist skills** | Planning → building → testing → browser → security → review → shipping → retro. Every dev cycle phase. |
 | **Auto-detected user skills** | Drop a skill in `~/.agents/skills/` or `~/.config/opencode/skills/`. OpenHermes finds it. Same name as a built-in? Your version wins. Survives `npm update`. |
 | **Shared operating model** | CHARTER + AUTOPILOT + CONTEXT + ETHOS injected every session. Every interaction grounded in the same rules. |
 | **CORE/DEEP skill format** | Every skill is a two-file system: CORE (SKILL.md) handles 80% of passes in one read. DEEP.md loads on demand for hard cases. |
 | **Plan file storage** | `~/.local/share/openhermes/plans/`. Survives `npm update`. |
 | **3 internal subsystems** | Composer, hooks, plans — all native Node.js / TypeScript. |
+| **Shared reference library** | `harness/reference/` — design blacklist, font bans, confidence tiers, shared protocols. Edit in one place, consumed by every skill. Zero duplication. |
 | **Zero npm dependency additions** | All new subsystems use native Node.js and TypeScript only. No new packages. |
 
-## 30 skills — four tiers
+## 33 skills — four tiers
 
 ### Tier 4 — Pipeline orchestrators
 Full multi-phase workflows:
@@ -109,6 +111,7 @@ Single-purpose, one thing well:
 | Skill | Purpose |
 |---|---|
 | **oh-ascii** | Complete ASCII diagramming: design patterns, generation, structural validation |
+| **oh-docs** | Post-ship docs: generate coverage map, update README/ARCHITECTURE/CONTRIBUTING, detect diagram drift, polish CHANGELOG |
 | **oh-expert** | AI self-diagnosis: sycophancy, hallucination, attention dynamics |
 | **oh-full-output** | Override truncation, ban placeholders, enforce complete generation |
 | **oh-health** | Code quality dashboard: tools, composite score, trend |
@@ -116,8 +119,10 @@ Single-purpose, one thing well:
 | **oh-handoff** | Compact session state → structured handoff document |
 | **oh-skill-craft** | Create new agent skills with frontmatter and bundled resources |
 | **oh-init** | Wire AGENTS.md, domain docs, issue tracker, triage labels |
+| **oh-pdf** | Convert markdown to publication-quality PDF with cover page, TOC, watermarks, page numbers |
 | **oh-triage** | Issue triage state machine — classify, prioritise, assign |
 | **oh-issue** | Break a plan/spec/PRD into independently-grabbable issues |
+| **oh-learn** | Persist and manage project learnings: record, review, search, prune, export across sessions |
 | **oh-prd** | Conversation → PRD → GitHub issue |
 | **oh-freeze** | Restrict file edits to a specific directory |
 | **oh-guard** | Safety confirmation — warn before destructive operations |
@@ -147,7 +152,8 @@ openhermes-pkg/
 │   │   ├── hooks/         # Pluggable hook registry
 │   │   ├── plans/         # Plan file path resolution
 │   │   └── ...            # guards/ (guard config)
-│   └── skills/            # 30 skill SKILL.md files (CORE/DEEP format)
+│   ├── reference/          # Shared constants: design-blacklist.md
+│   └── skills/            # 33 skill SKILL.md files (CORE/DEEP format)
 ├── lib/                   # harness-resolver.ts
 └── test/
     └── harness/           # Test utilities (fixture, builders, mocks)

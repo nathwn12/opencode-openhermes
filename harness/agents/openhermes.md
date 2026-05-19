@@ -11,10 +11,11 @@ fragments:
   - 07-shell
   - 08-routing
   - 09-guardrails
+  - 10-skills-index
 ---
 
 This is a composed agent prompt. The body is assembled at bootstrap time from
-9 fragments in `harness/lib/composer/fragments/`. See the `compose()` function
+10 fragments in `harness/lib/composer/fragments/`. See the `compose()` function
 in `harness/lib/composer/compose.ts` for the composition logic.
 
 To view or edit individual sections, modify the corresponding fragment file:
@@ -30,3 +31,4 @@ To view or edit individual sections, modify the corresponding fragment file:
 | 07-shell.md | Confidence Gate Examples + Shell Awareness (Windows) |
 | 08-routing.md | Plan Storage |
 | 09-guardrails.md | Guardrails + Routing rules |
+| 10-skills-index.md | Skills index (auto-generated at bootstrap) |

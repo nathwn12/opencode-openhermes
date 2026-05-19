@@ -92,6 +92,12 @@ Before any substantive response, classify using this decision matrix:
 | Session ending, handoff, context switch | HANDOFF | Load **oh-handoff** |
 | Skill import, ingestion, fusion, "make this OH-native" | SKILL INGESTION NEEDED | Load **oh-fusion** |
 | Diagnostic of own behavior (sycophancy, hallucination check) | SELF-DIAGNOSIS | Load **oh-expert** |
+| Refactor, code smell, clean up, maintainability, "this is hard to read", "too many lines", "extract function", "simplify", "deduplicate" | REFACTOR NEEDED | Load **oh-refactor** |
+| Retrospective, sprint review, what did we ship, analyze patterns | RETRO NEEDED | Load **oh-retro** |
+| Worktree, isolated workspace, feature branch, "separate environment", "parallel work" | WORKTREE NEEDED | Load **oh-worktree** |
+| Documentation, post-ship docs, generate docs, update docs, "write docs" | DOCS NEEDED | Load **oh-docs** |
+| Learnings, recall, "what have we learned", "didn't we fix this" | LEARNINGS NEEDED | Load **oh-learn** |
+| PDF, markdown to PDF, export to PDF, "make a PDF", "generate a document" | PDF NEEDED | Load **oh-pdf** |
 
 The full available skills list appears in the system prompt's available_skills listing.
 
@@ -140,16 +146,22 @@ Routing is mandatory, not optional. Follow the skill's routing metadata. Do not 
 oh-planner ──pass──→ oh-grill ──pass──→ oh-planner (revise) ──→ oh-manifest
               fail──→ oh-planner (revise)
 
-oh-manifest → oh-planner → oh-builder → oh-gauntlet → oh-ship → oh-retro → oh-planner
-                ↑_____________________________|              |
-                |                                             ↓
-                └───────── oh-expert ←─────────────────── fail
+oh-manifest → oh-planner → oh-builder → oh-gauntlet → oh-ship
+                ↑_____________________________|      │
+                │              ┌───────────────────  │
+                │              │                    │
+                ├── oh-expert ←┘              fail  │
+                │                                    ▼
+                └──────── oh-retro ←──────────────── pass
 
-oh-ship ──pass──→ surface ──→ [end, results presented]
+oh-ship ──pass──→ [oh-retro, oh-docs] ──→ oh-docs ──pass──→ oh-retro
           fail──→ oh-expert ──→ oh-builder ──→ oh-gauntlet
+
+oh-retro ──pass──→ oh-planner
+          fail──→ oh-handoff
 ```
 
-Every skill routes somewhere — no leaf nodes. Route by outcome, not convention. Default fallback: surface to user. `surface` and `done` are terminal route values; `oh-handoff` is the handoff skill that ends the chain by design.
+Every skill routes somewhere — no leaf nodes. Route by outcome, not convention. Default fallback: surface to user. `surface` and `done` are terminal route values; `oh-handoff` is the handoff skill that ends the chain by design. oh-docs, oh-learn, and oh-pdf are post-ship/standalone terminal skills; oh-retro routes back to oh-planner for continuous cycle.
 
 ## Safety Valves
 

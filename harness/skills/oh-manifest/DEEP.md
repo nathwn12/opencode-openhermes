@@ -64,13 +64,93 @@ Default: sequential.
 
 These are not optional. When triggered, loop **must** pause.
 
-## Decision Principles
+## Autopilot Mode
 
-Auto-resolve: completeness > cleverness, boil the lake, pragmatic > perfect, DRY at 3rd instance, explicit > implicit, bias toward action.
+When oh-manifest runs in autopilot mode (default for well-understood tasks), all
+intermediate decisions are auto-resolved using the 6 principles below. Only taste
+decisions, premise conflicts, and cross-model disagreements are surfaced at a
+final approval gate.
 
-Surface only: premises, dead ends, cross-model disagreement.
+### Trigger
 
-**Model selection guidance:**
+Autopilot activates automatically when:
+- The plan is well-scoped (concrete entities, measurable criteria)
+- No security-sensitive changes (auth, crypto, PII)
+- User previously approved autopilot or says "just do it"
+
+### The 6 Decision Principles
+
+These rules auto-answer every intermediate question:
+
+| # | Principle | Meaning |
+|---|-----------|---------|
+| 1 | **Completeness over cleverness** | Cover more cases. Clever shortcuts miss edge cases. |
+| 2 | **Boil the lake** | Fix blast radius (modified files + direct dependents), not symptoms. Auto-approve in-radius expansions under 1 day CC effort. |
+| 3 | **Pragmatic over perfect** | Ships today wins. Perfect designs that never ship are worthless. |
+| 4 | **DRY at 3rd instance** | Reuse what exists. Abstract only at the 3rd concrete instance. |
+| 5 | **Explicit over implicit** | Clear code over magic. 10-line obvious fix > 200-line abstraction. |
+| 6 | **Bias toward action** | When in doubt, make progress. Flag concerns but don't block. |
+
+**Conflict resolution (context-dependent):**
+- Plan/Strategy phase: P1 (completeness) + P2 (boil lake) dominate
+- Build/Implementation phase: P5 (explicit) + P3 (pragmatic) dominate
+- Review phase: P1 (completeness) + P4 (DRY) dominate
+
+### Decision Classification
+
+**Mechanical** — one clearly right answer. Auto-decide silently.
+Examples: Always run tests, always verify spec compliance, always fix compiler errors.
+
+**Taste** — reasonable people could disagree. Auto-decide with recommendation but
+surface at final gate. Three natural sources:
+1. **Close approaches** — top two are both viable with different tradeoffs.
+2. **Borderline scope** — in blast radius but 3-5 files, or ambiguous dependency chain.
+3. **Implementation ambiguities** — two ways to implement same behavior, neither clearly better.
+
+**User Challenge** — model and spec disagree with user's stated direction.
+This is NEVER auto-decided. Surface with:
+- What the user said (their original direction)
+- What the model recommends (the change)
+- Why (reasoning)
+- What context we might be missing (explicit acknowledgment)
+- If we're wrong, the cost is (what happens if user was right)
+
+### What Auto-Decide Means
+
+Auto-decide replaces the USER'S judgment with the 6 principles. It does NOT
+replace the ANALYSIS. Every review section must still be executed at full depth.
+The only difference: intermediate AskUserQuestion calls are answered by the
+principles instead of the user.
+
+**Always required even in autopilot:**
+- READ actual code, diffs, and files each section references
+- PRODUCE every output the section requires (diagrams, tables, artifacts)
+- IDENTIFY every issue the section is designed to catch
+- DECIDE each issue using the 6 principles
+- LOG each decision in the audit trail
+
+**Never do in autopilot:**
+- Skip a section because "it doesn't apply" without stating why
+- Compress a review into a one-liner table row
+- Write "no issues found" without showing what was examined
+- Auto-decide premises (core assumptions need human judgment)
+- Auto-decide User Challenges (model agrees with spec against user direction)
+
+### Phase Order
+
+When running auto-review of a plan (triggered by `oh-manifest --autoreview`),
+execute phases in strict sequential order — each builds on the previous:
+
+1. **Strategy** — Challenge premises, identify scope decisions, explore alternatives
+2. **Architecture** — Data flow, component boundaries, API surface, state model
+3. **Design** — UI/UX gaps, interaction states, AI slop detection
+4. **Engineering** — Edge cases, error handling, test coverage, performance
+5. **DX** — API ergonomics, onboarding flow, error messages
+
+Never run phases in parallel. Never skip phase order.
+
+### Model Selection Guidance (autopilot)
+
 - Mechanical tasks (isolated, 1-2 files, clear spec) → fast cheap model
 - Integration tasks (multi-file, coordination) → standard model
 - Architecture/design/review tasks → most capable model

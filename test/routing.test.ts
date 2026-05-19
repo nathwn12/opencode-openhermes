@@ -34,6 +34,12 @@ const ENTRY_POINTS = new Set([
   "oh-handoff",
   "oh-fusion",
   "oh-expert",
+  "oh-refactor",
+  "oh-retro",
+  "oh-worktree",
+  "oh-docs",
+  "oh-learn",
+  "oh-pdf",
 ])
 
 /**
@@ -50,11 +56,8 @@ const DIRECT_USER_SKILLS = new Set([
   "oh-init",        // "init project", "initialize"
   "oh-issue",       // "create issue", "break into issues"
   "oh-prd",         // "write PRD", "product requirements"
-  "oh-refactor",    // "refactor", "clean up", "improve code"
-  "oh-retro",       // "retrospective", "sprint retro", "retro"
   "oh-skills-list", // "list skills", "what can you do"
   "oh-triage",      // "triage", "classify issue"
-  "oh-worktree",    // "worktree", "isolate workspace", "isolated branch"
 ])
 
 // ---------------------------------------------------------------------------
@@ -210,8 +213,8 @@ describe("routing graph", () => {
   }
 
   // ---- 1: Parse sanity ------------------------------------------------
-  it("parses all 30 skill files", () => {
-    assert.ok(skills.size >= 30, `Expected >= 30 skills, got ${skills.size}`)
+  it("parses all 33 skill files", () => {
+    assert.ok(skills.size >= 33, `Expected >= 33 skills, got ${skills.size}`)
   })
 
   it("all expected entry points exist", () => {

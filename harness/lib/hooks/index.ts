@@ -27,6 +27,7 @@ export { shellDetectHook } from "./builtins/shell-detect-hook.ts";
 export { confidenceGateHook } from "./builtins/confidence-gate-hook.ts";
 export { delegationDepthHook, resetDepthTracker } from "./builtins/delegation-depth-hook.ts";
 export { dynamicRouteHook } from "./builtins/dynamic-route-hook.ts";
+export { planNumberingHook } from "./builtins/plan-numbering-hook.ts";
 export { nextRouteHook } from "./builtins/next-route-hook.ts";
 export { routeTrackingHook, resetRouteTracker, getHopHistory } from "./builtins/route-tracking-hook.ts";
 export type { HopRecord, RouteTrackingConfig } from "./builtins/route-tracking-hook.ts";

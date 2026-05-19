@@ -7,3 +7,4 @@
 | ADR-0003 | Per-Directory Plan Storage | Accepted |
 | ADR-0004 | Composer Fragment Architecture | Accepted |
 | ADR-0005 | Hook System Design | Accepted |
+| ADR-0006 | Anti-Slop Fusion | Accepted |

@@ -91,6 +91,10 @@ Subagent permissions — execution subagents (Tier 3+) get `bash: {"*": "allow"}
 ## Plan Files
 
 Canonical: `~/.local/share/openhermes/plans/<project-name>/plan-{nnn>.md`
+- **One plan = one user request.** A single request may span multiple phases within one plan — that's fine.
+- **Never overwrite an existing plan number.** When a new user request arrives, find the latest plan number (`findLatestPlanFile()`) and use the next number (NNN+1).
+- **Never modify a completed plan.** Completed plans are frozen historical records.
+- **Capture all work in the plan file.** Any unplanned work ("additionals") that surfaces during execution must be added as a new task item or phase — not done conversationally without tracking.
 - Status lifecycle: keep `active`/`in-progress`, delete `complete`/`abandoned`
 - Sequential numbering (001, 002, 003...)
 - Plan file creation is the agent's responsibility — bootstrap does NOT auto-create (prevents ghost skeletons)

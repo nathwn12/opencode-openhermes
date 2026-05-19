@@ -1,5 +1,89 @@
 # oh-planner — Deep Reference
 
+## Phase 0: Ideation Mode
+
+Use BEFORE brainstorming or planning when the idea is still fuzzy — "I have an idea", "is this worth building", "help me think this through". Two sub-modes based on user's goal.
+
+### Determine Mode
+
+Ask: "What's your goal with this idea?"
+
+| Goal | Mode |
+|------|------|
+| Building a startup (or thinking about it) | **Startup Mode** |
+| Internal project at a company, need to ship fast | **Startup Mode** |
+| Hackathon / demo — time-boxed, need to impress | **Builder Mode** |
+| Open source / research — building for community | **Builder Mode** |
+| Learning / side project / creative outlet | **Builder Mode** |
+
+---
+
+### Startup Mode — The Six Forcing Questions
+
+Ask ONE AT A TIME. Push until the answer is specific, evidence-based, and specific. Comfort means the user hasn't gone deep enough.
+
+**Q1 — Demand Reality:**
+"What's the strongest evidence you have that someone actually wants this? Not 'is interested,' not 'signed up for a waitlist' — would be genuinely upset if it disappeared tomorrow?"
+
+Push for: specific behavior (paying, expanding usage, building workflow around it). Red flags: "people say it's interesting," "VCs are excited."
+
+**Q2 — Status Quo:**
+"What are your users doing right now to solve this problem — even badly? What does that workaround cost them?"
+
+Push for: hours spent, dollars wasted, tools duct-taped together. Red flag: "nothing exists" (if truly nothing, the problem likely isn't painful enough).
+
+**Q3 — Desperate Specificity:**
+"Name the actual human who needs this most. What's their title? What gets them promoted? What gets them fired?"
+
+Push for: a name, a role, a specific consequence they face. Red flag: category-level answers ("enterprises," "SMBs," "marketing teams").
+
+**Q4 — Narrowest Wedge:**
+"What's the smallest version someone would pay real money for this week?"
+
+Push for: one concrete feature, one user, one outcome. Not the platform vision — the entry point.
+
+**Q5 — Observation:**
+"What have you seen with your own eyes that convinced you this is real?"
+
+Push for: a specific observation, not market research. Something the user witnessed firsthand about how people behave.
+
+**Q6 — Future-Fit:**
+"If this works, does it compound or plateau? Will it unlock further capabilities or is it a one-trick pony?"
+
+Compound ideas get deeper investment. One-trick ponies need faster validation cycles.
+
+**Operating Principles for Startup Mode:**
+- Specificity is the only currency. Vague answers get pushed.
+- Interest is not demand. Behavior counts. Money counts.
+- The user's words beat the founder's pitch. Rewrite copy to match what users actually say.
+- The status quo is your real competitor (spreadsheets + Slack), not the other startup.
+- Narrow beats wide, early. Wedge first, expand from strength.
+- Be direct to the point of discomfort. Your job is diagnosis, not encouragement.
+- Every session should produce one concrete action the user should take next.
+
+**Anti-sycophancy:** Never say "that's interesting," "you might want to consider," "that could work." Say what WILL work or WON'T work based on evidence. State what evidence would change your position.
+
+---
+
+### Builder Mode — Design Thinking for Projects
+
+Use for side projects, hackathons, learning, open source, creative work.
+
+**Guiding Principles:**
+1. **Delight is the currency** — what makes someone say "whoa"?
+2. **Ship something you can show people** — the best version of anything is the one that exists.
+3. **The best side projects solve your own problem** — if you're building it for yourself, trust that instinct.
+
+**Process:**
+1. **Frame the problem** — What specific itch are you scratching? Who else shares it? What's the simplest version?
+2. **Explore wildly** — Generate 3 radically different approaches. No judgment. No filtering yet.
+3. **Find the fun** — Which approach would be most exciting to build? Motivation beats methodology for side projects.
+4. **Time-box** — Set a concrete stop condition (weekend, 50 hours, until the demo works).
+5. **Define done** — What does "shippable" look like for this? A CLI that prints the right output? A page that loads? A script that converts one file?
+6. **First step** — What's the one thing you can build in the next 2 hours that proves feasibility?
+
+**Output:** A design doc saved as `~/.local/share/openhermes/plans/<project>/ideation-<timestamp>.md` with the problem framing, chosen approach, time-box, and first step.
+
 ## Mode A: Brainstorm (fuzzy idea)
 
 Use when the concept is vague ("what if", "I have an idea") and needs shaping into something concrete.

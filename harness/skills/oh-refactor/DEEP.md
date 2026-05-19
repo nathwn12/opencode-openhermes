@@ -115,6 +115,29 @@ Remove commented-out code, stale imports, dead paths. Update docs only if semant
 - [ ] Types for all public APIs, no `any` without justification
 - [ ] All tests pass, edge cases covered
 
+## AI-Generated Code: What to Fix vs What to Skip
+
+When refactoring AI-generated code, not every flagged pattern is a real problem.
+Use these guidelines (sourced from `reference/design-blacklist.md` §Code Slop).
+
+### What to fix (genuine quality improvements)
+- **Empty catches around file ops** — replace with `safeUnlink()` (ignores ENOENT, rethrows EPERM/EIO). Swallowed EPERM = silent data loss.
+- **Empty catches around process kills** — replace with `safeKill()` (ignores ESRCH, rethrows EPERM).
+- **Redundant `return await`** — remove when no enclosing try block. Saves a microtask, signals intent.
+- **Typed exception catches** — `catch (err) { if (!(err instanceof TypeError)) throw err }` over `catch {}` when the try block does URL parsing, JSON parsing, or DOM work.
+- **Dead code, stale imports, commented-out code** — remove unconditionally.
+
+### What NOT to fix (correct patterns that tools may flag)
+- **String-matching on error messages** — `err.message.includes('closed')` is brittle. If a fire-and-forget operation can fail for any reason and you don't care, `catch {}` is correct.
+- **Comments to exempt pass-through wrappers** — "alias for active session" above a method just to trip a linter rule is noise, not documentation.
+- **Catch-and-log in extension/browser code** — browser extensions crash entirely on uncaught errors. If the catch logs and continues, that IS the right pattern.
+- **Best-effort cleanup paths** — shutdown, emergency cleanup should swallow ALL errors. A cleanup path that throws means the rest of cleanup doesn't run.
+
+### Guiding Principle
+We are AI-coded and proud of it. The goal is code quality, not hiding. Accept
+findings where the "sloppy" pattern is the correct engineering choice for the
+context.
+
 ## Anti-patterns
 - Refactoring without tests (behavior preservation is unverifiable)
 - Mixing behavior changes with refactoring

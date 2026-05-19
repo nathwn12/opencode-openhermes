@@ -3,7 +3,9 @@ name: oh-ship
 description: "Use when code is ready to ship. Tests, version bump, commit, push to current branch, deploy, and verify. PRs only on request."
 tier: 4
 route:
-  pass: surface
+  pass:
+    - oh-retro
+    - oh-docs
   fail: oh-expert
   blocker: surface
 ---
@@ -26,6 +28,6 @@ Complete ship pipeline: pre-flight → version → changelog → commit → dete
 
 | Outcome | Route |
 |---------|-------|
-| pass | → surface (report success) |
+| pass | → oh-retro or oh-docs (evidence decides) |
 | fail | → oh-expert (diagnose) |
 | blocker | → surface |

@@ -36,6 +36,38 @@ No completion claims without fresh verification evidence.
 
 Skip unavailable → redistribute weight proportionally.
 
+## Optional: AI Code Quality Scan (slop-scan)
+
+If `npx slop-scan` is available, run it as an additional diagnostic. This is
+advisory only — does not affect the composite score directly.
+
+### Detection
+```bash
+npx slop-scan scan . --json 2>nul
+```
+
+If the command fails (tool not installed), skip silently.
+
+### Baseline Comparison (diff mode)
+When a git base branch is known (e.g., `main`), compare findings on HEAD vs the
+merge-base to show only NEW findings:
+- Run `npx slop-scan scan . --json` on HEAD
+- Check out base version, run scan, compare using line-number-insensitive fingerprinting
+- Report: "+N new / -M removed"
+
+### What Findings Mean
+See `reference/design-blacklist.md` §Code Slop: What to Fix vs What to Skip.
+
+### Integration with Dashboard
+Add a row to the health dashboard only when slop-scan found NEW issues on the
+current branch:
+```
+Slop scan   —        INFO     +3 new / -1 removed (see slop:diff for details)
+```
+
+Do NOT add a score row or weight category. Slop scan is informational overlay,
+not a scored category. Do not redistribute weights when skipped.
+
 ## Dashboard Template
 
 ```
@@ -67,6 +99,8 @@ Read last 10 entries. Trend table. Identify declining categories. Rank improveme
 - Skipped ≠ failed (tool not installed → redistribute weight).
 - Show raw output for failures.
 - First run: "No trend data yet."
+- Slop-scan is advisory only — never blocking. Missing tool = skip silently.
+- Baseline comparison only meaningful on feature branches (where base != HEAD).
 
 ## Anti-patterns
 

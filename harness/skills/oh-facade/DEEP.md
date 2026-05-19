@@ -42,11 +42,19 @@ Commit to one. Do not hedge.
 ### 1d. Output Brief
 Single paragraph: archetype, substrate, dials, key differentiator. Self-contradictory → surface. Otherwise → Phase 2.
 
+### 1e. Anti-Convergence Directive
+
+**Across sessions/generations, VARY light/dark, fonts, and aesthetic directions.**
+Never propose the same choices twice without explicit justification. If a prior session
+used Geist + dark + editorial, propose something different this time (or explicitly
+acknowledge you're doubling down because it fits the brief). Convergence across
+generations is slop.
+
 ## Phase 2: Design System
 
 ### 2a. Color
 - **Neutral**: Zinc or Slate. One. Never mix.
-- **Accent**: Exactly one. Saturation < 80%. No AI purple/blue.
+- **Accent**: Exactly one. Saturation < 80%. No AI purple/blue/violet/indigo. See `reference/design-blacklist.md` §AI Slop Blacklist.
 - **Surface**: Background, card, border, elevated. Specific hex.
 - **Text**: Primary, secondary, muted, inverse. Specific hex.
 - **Semantic**: Success, warning, error, info. Specific hex.
@@ -57,7 +65,7 @@ Single paragraph: archetype, substrate, dials, key differentiator. Self-contradi
 - **Body**: Leading 1.6-1.8. Max 65ch. Off-black, not `#000`.
 - **Mono**: JetBrains Mono, Geist Mono, SF Mono. Required when DENSITY > 5.
 - **Serif**: Editorial/creative only (Fraunces, Instrument Serif). Never in dashboards.
-- **BANNED**: Inter, Roboto, Arial, Open Sans, Helvetica, Georgia, Times New Roman.
+- **BANNED**: Inter, Roboto, Arial, Open Sans, Helvetica, Lato, Montserrat, Poppins, Space Grotesk, system-ui, -apple-system. See `reference/design-blacklist.md` §Font Blacklist.
 
 ### 2c. Components
 **Buttons:** Primary (solid, off-black/accent), Secondary (outline/ghost), Icon (square). Hover lift/darken. Active `scale(0.98)`. Focus ring.
@@ -118,12 +126,13 @@ Full interface from components. Responsive collapse at 768px. All viewport state
 - Semantic HTML: `<nav>`, `<main>`, `<section>`, `<article>`, `<aside>`, `<header>`, `<footer>`
 - A11y: focus rings, skip-to-content, alt text, aria labels
 - Meta: `<title>`, description, `og:image`, viewport
+- **Anti-slop**: no generic hero copy ("Welcome to...", "Unlock the power of..."), no happy talk paragraphs, no 3-column feature grids, no decorative blobs
 
 ## Phase 4: Audit
 
 ### Priority 1 (do first)
-- **Typography**: font matches spec? scale correct? tracking? no orphans? max-width?
-- **Color**: single accent? saturation < 80%? no AI purple? consistent? dark not pure black?
+- **Typography**: font matches spec? scale correct? tracking? no orphans? max-width? banned fonts?
+- **Color**: single accent? saturation < 80%? no AI purple/violet/indigo? consistent? dark not pure black?
 - **Layout**: grid not flexbox math? `min-h-[100dvh]`? responsive at 768px?
 
 ### Priority 2 (feel)
@@ -131,8 +140,15 @@ Full interface from components. Responsive collapse at 768px. All viewport state
 - **States**: every component has loading/empty/error? skeletons (not spinners)?
 - **Motion**: scroll entries? staggered? spring physics?
 
-### Priority 3 (content)
-- No lorem ipsum, cliches (Elevate, etc), generic names, emojis, bad icons?
+### Priority 3 (content + anti-slop)
+- No lorem ipsum, no cliches (Elevate, Unleash, Game-changer, Next-Gen, Seamless), no generic names, no emojis, no bad icons?
+- **Happy talk check**: scan for "Welcome to..." intros, instructions >1 sentence, self-congratulatory text. Count total visible words. Classify each block as "useful content" vs "happy talk." Report: "X words, Y (Z%) are happy talk."
+- **Slop blacklist match**: check against `reference/design-blacklist.md` §AI Slop Blacklist. Grade as follows:
+  - 0 matches → A (clean)
+  - 1 match → B (minor slop)
+  - 2 matches → C (noticeable)
+  - 3 matches → D (heavy)
+  - 4+ → F (redesign needed)
 
 ### Priority 4 (hardening)
 - Double-Bezel or appropriate card? button-in-button? nav active states?
@@ -141,10 +157,34 @@ Full interface from components. Responsive collapse at 768px. All viewport state
 
 ### Priority 5 (existing project redesign scan)
 - **Typography audit**: browser default fonts or Inter everywhere? Only Regular/Bold weights? Missing letter-spacing? All-caps subheaders everywhere? Orphaned words?
-- **Color audit**: pure `#000` background? Oversaturated accents? Mixing warm + cool grays? AI purple/blue gradient? Generic `box-shadow` (pure black tint)? No texture (pure flat)?
+- **Color audit**: pure `#000` background? Oversaturated accents? Mixing warm + cool grays? AI purple/blue/indigo gradient? Generic `box-shadow` (pure black tint)? No texture (pure flat)?
 - **Layout audit**: 3-equal-card rows? `height: 100vh` instead of `min-h-[100dvh]`? Complex flexbox percentage math? Everything centered and symmetrical?
 - **Surface audit**: flat sections with no visual depth? No background imagery? Sudden dark section in light page?
 - **Icon audit**: generic thin-line icon library? Rocket ship / shield cliches?
+
+### AI Slop Score (headline metric)
+
+Grade independently alongside Design Score. Report as standalone letter grade:
+
+| Score | Meaning |
+|-------|---------|
+| A | Clean — no AI slop patterns detected |
+| B | Minor — 1 pattern, easily fixed |
+| C | Noticeable — 2-3 patterns, needs work |
+| D | Heavy — 4 patterns, significant rework needed |
+| F | Redesign — 5+ patterns, entire approach is generic |
+
+AI Slop Score contributes 5% to the composite Design Score but is also reported independently as a headline metric (same as Design Score A-F).
+
+### Auto-Fix vs Ask Classification
+
+When audit finds fixable issues, classify by confidence:
+
+| Confidence | What | Action |
+|------------|------|--------|
+| HIGH (grep-detectable) | `outline: none`, `!important`, font-size <16px, banned fonts | **Auto-fix** — mechanical, no judgment needed |
+| MEDIUM (pattern/heuristic) | purple gradients, 3-column grids, centered layout, bubbly radii | **Ask** — present finding, recommend fix, get approval |
+| LOW (visual intent) | slop blacklist items 6-11 (blobs, emoji, left-border, hero copy, section rhythm, system-ui) | **Ask** — "Possible: verify visually or run /design-review" |
 
 ### Phase 5: Iterate
 1. Fix in Priority order. Re-audit after each level.
@@ -152,6 +192,9 @@ Full interface from components. Responsive collapse at 768px. All viewport state
 3. Blocked on a check → narrow scope or surface.
 
 ## Hard Bans
+
+See also `reference/design-blacklist.md` for the complete shared hard bans list.
+Core bans are duplicated here for local reference; design-blacklist.md is the source of truth.
 
 - No emojis in code/content/alt/markup
 - No Lorem Ipsum — write real draft copy
