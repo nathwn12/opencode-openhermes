@@ -277,8 +277,9 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
       let openHermesPrompt: string
       const injectSelfKnowledge = (prompt: string): string => {
         try {
-          const pkg = JSON.parse(fs.readFileSync(path.resolve(import.meta.dirname, "package.json"), "utf-8"))
-          return `OpenHermes v${pkg.version} | Harness: ${hDir}\n\n${prompt}`
+          const pkgDir = import.meta.dirname
+          const pkg = JSON.parse(fs.readFileSync(path.resolve(pkgDir, "package.json"), "utf-8"))
+          return `OpenHermes v${pkg.version} | Install: ${pkgDir} | Harness: ${hDir}\n\n${prompt}`
         } catch {
           return prompt
         }
