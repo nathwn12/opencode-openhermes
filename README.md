@@ -38,7 +38,7 @@ OpenHermes ships with a focused internal architecture — 3 subsystems working t
 | Subsystem | What it does |
 |-----------|-------------|
 | **Prompt Composer** | 9 modular fragments joined at runtime → byte-identical. Add a fragment, never edit the composition code. |
-| **Hook Registry** | Pluggable pre-tool, post-tool, route, and session hooks with priority-sort ordering. 5 built-in hooks, zero routing boilerplate. |
+| **Hook Registry** | Pluggable pre-tool, post-tool, route, and session hooks with priority-sort ordering. 7 built-in hooks, zero routing boilerplate. |
 | **Plan Location** | Resolves plan file paths per project with directory-per-project layout in `~/.local/share/openhermes/plans/`. |
 
 ---
@@ -133,6 +133,9 @@ openhermes-pkg/
 ├── AGENTS.md              # User-side routing overlay
 ├── CONTEXT.md             # Shared domain language
 ├── ETHOS.md               # Operating principles
+├── docs/
+│   ├── HOW-IT-WORKS.md     # Runtime data flow (routing, hooks, plans)
+│   └── adr/                 # Architecture Decision Records
 ├── bootstrap.ts           # Plugin entry — registers everything
 ├── index.ts               # Package entrypoint
 ├── harness/
