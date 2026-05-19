@@ -275,10 +275,19 @@ export const BootstrapPlugin: Plugin = async (ctx) => {
       const loadedAgents = agentDefinitions(agentsDir)
       // Use composer for the OpenHermes agent prompt — assemble from fragments
       let openHermesPrompt: string
+      const injectSelfKnowledge = (prompt: string): string => {
+        try {
+          const pkg = JSON.parse(fs.readFileSync(path.resolve(import.meta.dirname, "package.json"), "utf-8"))
+          return `OpenHermes v${pkg.version} | Harness: ${hDir}\n\n${prompt}`
+        } catch {
+          return prompt
+        }
+      }
       try {
-        openHermesPrompt = compose()
+        openHermesPrompt = injectSelfKnowledge(compose())
       } catch {
         openHermesPrompt = loadedAgents[OPENHERMES_AGENT]?.prompt ?? "You are OpenHermes."
+        openHermesPrompt = injectSelfKnowledge(openHermesPrompt)
       }
       const openHermesAgent = {
         description: loadedAgents[OPENHERMES_AGENT]?.description ?? "OpenHermes primary orchestrator",
