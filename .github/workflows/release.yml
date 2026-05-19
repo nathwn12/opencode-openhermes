@@ -1,0 +1,85 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: 'Version bump type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      publish:
+        description: 'Create GitHub Release'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+
+      - name: Dry-run version bump
+        shell: pwsh
+        run: ./scripts/sync-release.ps1 -Bump ${{ inputs.bump }}
+
+      - name: Apply version bump
+        shell: pwsh
+        run: ./scripts/sync-release.ps1 -Apply -Bump ${{ inputs.bump }}
+
+      - name: Verify CHANGELOG has Unreleased section
+        run: |
+          if grep -q "\[Unreleased\]" CHANGELOG.md; then
+            echo "CHANGELOG has Unreleased section"
+          else
+            echo "Adding Unreleased section to CHANGELOG"
+            sed -i '1,/^# /{/^# /a\\n## [Unreleased] - \n}' CHANGELOG.md
+          fi
+
+      - name: Install and test
+        run: |
+          bun install
+          bun test
+
+      - name: Get new version
+        id: version
+        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
+      - name: Commit and push
+        run: |
+          NEW_VERSION="${{ steps.version.outputs.version }}"
+          git add package.json CHANGELOG.md .version-bump.json
+          git commit -m "chore: bump to v${NEW_VERSION}"
+          git push origin dev
+
+      - name: Tag and push tag
+        run: |
+          NEW_VERSION="${{ steps.version.outputs.version }}"
+          git tag "v${NEW_VERSION}"
+          git push origin "v${NEW_VERSION}"
+
+      - name: Create GitHub Release
+        if: ${{ inputs.publish == true }}
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          generate_release_notes: true

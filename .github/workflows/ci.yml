@@ -8,7 +8,12 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.os != 'ubuntu-latest' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -23,5 +28,19 @@ jobs:
       - name: Run tests
         run: bun test
 
+      - name: Check test coverage (soft warning)
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          CHANGED_SRC=$(git diff --name-only origin/${{ github.base_ref }}...HEAD -- 'src/' 2>/dev/null | head -20)
+          CHANGED_TEST=$(git diff --name-only origin/${{ github.base_ref }}...HEAD -- 'test/' 2>/dev/null | head -20)
+          if [ -n "$CHANGED_SRC" ] && [ -z "$CHANGED_TEST" ]; then
+            echo "::warning::Source files changed but no test files updated. Consider adding tests."
+            echo "Changed source:"
+            echo "$CHANGED_SRC"
+          else
+            echo "Tests look good — source changes have corresponding test updates (or no source changes)."
+          fi
+
       - name: Print test summary
-        run: echo "CI tests complete"
+        run: echo "CI tests complete on ${{ matrix.os }}"
